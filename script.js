@@ -1,7 +1,3 @@
-/* ══════════════════════════════════════════════
-   SAVOL BANKI — O'ZBEK TILIDA
-   Har bir fandan 30+ savol (har sessiyada 20 ta tasodifiy tanlanadi)
-══════════════════════════════════════════════ */
 const BANKS = {
 math:[
   {q:"sin(x) ning hosilasi nima?",o:["cos(x)","-cos(x)","sin(x)","-sin(x)"],a:0},
