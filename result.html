@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Natija — QuizMaster Pro</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/result.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar" role="navigation">
+    <div class="container">
+      <a href="index.html" class="navbar-brand" aria-label="Bosh sahifaga qaytish">
+        <div class="brand-icon">Q</div>
+        <span>QuizMaster <span class="text-accent">Pro</span></span>
+      </a>
+      <div class="navbar-actions">
+        <button class="theme-toggle" aria-label="Mavzuni almashtirish">🌙</button>
+        <a href="index.html" class="btn btn-ghost btn-sm" aria-label="Fanlar ro'yxatiga qaytish">
+          ← Fanlar
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== RESULT PAGE ===== -->
+  <main class="result-page" role="main">
+    <div class="container">
+
+      <!-- === SCORE CARD === -->
+      <section class="score-card animate-scaleIn" aria-labelledby="result-title">
+        <!-- Konfetti elementi (dekoratsiya) -->
+        <div class="confetti-container" id="confetti-container" aria-hidden="true"></div>
+
+        <!-- Emoji va baho -->
+        <div class="grade-display">
+          <div class="grade-emoji" id="result-emoji" aria-hidden="true">🏆</div>
+          <div class="grade-badge" id="result-grade">A+</div>
+        </div>
+
+        <!-- Fan nomi -->
+        <p class="result-subject" id="result-subject-label">Matematika</p>
+        <h1 id="result-title" class="result-message" id="result-message-text">
+          Ajoyib natija!
+        </h1>
+
+        <!-- Foiz ko'rsatgich -->
+        <div class="percent-ring-wrapper" role="img" aria-labelledby="percent-label">
+          <svg class="percent-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring-track" cx="60" cy="60" r="50"/>
+            <circle class="ring-progress" id="ring-progress"
+              cx="60" cy="60" r="50"
+              style="stroke-dasharray: 314.16; stroke-dashoffset: 314.16;"
+            />
+          </svg>
+          <div class="percent-center">
+            <span class="percent-number" id="result-percent">0</span>
+            <span class="percent-symbol">%</span>
+            <span id="percent-label" class="percent-label">Natija</span>
+          </div>
+        </div>
+
+        <!-- To'g'ri / Noto'g'ri / Vaqt statistikasi -->
+        <div class="result-stats" role="list">
+          <div class="result-stat-item correct" role="listitem">
+            <span class="stat-icon" aria-hidden="true">✅</span>
+            <span class="stat-val" id="stat-correct">0</span>
+            <span class="stat-lbl">To'g'ri</span>
+          </div>
+          <div class="result-stat-item wrong" role="listitem">
+            <span class="stat-icon" aria-hidden="true">❌</span>
+            <span class="stat-val" id="stat-wrong">0</span>
+            <span class="stat-lbl">Noto'g'ri</span>
+          </div>
+          <div class="result-stat-item skipped" role="listitem">
+            <span class="stat-icon" aria-hidden="true">⏭</span>
+            <span class="stat-val" id="stat-skipped">0</span>
+            <span class="stat-lbl">O'tkazildi</span>
+          </div>
+          <div class="result-stat-item time" role="listitem">
+            <span class="stat-icon" aria-hidden="true">⏱</span>
+            <span class="stat-val" id="stat-time">0:00</span>
+            <span class="stat-lbl">Vaqt</span>
+          </div>
+        </div>
+
+        <!-- Tugmalar -->
+        <div class="result-actions">
+          <button class="btn btn-primary btn-lg" id="btn-retry" aria-label="Testni qayta boshlash">
+            🔄 Qayta boshlash
+          </button>
+          <a href="index.html" class="btn btn-outline btn-lg" aria-label="Boshqa fan tanlash">
+            📚 Boshqa fan
+          </a>
+        </div>
+      </section>
+
+      <!-- === SAVOL SHARHI === -->
+      <section class="review-section animate-fadeInUp stagger-2" aria-labelledby="review-title">
+        <div class="review-header flex-between">
+          <h2 id="review-title" class="review-title">📝 Javoblar sharhi</h2>
+          <button class="btn btn-ghost btn-sm" id="btn-toggle-review" aria-expanded="true">
+            Yashirish ▲
+          </button>
+        </div>
+
+        <div class="review-list" id="review-list" role="list">
+          <!-- JavaScript orqali to'ldiriladi -->
+          <div class="review-loading flex-center" style="padding:40px">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ===== SCRIPTS ===== -->
+  <script src="data/questions.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // ============================================================
+    // NATIJA SAHIFASI LOGIKASI
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // URL dan asosiy ma'lumotlarni o'qish
+      const subject  = QuizApp.getUrlParam('subject')  || 'Noma\'lum';
+      const score    = parseInt(QuizApp.getUrlParam('score')  || '0', 10);
+      const total    = parseInt(QuizApp.getUrlParam('total')  || '20', 10);
+      const timeSpent= parseInt(QuizApp.getUrlParam('time')   || '0', 10);
+
+      // Sessiyadan batafsil natijalarni olish
+      const session = QuizApp.loadSession();
+      const lastResult = session?.lastResult || null;
+
+      // Foiz va baho
+      const percent = QuizApp.calcPercent(score, total);
+      const grade   = QuizApp.getGrade(percent);
+
+      // --- Asosiy ko'rsatkichlarni DOM'ga qo'yish ---
+      setText('result-subject-label', subject);
+      setText('result-message-text', grade.message);
+      setText('result-emoji', grade.emoji);
+      setText('result-grade', grade.grade);
+      setText('stat-correct', score);
+      setText('stat-time', QuizApp.formatTime(timeSpent));
+
+      // Noto'g'ri va o'tkazildi
+      if (lastResult) {
+        const wrong   = lastResult.details.filter(d => d.userAnswer !== null && !d.isCorrect).length;
+        const skipped = lastResult.details.filter(d => d.userAnswer === null).length;
+        setText('stat-wrong', wrong);
+        setText('stat-skipped', skipped);
+      } else {
+        setText('stat-wrong', total - score);
+        setText('stat-skipped', 0);
+      }
+
+      // Baho rangini qo'llash
+      document.documentElement.style.setProperty('--grade-color', grade.color);
+
+      // --- Foiz animatsiyasi ---
+      animatePercent(percent);
+
+      // --- Konfetti (80%+ da) ---
+      if (percent >= 80) {
+        createConfetti();
+      }
+
+      // --- Javoblar sharhi ---
+      if (lastResult) {
+        renderReview(lastResult.details);
+      } else {
+        document.getElementById('review-list').innerHTML =
+          '<p class="text-muted text-center" style="padding:24px">Batafsil ma\'lumot mavjud emas.</p>';
+      }
+
+      // --- Qayta boshlash tugmasi ---
+      const retryBtn = document.getElementById('btn-retry');
+      if (retryBtn && lastResult) {
+        retryBtn.addEventListener('click', () => {
+          window.location.href = `quiz.html?subject=${lastResult.subjectIndex}`;
+        });
+      } else if (retryBtn) {
+        retryBtn.addEventListener('click', () => window.location.href = 'index.html');
+      }
+
+      // --- Sharh toggle ---
+      const toggleBtn = document.getElementById('btn-toggle-review');
+      const reviewList = document.getElementById('review-list');
+      if (toggleBtn && reviewList) {
+        toggleBtn.addEventListener('click', () => {
+          const hidden = reviewList.style.display === 'none';
+          reviewList.style.display = hidden ? '' : 'none';
+          toggleBtn.textContent = hidden ? 'Yashirish ▲' : 'Ko\'rsatish ▼';
+          toggleBtn.setAttribute('aria-expanded', hidden ? 'true' : 'false');
+        });
+      }
+    });
+
+    // -------------------------------------------------------
+    // Foiz halqa animatsiyasi
+    // -------------------------------------------------------
+    function animatePercent(target) {
+      const ring    = document.getElementById('ring-progress');
+      const numEl   = document.getElementById('result-percent');
+      const circumference = 314.16;
+      let current = 0;
+
+      const duration = 1200; // ms
+      const startTime = performance.now();
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Easing (ease-out cubic)
+        const eased = 1 - Math.pow(1 - progress, 3);
+        current = Math.round(eased * target);
+
+        if (numEl) numEl.textContent = current;
+        if (ring) {
+          ring.style.strokeDashoffset = circumference * (1 - eased * target / 100);
+        }
+
+        if (progress < 1) requestAnimationFrame(update);
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    // -------------------------------------------------------
+    // Javoblar sharhini render qilish
+    // -------------------------------------------------------
+    function renderReview(details) {
+      const list = document.getElementById('review-list');
+      if (!list) return;
+
+      list.innerHTML = '';
+      details.forEach((d, i) => {
+        const item = document.createElement('div');
+        const statusClass = d.isCorrect ? 'correct' : (d.userAnswer === null ? 'skipped' : 'wrong');
+        item.className = `review-item ${statusClass} animate-fadeInUp`;
+        item.style.animationDelay = `${i * 0.04}s`;
+        item.setAttribute('role', 'listitem');
+
+        const userLabel = d.userAnswer === null
+          ? '<span class="ua skipped">O\'tkazildi</span>'
+          : `<span class="ua ${d.isCorrect ? 'correct' : 'wrong'}">${escapeHtml(d.userAnswer)}</span>`;
+
+        item.innerHTML = `
+          <div class="review-item-header">
+            <span class="review-num">${i + 1}</span>
+            <span class="review-status-icon" aria-hidden="true">
+              ${d.isCorrect ? '✅' : (d.userAnswer === null ? '⏭' : '❌')}
+            </span>
+          </div>
+          <p class="review-question">${escapeHtml(d.question)}</p>
+          <div class="review-answers">
+            <div class="review-answer-row">
+              <span class="ra-label">Sizning javob:</span>
+              ${userLabel}
+            </div>
+            ${!d.isCorrect ? `
+            <div class="review-answer-row">
+              <span class="ra-label">To'g'ri javob:</span>
+              <span class="ua correct">${escapeHtml(d.correctAnswer)}</span>
+            </div>` : ''}
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // -------------------------------------------------------
+    // Konfetti yaratish
+    // -------------------------------------------------------
+    function createConfetti() {
+      const container = document.getElementById('confetti-container');
+      if (!container) return;
+
+      const colors = ['#6C63FF', '#3ECFCF', '#FD79A8', '#FDCB6E', '#00B894', '#FF6B6B'];
+      const count = 60;
+
+      for (let i = 0; i < count; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.cssText = `
+          left: ${Math.random() * 100}%;
+          background: ${colors[Math.floor(Math.random() * colors.length)]};
+          width: ${4 + Math.random() * 6}px;
+          height: ${8 + Math.random() * 8}px;
+          animation-delay: ${Math.random() * 2}s;
+          animation-duration: ${2 + Math.random() * 2}s;
+          border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+          transform: rotate(${Math.random() * 360}deg);
+        `;
+        container.appendChild(piece);
+      }
+
+      // 5 sekunddan keyin tozalash
+      setTimeout(() => container.innerHTML = '', 5000);
+    }
+
+    // -------------------------------------------------------
+    // Yordamchi funksiyalar
+    // -------------------------------------------------------
+    function setText(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
