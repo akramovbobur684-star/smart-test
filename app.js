@@ -1,6 +1,6 @@
 // ============================================================
-// app.js — Asosiy ilova mantig'i
-// Mavzu (dark/light), localStorage va umumiy yordamchi funksiyalar
+// app.js — Asosiy ilova mantig'i (Kengaytirilgan Versiya)
+// Mavzu (dark/light), localStorage, Toast va Loader funksiyalari
 // ============================================================
 
 'use strict';
@@ -11,12 +11,11 @@
 
 /**
  * Joriy mavzuni localStorage'dan o'qib qaytaradi.
- * Agar saqlanmagan bo'lsa, tizim mavzusini ishlatadi.
  */
 function getCurrentTheme() {
-  const saved = localStorage.getItem('qm_theme');
-  if (saved) return saved;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const saved = localStorage.getItem('qm_theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 /**
@@ -24,52 +23,85 @@ function getCurrentTheme() {
  * @param {string} theme - 'dark' yoki 'light'
  */
 function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('qm_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.className = theme === 'dark' ? 'dark-mode' : 'light-mode';
+    localStorage.setItem('qm_theme', theme);
 
-  // Toggle tugmasidagi ikonni yangilash
-  const toggleBtns = document.querySelectorAll('.theme-toggle');
-  toggleBtns.forEach(btn => {
-    btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
-    btn.setAttribute('aria-label', theme === 'dark' ? 'Kunduzgi rejim' : 'Tungi rejim');
-  });
+    // Toggle tugmasidagi ikonni yangilash
+    const toggleBtns = document.querySelectorAll('.theme-toggle');
+    toggleBtns.forEach(btn => {
+        if (btn) {
+            btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+            btn.setAttribute('aria-label', theme === 'dark' ? 'Kunduzgi rejim' : 'Tungi rejim');
+        }
+    });
 }
 
 /**
  * Mavzuni almashtiradi (dark ↔ light)
  */
 function toggleTheme() {
-  const current = getCurrentTheme();
-  const next = current === 'dark' ? 'light' : 'dark';
-  applyTheme(next);
+    const current = getCurrentTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    showToast(`Mavzu o'zgardi: ${next === 'dark' ? 'Tungi' : 'Kunduzgi'}`);
 }
 
 // -------------------------------------------------------
-// 2. TOAST XABARNOMASI
+// 2. TOAST VA LOADER XABARNOMASI
 // -------------------------------------------------------
 
 /**
- * Ekran pastida qisqa xabar ko'rsatadi.
- * @param {string} message - Ko'rsatiladigan matn
- * @param {'success'|'error'|'info'} type  - Tur (rang uchun)
- * @param {number} duration - Millisekundlarda vaqt (default 2500)
+ * Ekran burchagida chiroyli xabar ko'rsatadi.
  */
-function showToast(message, type = 'info', duration = 2500) {
-  // Eski toastni o'chirish
-  const old = document.querySelector('.toast');
-  if (old) old.remove();
+function showToast(message, type = 'info', duration = 3000) {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
 
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type} animate-slideIn`;
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
 
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(30px)';
-    toast.style.transition = 'all 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, duration);
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || '🔔'}</span>
+        <span class="toast-message">${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // O'chirish animatsiyasi
+    setTimeout(() => {
+        toast.classList.add('animate-fadeOut');
+        setTimeout(() => toast.remove(), 500);
+    }, duration);
+}
+
+/**
+ * Sahifa yuklanayotganini ko'rsatish uchun loader
+ */
+function toggleLoader(show = true) {
+    let loader = document.getElementById('app-loader');
+    if (show) {
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'app-loader';
+            loader.innerHTML = '<div class="spinner"></div>';
+            document.body.appendChild(loader);
+        }
+        loader.style.display = 'flex';
+    } else if (loader) {
+        loader.style.display = 'none';
+    }
 }
 
 // -------------------------------------------------------
@@ -77,61 +109,58 @@ function showToast(message, type = 'info', duration = 2500) {
 // -------------------------------------------------------
 
 const STORAGE_KEYS = {
-  results: 'qm_results',        // Barcha natijalar tarixi
-  currentSession: 'qm_session', // Joriy sessiya
-  theme: 'qm_theme',
-  stats: 'qm_stats'
+    results: 'qm_results',
+    currentSession: 'qm_session',
+    theme: 'qm_theme',
+    user: 'qm_user_profile'
 };
 
 /**
- * Barcha natijalar tarixini qaytaradi.
- * @returns {Array}
+ * Barcha natijalar tarixini qaytaradi va saralaydi.
  */
 function getAllResults() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.results)) || [];
-  } catch {
-    return [];
-  }
+    try {
+        const data = localStorage.getItem(STORAGE_KEYS.results);
+        const results = data ? JSON.parse(data) : [];
+        return results.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } catch (e) {
+        console.error("Natijalarni yuklashda xato:", e);
+        return [];
+    }
 }
 
 /**
- * Yangi natijani saqlaydi.
- * @param {Object} result - Natija ob'ekti
+ * Yangi natijani saqlaydi va eskilarni tozalaydi.
  */
 function saveResult(result) {
-  const all = getAllResults();
-  all.unshift({ ...result, id: Date.now(), date: new Date().toISOString() });
-  // Faqat oxirgi 50 ta natijani saqlash
-  if (all.length > 50) all.splice(50);
-  localStorage.setItem(STORAGE_KEYS.results, JSON.stringify(all));
+    const all = getAllResults();
+    const newEntry = {
+        ...result,
+        id: 'res_' + Date.now(),
+        date: new Date().toISOString()
+    };
+    
+    all.unshift(newEntry);
+    
+    // Faqat oxirgi 50 ta natijani saqlash (xotirani to'ldirmaslik uchun)
+    if (all.length > 50) all.pop();
+    
+    localStorage.setItem(STORAGE_KEYS.results, JSON.stringify(all));
+    return newEntry;
 }
 
-/**
- * Joriy test sessiyasini saqlaydi.
- * @param {Object} session
- */
 function saveSession(session) {
-  localStorage.setItem(STORAGE_KEYS.currentSession, JSON.stringify(session));
+    localStorage.setItem(STORAGE_KEYS.currentSession, JSON.stringify(session));
 }
 
-/**
- * Joriy sessiyani o'qiydi.
- * @returns {Object|null}
- */
 function loadSession() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.currentSession));
-  } catch {
-    return null;
-  }
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.currentSession));
+    } catch { return null; }
 }
 
-/**
- * Joriy sessiyani o'chiradi.
- */
 function clearSession() {
-  localStorage.removeItem(STORAGE_KEYS.currentSession);
+    localStorage.removeItem(STORAGE_KEYS.currentSession);
 }
 
 // -------------------------------------------------------
@@ -139,115 +168,84 @@ function clearSession() {
 // -------------------------------------------------------
 
 /**
- * Massivni tasodifiy tartibga aralashtirib qaytaradi (Fisher-Yates).
- * @param {Array} arr
- * @returns {Array}
+ * Massivni tasodifiy tartibga aralashtirish (Fisher-Yates algoritmi)
  */
 function shuffleArray(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+    if (!Array.isArray(arr)) return [];
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
 }
 
-/**
- * Sonni 2 xonali formatda qaytaradi (masalan: 9 → "09")
- * @param {number} n
- * @returns {string}
- */
-function padTwo(n) {
-  return String(n).padStart(2, '0');
-}
-
-/**
- * Sekundlarni "MM:SS" formatiga aylantiradi.
- * @param {number} seconds
- * @returns {string}
- */
 function formatTime(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${padTwo(m)}:${padTwo(s)}`;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-/**
- * Foizni hisoblaydi.
- * @param {number} correct
- * @param {number} total
- * @returns {number}
- */
 function calcPercent(correct, total) {
-  if (total === 0) return 0;
-  return Math.round((correct / total) * 100);
+    return total > 0 ? Math.round((correct / total) * 100) : 0;
 }
 
 /**
- * Natijaga qarab baho va xabar qaytaradi.
- * @param {number} percent
- * @returns {{ grade: string, message: string, emoji: string, color: string }}
+ * Natijaga qarab kengaytirilgan ma'lumotlar qaytaradi.
  */
 function getGrade(percent) {
-  if (percent >= 90) return { grade: 'A+', message: 'Ajoyib natija! Siz zo\'rsiz!', emoji: '🏆', color: '#00B894' };
-  if (percent >= 75) return { grade: 'A',  message: 'Zo\'r! Juda yaxshi natija!', emoji: '🌟', color: '#6C63FF' };
-  if (percent >= 60) return { grade: 'B',  message: 'Yaxshi natija! Davom eting!', emoji: '👍', color: '#4ECDC4' };
-  if (percent >= 45) return { grade: 'C',  message: 'O\'rtacha. Ko\'proq mashq qiling.', emoji: '📚', color: '#FDCB6E' };
-  if (percent >= 30) return { grade: 'D',  message: 'Yana urinib ko\'ring!', emoji: '💪', color: '#E17055' };
-  return { grade: 'F', message: 'Tayyorgarlik ko\'ring va qayta urinib ko\'ring!', emoji: '📖', color: '#FF6B6B' };
+    const data = [
+        { min: 90, grade: 'A+', msg: 'Siz koinot darajasidagi dahosiz!', emoji: '👑', color: '#00B894' },
+        { min: 75, grade: 'A',  msg: 'Juda yaxshi! Mukammallikka bir qadam!', emoji: '🌟', color: '#6C63FF' },
+        { min: 60, grade: 'B',  msg: 'Yaxshi, lekin yanada yaxshiroq bo\'lishi mumkin!', emoji: '💪', color: '#4ECDC4' },
+        { min: 45, grade: 'C',  msg: 'O\'rtacha natija, ko\'proq mutolaa qiling.', emoji: '📖', color: '#FDCB6E' },
+        { min: 0,  grade: 'F',  msg: 'Xafa bo\'lmang, qaytadan urinib ko'ring!', emoji: '🎯', color: '#FF6B6B' }
+    ];
+    return data.find(d => percent >= d.min);
 }
 
 // -------------------------------------------------------
-// 5. URL PARAMETER YORDAMCHILARI
+// 5. URL VA DOM BOSHQARUVI
 // -------------------------------------------------------
 
-/**
- * URL dan parametr o'qiydi.
- * @param {string} name
- * @returns {string|null}
- */
 function getUrlParam(name) {
-  return new URLSearchParams(window.location.search).get(name);
+    return new URLSearchParams(window.location.search).get(name);
 }
 
-// -------------------------------------------------------
-// 6. DOM YUKLANGANDA ISHLATILADIGAN INIT
-// -------------------------------------------------------
-
+// Sahifa yuklanganda bajariladigan ishlar
 document.addEventListener('DOMContentLoaded', () => {
-  // Mavzuni qo'llash
-  applyTheme(getCurrentTheme());
+    // 1. Mavzuni o'rnatish
+    applyTheme(getCurrentTheme());
 
-  // Barcha theme-toggle tugmalariga event qo'shish
-  document.querySelectorAll('.theme-toggle').forEach(btn => {
-    btn.addEventListener('click', toggleTheme);
-  });
+    // 2. Eventlarni bog'lash
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+        btn.addEventListener('click', toggleTheme);
+    });
 
-  // Sahifani fade-in bilan ko'rsatish
-  document.body.style.opacity = '0';
-  requestAnimationFrame(() => {
-    document.body.style.transition = 'opacity 0.4s ease';
-    document.body.style.opacity = '1';
-  });
+    // 3. Kirish animatsiyasi
+    document.body.classList.add('page-loaded');
+    
+    console.log("QuizMaster Pro App initialized...");
 });
 
 // -------------------------------------------------------
-// 7. GLOBAL EXPORT (boshqa fayllarda ishlatish uchun)
+// 6. GLOBAL EXPORT
 // -------------------------------------------------------
 window.QuizApp = {
-  getCurrentTheme,
-  applyTheme,
-  toggleTheme,
-  showToast,
-  getAllResults,
-  saveResult,
-  saveSession,
-  loadSession,
-  clearSession,
-  shuffleArray,
-  formatTime,
-  calcPercent,
-  getGrade,
-  getUrlParam,
-  padTwo
+    getCurrentTheme,
+    applyTheme,
+    toggleTheme,
+    showToast,
+    toggleLoader,
+    getAllResults,
+    saveResult,
+    saveSession,
+    loadSession,
+    clearSession,
+    shuffleArray,
+    formatTime,
+    calcPercent,
+    getGrade,
+    getUrlParam,
+    STORAGE_KEYS
 };
