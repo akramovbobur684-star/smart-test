@@ -224,7 +224,12 @@ $('themeBtn').addEventListener('click',()=>{A.theme=A.theme==='dark'?'light':'da
    BOSH SAHIFA
 ══════════════════════════════ */
 $('btnStartIQ').addEventListener('click',()=>{scr('s-iq');resetIQ()});
-$('btnHistory').addEventListener('click',()=>{if(A.iqScore===0&&!localStorage.getItem('it_data')){toast("Avval IQ testini bajaring!",'warn');return}updateDash();scr('s-dash');showSec('tarix')});
+
+$('.btnHistory').addEventListener('click', ()=>{ 
+    // Tekshiruv olib tashlandi
+    updateDash(); 
+    scr('dash'); 
+});
 
 /* ══════════════════════════════
    IQ TESTI
@@ -525,7 +530,11 @@ document.addEventListener('keydown',e=>{
     if(e.key==='ArrowLeft')$('btnPrev').click();
   }
 });
+// Eskisi:
+scr('s-iq');
 
+// Yangisi (to'g'ridan-to'g'ri fanlar paneliga):
+scr('dash');
 /* ══ ANTI-CHEAT ══ */
 document.addEventListener('contextmenu',e=>{if($('s-exam').classList.contains('on')){e.preventDefault();toast("Imtihon davomida o'ng tugma o'chirilgan.",'warn')}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&$('s-exam').classList.contains('on'))toast('⚠ Boshqa sahifaga o\'tish aniqlandi!','err')});
