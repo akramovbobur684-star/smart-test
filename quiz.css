@@ -1,337 +1,321 @@
 /* ============================================================
-   quiz.css — Test sahifasi uslublari
+   quiz.css — Test Sahifasi uchun Professional Uslublar
    ============================================================ */
 
-/* ---------- Page Layout ---------- */
+/* ---------- 1. PAGE LAYOUT & SETUP ---------- */
 .quiz-page {
-  min-height: calc(100vh - 70px);
-  padding: 32px 0 48px;
+    min-height: calc(100vh - 70px);
+    padding: 40px 0 60px;
+    background: radial-gradient(circle at 0% 0%, var(--accent-glow) 0%, transparent 25%),
+                radial-gradient(circle at 100% 100%, var(--accent-glow) 0%, transparent 25%);
 }
 
 .quiz-page .container {
-  max-width: 780px;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
-/* ---------- Top Bar ---------- */
+/* ---------- 2. TOP BAR (STATS & TIMER) ---------- */
 .quiz-topbar {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 28px;
-  padding: 14px 20px;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 32px;
+    padding: 16px 24px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(8px);
 }
 
-/* Fan nomi pill */
+/* Subject Pill */
 .quiz-subject-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 16px;
-  border-radius: var(--radius-full);
-  background: rgba(108, 99, 255, 0.1);
-  border: 1px solid rgba(108, 99, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 18px;
+    border-radius: var(--radius-full);
+    background: rgba(108, 99, 255, 0.08);
+    border: 1px solid var(--accent-glow);
+    transition: var(--transition);
+}
+
+.quiz-subject-pill:hover {
+    background: rgba(108, 99, 255, 0.15);
 }
 
 .quiz-subject-text {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--subject-color, var(--accent));
-  white-space: nowrap;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--subject-color, var(--accent));
+    letter-spacing: 0.02em;
 }
 
-/* Progress bloki */
+/* Progress Indicator */
 .quiz-progress-block {
-  flex: 1;
-  min-width: 0;
+    flex: 1;
+    min-width: 0;
 }
 
 .quiz-counter {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    display: block;
 }
 
-/* ---------- Timer ---------- */
+.progress-bar-wrap {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--card-gradient, var(--accent));
+    width: 0%;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- 3. CIRCULAR TIMER ---------- */
 .timer-block {
-  position: relative;
-  width: 52px;
-  height: 52px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: relative;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .timer-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
 }
 
 .timer-track {
-  fill: none;
-  stroke: var(--bg-option);
-  stroke-width: 3;
+    fill: none;
+    stroke: var(--border-color);
+    stroke-width: 4;
 }
 
 .timer-ring {
-  fill: none;
-  stroke: var(--subject-color, var(--accent));
-  stroke-width: 3;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.9s linear;
+    fill: none;
+    stroke: var(--subject-color, var(--accent));
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
 }
 
 .timer-text {
-  position: relative;
-  z-index: 2;
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
-/* Vaqt qizarish animatsiyasi */
-.timer-warning .timer-ring {
-  stroke: var(--danger) !important;
-  animation: timerPulse 0.5s ease-in-out infinite alternate;
-}
-
-.timer-warning {
-  color: var(--danger) !important;
-  animation: timerPulse 0.5s ease-in-out infinite alternate;
+/* Timer Urgency States */
+.timer-warning .timer-ring { stroke: #fbbf24 !important; }
+.timer-danger .timer-ring { 
+    stroke: #ef4444 !important; 
+    animation: timerPulse 0.5s ease-in-out infinite alternate;
 }
 
 @keyframes timerPulse {
-  from { opacity: 1; }
-  to   { opacity: 0.5; }
+    from { transform: rotate(-90deg) scale(1); opacity: 1; }
+    to { transform: rotate(-90deg) scale(1.05); opacity: 0.8; }
 }
 
-/* ---------- Question Card ---------- */
+/* ---------- 4. QUESTION CARD ---------- */
 .question-card {
-  position: relative;
-  padding: 36px 36px 28px;
-  margin-bottom: 20px;
-  min-height: 140px;
+    position: relative;
+    padding: 44px 40px 32px;
+    background: var(--bg-card);
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    margin-bottom: 24px;
+    overflow: visible;
 }
 
 .question-number-badge {
-  position: absolute;
-  top: -12px;
-  left: 28px;
-  padding: 4px 14px;
-  background: var(--subject-color, var(--accent));
-  color: white;
-  border-radius: var(--radius-full);
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+    position: absolute;
+    top: -14px;
+    left: 32px;
+    padding: 6px 18px;
+    background: var(--card-gradient, var(--accent));
+    color: white;
+    border-radius: var(--radius-md);
+    font-weight: 800;
+    font-size: 0.85rem;
+    box-shadow: 0 8px 16px -4px var(--accent-glow);
 }
 
 .question-text {
-  font-family: var(--font-display);
-  font-size: clamp(1rem, 2.5vw, 1.25rem);
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.55;
-  margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.5;
 }
 
-/* ---------- Options Grid ---------- */
+/* ---------- 5. OPTIONS GRID & BUTTONS ---------- */
 .options-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 28px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
 }
 
-/* ---------- Option Button ---------- */
 .option-btn {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
-  background: var(--bg-option);
-  border: 2px solid transparent;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition);
-  text-align: left;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  font-weight: 500;
-  width: 100%;
-  line-height: 1.4;
-  opacity: 0; /* animate-fadeInUp tomonidan ko'rinadi */
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: left;
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
 }
 
-.option-btn:hover {
-  background: var(--bg-option-hover);
-  border-color: var(--subject-color, var(--accent));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+.option-btn:hover:not(:disabled) {
+    border-color: var(--subject-color, var(--accent));
+    background: var(--bg-secondary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
 }
 
 .option-btn.selected {
-  background: rgba(108, 99, 255, 0.1);
-  border-color: var(--subject-color, var(--accent));
-  color: var(--subject-color, var(--accent));
-  box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.08);
+    background: rgba(108, 99, 255, 0.05);
+    border-color: var(--subject-color, var(--accent));
+    box-shadow: 0 0 0 4px var(--accent-glow);
+}
+
+.option-letter {
+    width: 36px;
+    height: 36px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
 }
 
 .option-btn.selected .option-letter {
-  background: var(--subject-color, var(--accent));
-  color: white;
-  border-color: transparent;
+    background: var(--card-gradient, var(--accent));
+    color: white;
+    border-color: transparent;
 }
 
-/* Option harf badge'i */
-.option-letter {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.8rem;
-  flex-shrink: 0;
-  transition: var(--transition);
-  background: var(--bg-card);
-}
-
-.option-text {
-  flex: 1;
-  line-height: 1.4;
-}
-
-/* ---------- Bottom Bar ---------- */
+/* ---------- 6. QUIZ BOTTOM BAR ---------- */
 .quiz-bottom-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 20px;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 28px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
 }
 
-/* Savol noqtalari */
 .question-dots {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  max-width: 360px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    max-width: 400px;
 }
 
 .q-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--bg-option);
-  border: 1.5px solid var(--border-color);
-  cursor: default;
-  padding: 0;
-  transition: var(--transition);
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    background: var(--border-color);
+    transition: var(--transition);
 }
 
 .q-dot.active {
-  background: var(--subject-color, var(--accent));
-  border-color: var(--subject-color, var(--accent));
-  transform: scale(1.3);
-  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+    background: var(--subject-color, var(--accent));
+    transform: scale(1.4);
+    box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .q-dot.answered {
-  background: var(--success);
-  border-color: var(--success);
+    background: #10b981; /* Success color */
 }
 
-.q-dot.skipped {
-  background: var(--warning);
-  border-color: var(--warning);
-  opacity: 0.7;
-}
-
-/* Keyingi tugma — javob bo'lsa yanada ko'zga ko'rinadi */
-#btn-next {
-  background: var(--subject-color, var(--accent));
-  flex-shrink: 0;
-  font-size: 0.95rem;
-  padding: 13px 28px;
-}
-
-#btn-next:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
-#btn-next.has-answer {
-  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
-}
-
-/* ---------- Error State ---------- */
-.error-state {
-  padding: 80px 20px;
-}
-
-.error-state h2 {
-  margin: 16px 0 8px;
-  font-size: 1.5rem;
-}
-
-.error-state p {
-  color: var(--text-secondary);
-}
-
-/* ---------- Responsive ---------- */
-@media (max-width: 640px) {
-  .quiz-topbar {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-  }
-
-  .quiz-subject-pill { grid-column: 1; }
-  .timer-block { grid-row: 1 / 3; grid-column: 2; }
-  .quiz-progress-block { grid-column: 1; }
-
-  .options-grid {
-    grid-template-columns: 1fr;
+/* Button Next */
+.btn-next-quiz {
+    padding: 14px 32px;
+    background: var(--card-gradient, var(--accent));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
     gap: 10px;
-  }
-
-  .question-card {
-    padding: 28px 20px 20px;
-  }
-
-  .quiz-bottom-bar {
-    flex-direction: column;
-  }
-
-  .question-dots {
-    max-width: 100%;
-    justify-content: center;
-  }
-
-  #btn-next { width: 100%; }
 }
 
-@media (max-width: 400px) {
-  .quiz-topbar { padding: 12px 14px; }
-  .option-btn { padding: 13px 14px; font-size: 0.88rem; }
+.btn-next-quiz:hover {
+    filter: brightness(1.1);
+    transform: translateX(5px);
+}
+
+.btn-next-quiz:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ---------- 7. RESPONSIVE DESIGN ---------- */
+@media (max-width: 768px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .quiz-topbar { grid-template-columns: 1fr auto; }
+    .quiz-progress-block { grid-column: 1 / -1; order: 3; }
+    .question-card { padding: 35px 25px 25px; }
+}
+
+@media (max-width: 480px) {
+    .quiz-page { padding: 20px 0; }
+    .quiz-bottom-bar { flex-direction: column; text-align: center; }
+    .btn-next-quiz { width: 100%; justify-content: center; }
+}
+
+/* Error/Empty States */
+.quiz-error-container {
+    text-align: center;
+    padding: 60px 0;
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    display: block;
 }
