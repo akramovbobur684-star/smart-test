@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IntelliTest — Aqlli Test Platformasi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css"/>
+</head>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="ld-box">
+    <div class="ld-logo">IT</div>
+    <div class="ld-bar"><div class="ld-fill"></div></div>
+    <p class="ld-txt">IntelliTest yuklanmoqda…</p>
+  </div>
+</div>
+
+<!-- TEMA TUGMASI -->
+<button class="theme-btn" id="themeBtn" title="Temani almashtirish">☀</button>
+
+<!-- ══════════════════════════════
+     EKRAN 1 — BOSH SAHIFA
+══════════════════════════════ -->
+<section id="s-home" class="scr on">
+  <div class="home-bg">
+    <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+    <div class="grid-bg"></div>
+  </div>
+  <nav class="top-nav">
+    <div class="brand"><div class="bmark">IT</div><span class="bname">IntelliTest</span></div>
+    <div class="nav-tag">Aqlli Test Platformasi</div>
+  </nav>
+  <div class="home-content">
+    <div class="badge">🇺🇿 O'zbek Tilida · Adaptiv · Xavfsiz</div>
+    <h1>Bilimingizni<br><em>aniq o'lchang.</em></h1>
+    <p class="home-sub">Matematika, Fizika, Ingliz tili, Dasturlash va Tarix fanlarini qamrab oluvchi professional test platformasi — kognitiv profillashtirish asosida adaptiv qiyinchilik darajasi bilan.</p>
+    <div class="home-chips">
+      <div class="chip"><b>100</b> Savol</div>
+      <div class="chip"><b>5</b> Fan</div>
+      <div class="chip"><b>120</b> daqiqa</div>
+      <div class="chip"><b>3</b> Daraja</div>
+    </div>
+    <div class="home-actions">
+      <button class="btn btn-p" id="btnStartIQ">IQ Baholashni Boshlash →</button>
+      <button class="btn btn-g" id="btnHistory">Natijalarim</button>
+    </div>
+    <p class="home-note">⚡ Avval 5 daqiqalik IQ kalibrlash testi o'tkaziladi — bu sizning qiyinchilik darajangizni belgilaydi.</p>
+  </div>
+  <div class="float-cards">
+    <div class="fc" style="--fc-c:#f59e0b"><span class="fc-icon">∑</span><span class="fc-label">Matematika</span></div>
+    <div class="fc" style="--fc-c:#06b6d4"><span class="fc-icon">⚛</span><span class="fc-label">Fizika</span></div>
+    <div class="fc" style="--fc-c:#8b5cf6"><span class="fc-icon">A</span><span class="fc-label">Ingliz tili</span></div>
+    <div class="fc" style="--fc-c:#10b981"><span class="fc-icon">&lt;/&gt;</span><span class="fc-label">Dasturlash</span></div>
+    <div class="fc" style="--fc-c:#ef4444"><span class="fc-icon">⏳</span><span class="fc-label">Tarix</span></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     EKRAN 2 — IQ TESTI
+══════════════════════════════ -->
+<section id="s-iq" class="scr">
+  <div class="iq-head">
+    <div class="brand"><div class="bmark">IT</div><span class="bname">IntelliTest</span></div>
+    <div class="iq-prog-wrap">
+      <span class="iq-prog-lbl">IQ Baholash</span>
+      <div class="iq-prog-bar"><div class="iq-prog-fill" id="iqFill"></div></div>
+      <span class="iq-prog-cnt" id="iqCnt">0 / 10</span>
+    </div>
+    <div class="timer-chip" id="iqTimer">05:00</div>
+  </div>
+  <div class="iq-body">
+    <div class="iq-intro" id="iqIntro">
+      <div class="iq-intro-ico">🧠</div>
+      <h2>Kognitiv Baholash</h2>
+      <p>10 ta savol orqali mantiqiy fikrlash, naqsh aniqlash va abstrak tafakkur qobiliyatingiz o'lchanadi. Natija asosida test qiyinchilik darajasi belgilanadi.</p>
+      <ul class="iq-rules">
+        <li>✓ 10 ta savol, 5 daqiqa</li>
+        <li>✓ Noto'g'ri javob uchun jarimasi yo'q</li>
+        <li>✓ Javob bergandan so'ng o'zgartirish mumkin emas</li>
+        <li>✓ Natija: Oson / O'rta / Qiyin daraja</li>
+      </ul>
+      <button class="btn btn-p" id="btnIQGo">Baholashni Boshlash →</button>
+    </div>
+    <div class="iq-qwrap" id="iqQwrap" style="display:none">
+      <div class="q-meta">
+        <span class="q-cat" id="iqCat">Naqshni aniqlash</span>
+        <span class="q-num" id="iqQNum">1 / 10</span>
+      </div>
+      <div class="q-text" id="iqQText"></div>
+      <div class="opts" id="iqOpts"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     EKRAN 3 — DASHBOARD
+══════════════════════════════ -->
+<section id="s-dash" class="scr">
+  <div class="sidebar">
+    <div class="brand"><div class="bmark">IT</div><span class="bname">IntelliTest</span></div>
+    <div class="user-card">
+      <div class="avatar" id="userAvatar">O</div>
+      <div>
+        <div class="uname" id="userName">O'quvchi</div>
+        <div class="ulevel"><span class="ldot" id="ldot"></span><span id="userLevel">O'rta</span></div>
+      </div>
+    </div>
+    <nav class="snav">
+      <button class="sni on" data-sec="fanlar"><span class="sni-ico">📚</span> Fanlar</button>
+      <button class="sni" data-sec="iq"><span class="sni-ico">🧠</span> IQ Natija</button>
+      <button class="sni" data-sec="psych"><span class="sni-ico">🔬</span> Psixologiya</button>
+      <button class="sni" data-sec="tarix"><span class="sni-ico">📊</span> Tarixim</button>
+    </nav>
+    <button class="btn btn-p sb-btn" id="btnFullExam">🎯 To'liq Imtihon</button>
+    <button class="btn btn-g sb-btn red" id="btnReset">↺ Profilni Tiklash</button>
+  </div>
+  <div class="dash-main">
+    <!-- FANLAR -->
+    <div class="dsec on" id="sec-fanlar">
+      <div class="dwelcome">
+        <h2>Xush kelibsiz, <span id="dashName">O'quvchi</span>!</h2>
+        <p>Alohida fan bo'yicha mashq qiling yoki to'liq 2 soatlik imtihonni boshlang.</p>
+      </div>
+      <div class="subj-grid">
+        <div class="subj-card" style="--sc:#f59e0b">
+          <div class="subj-ico">∑</div>
+          <div class="subj-info">
+            <h3>Matematika</h3>
+            <p>Algebra, Hisob, Geometriya va Mantiq</p>
+            <div class="stags"><span class="stag">20 savol</span><span class="stag" id="mathSc">Urinilmagan</span></div>
+          </div>
+          <button class="subj-btn" data-sub="math">Mashq →</button>
+        </div>
+        <div class="subj-card" style="--sc:#06b6d4">
+          <div class="subj-ico">⚛</div>
+          <div class="subj-info">
+            <h3>Fizika</h3>
+            <p>Mexanika, Termodinamika va To'lqinlar</p>
+            <div class="stags"><span class="stag">20 savol</span><span class="stag" id="physicsSc">Urinilmagan</span></div>
+          </div>
+          <button class="subj-btn" data-sub="physics">Mashq →</button>
+        </div>
+        <div class="subj-card" style="--sc:#8b5cf6">
+          <div class="subj-ico">A</div>
+          <div class="subj-info">
+            <h3>Ingliz tili</h3>
+            <p>Grammatika, Leksika va Tushunish</p>
+            <div class="stags"><span class="stag">20 savol</span><span class="stag" id="englishSc">Urinilmagan</span></div>
+          </div>
+          <button class="subj-btn" data-sub="english">Mashq →</button>
+        </div>
+        <div class="subj-card" style="--sc:#10b981">
+          <div class="subj-ico">&lt;/&gt;</div>
+          <div class="subj-info">
+            <h3>Dasturlash</h3>
+            <p>Algoritmlar, Ma'lumot Tuzilmalari va Nazariya</p>
+            <div class="stags"><span class="stag">20 savol</span><span class="stag" id="programmingSc">Urinilmagan</span></div>
+          </div>
+          <button class="subj-btn" data-sub="programming">Mashq →</button>
+        </div>
+        <div class="subj-card" style="--sc:#ef4444">
+          <div class="subj-ico">⏳</div>
+          <div class="subj-info">
+            <h3>Tarix</h3>
+            <p>Jahon Voqealari, Sivilizatsiyalar va Sanalar</p>
+            <div class="stags"><span class="stag">20 savol</span><span class="stag" id="historySc">Urinilmagan</span></div>
+          </div>
+          <button class="subj-btn" data-sub="history">Mashq →</button>
+        </div>
+      </div>
+    </div>
+    <!-- IQ NATIJA -->
+    <div class="dsec" id="sec-iq">
+      <h2 style="margin-bottom:1.2rem">IQ Baholash Natijasi</h2>
+      <div class="iq-res-card">
+        <div class="gauge-wrap"><canvas id="iqGauge" width="160" height="160"></canvas>
+          <div class="gauge-lbl"><span id="iqScoreShow">--</span><small>/ 10</small></div>
+        </div>
+        <div class="iq-res-info">
+          <div class="iq-badge" id="iqLvlBadge">O'rta</div>
+          <p id="iqResDesc">IQ testini yakunlang, natijangiz bu yerda ko'rinadi.</p>
+          <div class="iq-breakdown" id="iqBreakdown"></div>
+        </div>
+      </div>
+    </div>
+    <!-- PSIXOLOGIYA -->
+    <div class="dsec" id="sec-psych">
+      <h2 style="margin-bottom:1.2rem">Psixologik Profil</h2>
+      <div class="psych-grid">
+        <div class="psych-card">
+          <h3>🎯 Diqqat Tendentsiyasi</h3>
+          <p>Javob naqshlaringizga ko'ra, siz ehtiyotkor mulohaza uslubiga ega bo'lgan analitik fikrlovchisiz.</p>
+          <div class="psych-bar"><div class="psych-fill" style="--w:72%"></div></div>
+          <span class="psych-lbl">Analitik Tafakkur — 72%</span>
+        </div>
+        <div class="psych-card">
+          <h3>⚡ Reaksiya Tezligi</h3>
+          <p>O'rtacha javob vaqtingiz kognitiv yukni o'rtacha darajada boshqarish qobiliyatiga ega ekanligingizni ko'rsatadi.</p>
+          <div class="psych-bar"><div class="psych-fill" style="--w:58%"></div></div>
+          <span class="psych-lbl">O'rtacha Tezlik — 58%</span>
+        </div>
+        <div class="psych-card">
+          <h3>🔄 Moslashuvchanlik</h3>
+          <p>Fanlar bo'ylab ko'rsatkichlaringiz kuchli lateral tafakkurni anglatadi.</p>
+          <div class="psych-bar"><div class="psych-fill" style="--w:85%"></div></div>
+          <span class="psych-lbl">Yuqori Moslashuvchanlik — 85%</span>
+        </div>
+        <div class="psych-card">
+          <h3>💡 Ishonch Indeksi</h3>
+          <p>Kamroq javob o'zgartirishingiz qaror qabul qilishda yuqori ishonchni ko'rsatadi.</p>
+          <div class="psych-bar"><div class="psych-fill" style="--w:63%"></div></div>
+          <span class="psych-lbl">Ishonchli — 63%</span>
+        </div>
+      </div>
+    </div>
+    <!-- TARIXIM -->
+    <div class="dsec" id="sec-tarix">
+      <h2 style="margin-bottom:1.2rem">Imtihon Tarixi</h2>
+      <div class="hist-list" id="histList"><div class="hist-empty">Hali yakunlangan imtihon yo'q.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     EKRAN 4 — IMTIHON
+══════════════════════════════ -->
+<section id="s-exam" class="scr">
+  <div class="exam-top">
+    <div class="exam-brand"><div class="bmark sm">IT</div><span id="examTitle">Imtihon</span></div>
+    <div class="exam-tabs" id="examTabs"></div>
+    <div class="exam-ctrl">
+      <div class="etimer" id="examTimer"><span>⏱</span><span id="timerTxt">2:00:00</span></div>
+      <button class="btn btn-p sm" id="btnSubmit">Topshirish</button>
+    </div>
+  </div>
+  <div class="eprog"><div class="eprog-fill" id="eprog"></div></div>
+  <div class="exam-body">
+    <div class="qpanel">
+      <div class="qhead">
+        <span class="qstag" id="qstag">Matematika</span>
+        <span class="q-num" id="qnum">1 / 20</span>
+        <span class="qdiff" id="qdiff">O'rta</span>
+      </div>
+      <div class="qtext" id="qtext">Savol yuklanmoqda…</div>
+      <div class="qopts" id="qopts"></div>
+      <div class="afb" id="afb" style="display:none"></div>
+      <div class="qnav-btns">
+        <button class="btn btn-g sm" id="btnPrev">← Oldingi</button>
+        <button class="btn btn-p sm" id="btnNext">Keyingi →</button>
+      </div>
+    </div>
+    <div class="npanel">
+      <div class="np-title">Savol Navigatsiyasi</div>
+      <div class="np-legend">
+        <span class="ok">✓ Javob berildi</span>
+        <span class="acc">● Joriy</span>
+        <span>○ Javobsiz</span>
+      </div>
+      <div class="qgrid" id="qgrid"></div>
+      <div class="mini-stats">
+        <div class="mstat"><span class="mstat-val" id="msAns">0</span><span class="mstat-lbl">Javoblandi</span></div>
+        <div class="mstat"><span class="mstat-val" id="msRem">100</span><span class="mstat-lbl">Qoldi</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     EKRAN 5 — NATIJALAR
+══════════════════════════════ -->
+<section id="s-res" class="scr">
+  <div class="res-head">
+    <div class="brand"><div class="bmark">IT</div><span class="bname">IntelliTest</span></div>
+    <button class="btn btn-g sm" id="btnBackDash">← Dashboard</button>
+  </div>
+  <div class="res-body">
+    <div class="res-hero">
+      <div class="res-trophy" id="trophy">🏆</div>
+      <h1 class="res-title">Imtihon Yakunlandi!</h1>
+      <div class="res-overall">
+        <div class="ovr-score"><span id="ovScore">0</span><span class="score-den">/ 100</span></div>
+        <div>
+          <div class="ovr-grade" id="ovGrade">A</div>
+          <div class="ovr-lbl">Umumiy Ball</div>
+          <div class="ovr-time" id="ovTime">Vaqt: 0:00</div>
+        </div>
+      </div>
+    </div>
+    <div class="res-grid">
+      <div class="rcard wide">
+        <h3>Fan bo'yicha Ko'rsatkichlar</h3>
+        <div class="sr-list" id="srList"></div>
+      </div>
+      <div class="rcard">
+        <h3>Kompetentlik Radari</h3>
+        <div class="chart-box"><canvas id="radarCh"></canvas></div>
+      </div>
+      <div class="rcard">
+        <h3>Ball Taqsimoti</h3>
+        <div class="chart-box"><canvas id="barCh"></canvas></div>
+      </div>
+      <div class="rcard">
+        <h3>Javob Tahlili</h3>
+        <div class="chart-box sm"><canvas id="dntCh"></canvas></div>
+        <div class="dnt-legend" id="dntLeg"></div>
+      </div>
+      <div class="rcard wide">
+        <h3>Savol Ko'rib Chiqish</h3>
+        <div class="rev-filters">
+          <button class="rfbtn on" data-f="all">Barchasi</button>
+          <button class="rfbtn" data-f="ok">To'g'ri</button>
+          <button class="rfbtn" data-f="ng">Noto'g'ri</button>
+          <button class="rfbtn" data-f="sk">O'tkazilgan</button>
+        </div>
+        <div class="rev-list" id="revList"></div>
+      </div>
+    </div>
+    <div class="res-actions">
+      <button class="btn btn-p" id="btnRetake">Qayta Topshirish</button>
+      <button class="btn btn-g" id="btnHome">Bosh Sahifa</button>
+    </div>
+  </div>
+</section>
+
+<!-- TOAST -->
+<div id="toasts"></div>
+<!-- MODAL -->
+<div id="modal">
+  <div class="mbox">
+    <div class="mtitle" id="mTitle">Tasdiqlash</div>
+    <div class="mbody" id="mBody">Ishonchingiz komilmi?</div>
+    <div class="macts">
+      <button class="btn btn-g sm" id="mCancel">Bekor qilish</button>
+      <button class="btn btn-p sm" id="mOk">Tasdiqlash</button>
+    </div>
+  </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
