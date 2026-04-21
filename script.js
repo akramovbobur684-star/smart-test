@@ -3,7 +3,6 @@
    Har bir fandan 30+ savol (har sessiyada 20 ta tasodifiy tanlanadi)
 ══════════════════════════════════════════════ */
 const BANKS = {
-
 math:[
   {q:"sin(x) ning hosilasi nima?",o:["cos(x)","-cos(x)","sin(x)","-sin(x)"],a:0},
   {q:"2x + 5 = 13 dan x ni toping.",o:["3","4","5","6"],a:1},
