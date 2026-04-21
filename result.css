@@ -1,0 +1,404 @@
+/* ============================================================
+   result.css — Natija sahifasi uslublari
+   ============================================================ */
+
+/* ---------- Page ---------- */
+.result-page {
+  padding: 48px 0 80px;
+  min-height: calc(100vh - 70px);
+}
+
+.result-page .container {
+  max-width: 720px;
+}
+
+/* ---------- Score Card ---------- */
+.score-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  padding: 48px 40px 36px;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 28px;
+}
+
+/* Karta yuqori qismida gradient chiziq */
+.score-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg,
+    var(--grade-color, var(--accent)),
+    var(--accent-light),
+    var(--grade-color, var(--accent))
+  );
+  background-size: 200% 100%;
+  animation: gradientShift 3s linear infinite;
+}
+
+@keyframes gradientShift {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* Arxa fon ranglanishi */
+.score-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle,
+    rgba(108, 99, 255, 0.06) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* ---------- Confetti ---------- */
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  to {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* ---------- Grade Display ---------- */
+.grade-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 2;
+}
+
+.grade-emoji {
+  font-size: 2.4rem;
+  animation: bounceIn 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes bounceIn {
+  0%   { transform: scale(0.3); opacity: 0; }
+  50%  { transform: scale(1.1); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+.grade-badge {
+  padding: 6px 18px;
+  background: var(--grade-color, var(--accent));
+  color: white;
+  border-radius: var(--radius-full);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 16px rgba(108, 99, 255, 0.35);
+  animation: fadeInUp 0.5s 0.2s both;
+}
+
+/* ---------- Result Subject / Message ---------- */
+.result-subject {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 2;
+  animation: fadeInUp 0.5s 0.3s both;
+}
+
+.result-message {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 2;
+  animation: fadeInUp 0.5s 0.4s both;
+}
+
+/* ---------- Percent Ring ---------- */
+.percent-ring-wrapper {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 32px;
+  animation: scaleIn 0.6s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.percent-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--bg-option);
+  stroke-width: 8;
+}
+
+.ring-progress {
+  fill: none;
+  stroke: var(--grade-color, var(--accent));
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 6px var(--grade-color, var(--accent)));
+}
+
+.percent-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.percent-number {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.percent-symbol {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.percent-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ---------- Result Stats ---------- */
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+  animation: fadeInUp 0.5s 0.6s both;
+}
+
+.result-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  background: var(--bg-option);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.result-stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.result-stat-item.correct { border-color: rgba(0, 184, 148, 0.2); }
+.result-stat-item.wrong   { border-color: rgba(255, 107, 107, 0.2); }
+.result-stat-item.skipped { border-color: rgba(253, 203, 110, 0.2); }
+.result-stat-item.time    { border-color: rgba(108, 99, 255, 0.2); }
+
+.stat-icon { font-size: 1.2rem; }
+
+.stat-val {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.stat-lbl {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ---------- Action Buttons ---------- */
+.result-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.5s 0.7s both;
+}
+
+.result-actions .btn {
+  min-width: 180px;
+}
+
+/* ---------- Review Section ---------- */
+.review-section {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.review-header {
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.review-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.review-list {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------- Review Item ---------- */
+.review-item {
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-option);
+  transition: var(--transition);
+  opacity: 0;
+}
+
+.review-item.correct { border-left: 3px solid var(--success); }
+.review-item.wrong   { border-left: 3px solid var(--danger); }
+.review-item.skipped { border-left: 3px solid var(--warning); }
+
+.review-item:hover {
+  transform: translateX(3px);
+  box-shadow: var(--shadow-sm);
+}
+
+.review-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.review-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.review-status-icon { font-size: 1rem; }
+
+.review-question {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.review-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.review-answer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.ra-label {
+  color: var(--text-muted);
+  min-width: 110px;
+  flex-shrink: 0;
+}
+
+/* Javob tegchalari */
+.ua {
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.ua.correct { background: rgba(0, 184, 148, 0.12); color: var(--success); }
+.ua.wrong   { background: rgba(255, 107, 107, 0.12); color: var(--danger); }
+.ua.skipped { background: rgba(253, 203, 110, 0.12); color: #E17055; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .score-card { padding: 36px 20px 28px; }
+
+  .result-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .result-actions { flex-direction: column; }
+  .result-actions .btn { width: 100%; }
+
+  .percent-ring-wrapper { width: 140px; height: 140px; }
+  .percent-number { font-size: 2.2rem; }
+
+  .review-header { padding: 16px 20px; }
+  .review-list { padding: 12px; gap: 10px; }
+  .review-item { padding: 13px 14px; }
+  .ra-label { min-width: 90px; }
+}
+
+@media (max-width: 380px) {
+  .grade-display { flex-direction: column; gap: 8px; }
+  .result-stats { grid-template-columns: repeat(2, 1fr); }
+}
