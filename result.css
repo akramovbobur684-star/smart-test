@@ -1,404 +1,423 @@
-/* ============================================================
-   result.css — Natija sahifasi uslublari
-   ============================================================ */
+/**
+ * ============================================================
+ * quiz.js — QuizMaster Pro Test Engine (v2.0)
+ * Mantiq: Savollar, Timer, Progress, Sessiya, Nuqtalar
+ * ============================================================
+ */
 
-/* ---------- Page ---------- */
-.result-page {
-  padding: 48px 0 80px;
-  min-height: calc(100vh - 70px);
+'use strict';
+
+// -------------------------------------------------------
+// 1. TEST HOLATI (Advanced State Management)
+// -------------------------------------------------------
+const QuizState = {
+    subjectIndex: 0,
+    questions: [],
+    currentIndex: 0,
+    answers: [],
+    selectedOption: null,
+    timeLeft: 0,
+    totalTime: 0,
+    timerInterval: null,
+    isFinished: false,
+    startTime: null,
+    endTime: null,
+    shuffledOptions: [],
+    timePerQuestionLogs: [], // Har bir savolga sarflangan vaqt logi
+    lastActionTimestamp: null
+};
+
+const TIME_PER_QUESTION = 30; // 30 soniya har bir savol uchun
+const CIRCUMFERENCE = 125.66; // 2 * PI * 20 (Ring uchun)
+
+// -------------------------------------------------------
+// 2. TESTNI BOSHLASH VA TIKLASH
+// -------------------------------------------------------
+
+/**
+ * Testni boshlash funksiyasi
+ * @param {number} idx - Fan indeksi
+ * @param {boolean} resume - Sessiyadan tiklash
+ */
+function startQuiz(idx, resume = false) {
+    const data = window.QUIZ_DATA[idx];
+    if (!data) return showError('Tanlangan fan ma\'lumotlari topilmadi.');
+
+    if (resume) {
+        const saved = QuizApp.loadSession();
+        if (saved && saved.subjectIndex === idx && saved.fullState) {
+            Object.assign(QuizState, saved.fullState);
+            renderQuestion();
+            initDotsNavigation();
+            return;
+        }
+    }
+
+    // Holatni tozalash va yangi testni sozlash
+    QuizState.subjectIndex = idx;
+    QuizState.questions = QuizApp.shuffleArray(data.questions);
+    QuizState.currentIndex = 0;
+    QuizState.answers = new Array(QuizState.questions.length).fill(undefined);
+    QuizState.timePerQuestionLogs = new Array(QuizState.questions.length).fill(0);
+    QuizState.selectedOption = null;
+    QuizState.isFinished = false;
+    QuizState.startTime = Date.now();
+    QuizState.lastActionTimestamp = Date.now();
+    QuizState.totalTime = QuizState.questions.length * TIME_PER_QUESTION;
+
+    // Boshlang'ich UI sozlamalari
+    initDotsNavigation();
+    saveCurrentState();
+    renderQuestion();
+    
+    // Kirish xabarnomasi
+    if (window.QuizApp && QuizApp.showToast) {
+        QuizApp.showToast(`${data.subject} testi boshlandi! Omad!`, 'info');
+    }
 }
 
-.result-page .container {
-  max-width: 720px;
+// -------------------------------------------------------
+// 3. SAVOLNI RENDER QILISH (UI Logic)
+// -------------------------------------------------------
+
+function renderQuestion() {
+    if (QuizState.isFinished) return;
+
+    const currentQuestion = QuizState.questions[QuizState.currentIndex];
+    const totalQuestions = QuizState.questions.length;
+    const currentNum = QuizState.currentIndex + 1;
+    const subject = window.QUIZ_DATA[QuizState.subjectIndex];
+
+    // Matnlarni o'rnatish
+    setInner('quiz-subject-name', subject.subject);
+    setInner('quiz-question-counter', `${currentNum} / ${totalQuestions}`);
+    setInner('quiz-question-text', currentQuestion.question);
+    
+    // Badge yangilash (S-1 formatida)
+    const badge = document.getElementById('question-badge');
+    if (badge) badge.textContent = `S–${currentNum}`;
+
+    // Progress Bar yangilash
+    const pct = Math.round(((currentNum - 1) / totalQuestions) * 100);
+    const progressBar = document.getElementById('quiz-progress-bar');
+    if (progressBar) {
+        progressBar.style.width = `${pct}%`;
+        progressBar.style.backgroundColor = subject.color;
+    }
+    setInner('quiz-progress-text', `${pct}% bajarildi`);
+
+    // Variantlarni tozalash va chizish
+    const optionsGrid = document.getElementById('quiz-options');
+    if (!optionsGrid) return;
+    optionsGrid.innerHTML = '';
+
+    // Variantlarni aralashtirish
+    QuizState.shuffledOptions = QuizApp.shuffleArray(currentQuestion.options);
+
+    QuizState.shuffledOptions.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn animate-fadeInUp';
+        btn.style.animationDelay = `${index * 0.1}s`;
+        
+        const letter = String.fromCharCode(65 + index); // A, B, C, D
+        btn.innerHTML = `
+            <span class="option-letter">${letter}</span>
+            <span class="option-text">${opt}</span>
+        `;
+
+        // Agar bu savolga oldin javob berilgan bo'lsa (back/resume)
+        if (QuizState.answers[QuizState.currentIndex] === opt) {
+            btn.classList.add('selected');
+        }
+
+        btn.onclick = () => handleOptionSelection(btn, opt);
+        optionsGrid.appendChild(btn);
+    });
+
+    updateNavigationUI();
+    resetTimer();
+    saveCurrentState();
+
+    // Dinamik ranglarni qo'llash
+    document.documentElement.style.setProperty('--subject-color', subject.color);
+    document.documentElement.style.setProperty('--accent', subject.color);
 }
 
-/* ---------- Score Card ---------- */
-.score-card {
-  position: relative;
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color);
-  padding: 48px 40px 36px;
-  text-align: center;
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  margin-bottom: 28px;
+// -------------------------------------------------------
+// 4. JAVOB TANLASH VA NAVIGATSIYA
+// -------------------------------------------------------
+
+function handleOptionSelection(element, value) {
+    if (QuizState.isFinished) return;
+
+    const allBtns = document.querySelectorAll('.option-btn');
+    allBtns.forEach(btn => btn.classList.remove('selected'));
+    
+    element.classList.add('selected');
+    QuizState.selectedOption = value;
+    QuizState.answers[QuizState.currentIndex] = value;
+
+    // Logika: Savolga sarflangan vaqtni hisoblash
+    const now = Date.now();
+    QuizState.timePerQuestionLogs[QuizState.currentIndex] += Math.round((now - QuizState.lastActionTimestamp) / 1000);
+    QuizState.lastActionTimestamp = now;
+
+    updateNavigationUI();
+    saveCurrentState();
 }
 
-/* Karta yuqori qismida gradient chiziq */
-.score-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg,
-    var(--grade-color, var(--accent)),
-    var(--accent-light),
-    var(--grade-color, var(--accent))
-  );
-  background-size: 200% 100%;
-  animation: gradientShift 3s linear infinite;
+/**
+ * Nuqtalar (dots) navigatsiyasini yaratish
+ */
+function initDotsNavigation() {
+    const dotsContainer = document.getElementById('question-dots');
+    if (!dotsContainer) return;
+
+    dotsContainer.innerHTML = '';
+    QuizState.questions.forEach((_, index) => {
+        const dot = document.createElement('div');
+        dot.className = 'q-dot';
+        dot.onclick = () => jumpToQuestion(index);
+        dotsContainer.appendChild(dot);
+    });
 }
 
-@keyframes gradientShift {
-  from { background-position: 200% 0; }
-  to   { background-position: -200% 0; }
+function updateNavigationUI() {
+    const nextBtn = document.getElementById('btn-next');
+    if (nextBtn) {
+        const isLast = QuizState.currentIndex === QuizState.questions.length - 1;
+        const hasAns = QuizState.answers[QuizState.currentIndex] !== undefined;
+
+        nextBtn.innerHTML = isLast ? 'Natijani ko\'rish ✅' : 'Keyingisi →';
+        nextBtn.disabled = false; 
+        nextBtn.classList.toggle('has-answer', hasAns);
+    }
+
+    // Nuqtalar holatini yangilash
+    const dots = document.querySelectorAll('.q-dot');
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === QuizState.currentIndex);
+        dot.classList.toggle('answered', QuizState.answers[index] !== undefined && QuizState.answers[index] !== null);
+    });
 }
 
-/* Arxa fon ranglanishi */
-.score-card::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle,
-    rgba(108, 99, 255, 0.06) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
+function jumpToQuestion(index) {
+    if (QuizState.isFinished || index === QuizState.currentIndex) return;
+    
+    // Hozirgi holatni saqlab o'tish
+    if (QuizState.answers[QuizState.currentIndex] === undefined) {
+        QuizState.answers[QuizState.currentIndex] = null;
+    }
+    
+    QuizState.currentIndex = index;
+    QuizState.selectedOption = QuizState.answers[index] || null;
+    QuizState.lastActionTimestamp = Date.now();
+    renderQuestion();
 }
 
-/* ---------- Confetti ---------- */
-.confetti-container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 10;
+function goNext() {
+    if (QuizState.isFinished) return;
+
+    // Vaqt logini yangilash
+    const now = Date.now();
+    QuizState.timePerQuestionLogs[QuizState.currentIndex] += Math.round((now - QuizState.lastActionTimestamp) / 1000);
+    QuizState.lastActionTimestamp = now;
+
+    if (QuizState.answers[QuizState.currentIndex] === undefined) {
+        QuizState.answers[QuizState.currentIndex] = null;
+    }
+
+    if (QuizState.currentIndex < QuizState.questions.length - 1) {
+        QuizState.currentIndex++;
+        QuizState.selectedOption = QuizState.answers[QuizState.currentIndex] || null;
+        renderQuestion();
+    } else {
+        finishQuiz();
+    }
 }
 
-.confetti-piece {
-  position: absolute;
-  top: -10px;
-  animation: confettiFall linear forwards;
+// -------------------------------------------------------
+// 5. TIMER VA VAQT NAZORATI
+// -------------------------------------------------------
+
+function resetTimer() {
+    stopTimer();
+    QuizState.timeLeft = TIME_PER_QUESTION;
+    updateTimerDisplay();
+
+    QuizState.timerInterval = setInterval(() => {
+        QuizState.timeLeft--;
+        updateTimerDisplay();
+
+        if (QuizState.timeLeft <= 0) {
+            stopTimer();
+            if (window.QuizApp && QuizApp.showToast) {
+                QuizApp.showToast('Vaqt tugadi! Keyingi savolga o\'tildi.', 'warning');
+            }
+            goNext();
+        }
+    }, 1000);
 }
 
-@keyframes confettiFall {
-  to {
-    transform: translateY(100vh) rotate(720deg);
-    opacity: 0;
-  }
+function updateTimerDisplay() {
+    const textEl = document.getElementById('quiz-timer');
+    const ringEl = document.getElementById('timer-ring');
+    if (!textEl) return;
+
+    textEl.textContent = QuizApp.formatTime(QuizState.timeLeft);
+
+    // Urgency styling
+    if (QuizState.timeLeft <= 10) {
+        textEl.style.color = '#ef4444';
+        textEl.classList.add('timer-warning');
+    } else {
+        textEl.style.color = 'inherit';
+        textEl.classList.remove('timer-warning');
+    }
+
+    // Ring SVG animation
+    if (ringEl) {
+        const offset = CIRCUMFERENCE * (1 - QuizState.timeLeft / TIME_PER_QUESTION);
+        ringEl.style.strokeDashoffset = offset;
+    }
 }
 
-/* ---------- Grade Display ---------- */
-.grade-display {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-bottom: 6px;
-  position: relative;
-  z-index: 2;
+function stopTimer() {
+    if (QuizState.timerInterval) {
+        clearInterval(QuizState.timerInterval);
+        QuizState.timerInterval = null;
+    }
 }
 
-.grade-emoji {
-  font-size: 2.4rem;
-  animation: bounceIn 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+// -------------------------------------------------------
+// 6. NATIJANI YAKUNLASH
+// -------------------------------------------------------
+
+function finishQuiz() {
+    stopTimer();
+    QuizState.isFinished = true;
+    QuizState.endTime = Date.now();
+
+    const subjectData = window.QUIZ_DATA[QuizState.subjectIndex];
+    let correctCount = 0;
+    const performanceDetails = [];
+
+    QuizState.questions.forEach((question, i) => {
+        const userSelection = QuizState.answers[i];
+        const isRight = userSelection === question.answer;
+        if (isRight) correctCount++;
+
+        performanceDetails.push({
+            questionText: question.question,
+            userAns: userSelection || "Javob berilmadi",
+            correctAns: question.answer,
+            isCorrect: isRight,
+            timeSpent: QuizState.timePerQuestionLogs[i]
+        });
+    });
+
+    const finalResult = {
+        subject: subjectData.subject,
+        subjectIndex: QuizState.subjectIndex,
+        correct: correctCount,
+        total: QuizState.questions.length,
+        percent: QuizApp.calcPercent(correctCount, QuizState.questions.length),
+        timeSpent: Math.round((QuizState.endTime - QuizState.startTime) / 1000),
+        detailedLogs: performanceDetails
+    };
+
+    // Ma'lumotlarni saqlash
+    QuizApp.saveResult(finalResult);
+    QuizApp.clearSession(); // Test tugagach joriy sessiyani o'chirish
+
+    // Natija sahifasiga yo'naltirish
+    const query = new URLSearchParams({
+        subject: finalResult.subject,
+        score: finalResult.correct,
+        total: finalResult.total,
+        time: finalResult.timeSpent,
+        pct: finalResult.percent
+    }).toString();
+
+    window.location.href = `result.html?${query}`;
 }
 
-@keyframes bounceIn {
-  0%   { transform: scale(0.3); opacity: 0; }
-  50%  { transform: scale(1.1); }
-  70%  { transform: scale(0.9); }
-  100% { transform: scale(1);   opacity: 1; }
+// -------------------------------------------------------
+// 7. YORDAMCHI FUNKSIYALAR VA EVENTLAR
+// -------------------------------------------------------
+
+function saveCurrentState() {
+    QuizApp.saveSession({
+        subjectIndex: QuizState.subjectIndex,
+        fullState: QuizState,
+        timestamp: Date.now()
+    });
 }
 
-.grade-badge {
-  padding: 6px 18px;
-  background: var(--grade-color, var(--accent));
-  color: white;
-  border-radius: var(--radius-full);
-  font-family: var(--font-display);
-  font-size: 1.2rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  box-shadow: 0 4px 16px rgba(108, 99, 255, 0.35);
-  animation: fadeInUp 0.5s 0.2s both;
+function setInner(id, content) {
+    const element = document.getElementById(id);
+    if (element) element.innerHTML = content;
 }
 
-/* ---------- Result Subject / Message ---------- */
-.result-subject {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-  position: relative;
-  z-index: 2;
-  animation: fadeInUp 0.5s 0.3s both;
+function showError(message) {
+    const container = document.getElementById('quiz-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="error-state text-center" style="padding: 100px 20px;">
+                <h1 style="font-size: 4rem;">⚠️</h1>
+                <h2>Xatolik yuz berdi</h2>
+                <p>${message}</p>
+                <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Bosh sahifaga qaytish</a>
+            </div>
+        `;
+    }
 }
 
-.result-message {
-  font-size: clamp(1.3rem, 3vw, 1.8rem);
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 28px;
-  position: relative;
-  z-index: 2;
-  animation: fadeInUp 0.5s 0.4s both;
-}
+// Klaviatura boshqaruvi
+document.addEventListener('keydown', (event) => {
+    if (QuizState.isFinished) return;
 
-/* ---------- Percent Ring ---------- */
-.percent-ring-wrapper {
-  position: relative;
-  width: 160px;
-  height: 160px;
-  margin: 0 auto 32px;
-  animation: scaleIn 0.6s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
+    // 1-4 tugmalari orqali variant tanlash
+    if (event.key >= '1' && event.key <= '4') {
+        const optionBtns = document.querySelectorAll('.option-btn');
+        const targetIndex = parseInt(event.key) - 1;
+        if (optionBtns[targetIndex]) optionBtns[targetIndex].click();
+    }
 
-.percent-ring {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
+    // Enter yoki Space orqali keyingi savol
+    if (event.key === 'Enter') {
+        const next = document.getElementById('btn-next');
+        if (next && !next.disabled) goNext();
+    }
+});
 
-.ring-track {
-  fill: none;
-  stroke: var(--bg-option);
-  stroke-width: 8;
-}
+// Sahifa yuklanganda ishga tushirish mantiqi
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('quiz-container');
+    if (!container) return;
 
-.ring-progress {
-  fill: none;
-  stroke: var(--grade-color, var(--accent));
-  stroke-width: 8;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: drop-shadow(0 0 6px var(--grade-color, var(--accent)));
-}
+    const subjectId = QuizApp.getUrlParam('subject');
+    if (subjectId !== null) {
+        startQuiz(parseInt(subjectId), true);
+    }
 
-.percent-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
+    const nextBtn = document.getElementById('btn-next');
+    if (nextBtn) nextBtn.onclick = goNext;
 
-.percent-number {
-  font-family: var(--font-display);
-  font-size: 2.6rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1;
-}
+    // Visibility change - Tabdan chiqib ketsa ogohlantirish (ixtiyoriy)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && !QuizState.isFinished) {
+            console.log('Foydalanuvchi tabni tark etdi.');
+            // Bu yerga vaqtni to'xtatish yoki Toast chiqarish qo'shish mumkin
+        }
+    });
+});
 
-.percent-symbol {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  line-height: 1;
-  margin-top: 2px;
-}
-
-.percent-label {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-/* ---------- Result Stats ---------- */
-.result-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 32px;
-  animation: fadeInUp 0.5s 0.6s both;
-}
-
-.result-stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 10px;
-  background: var(--bg-option);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  transition: var(--transition);
-}
-
-.result-stat-item:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.result-stat-item.correct { border-color: rgba(0, 184, 148, 0.2); }
-.result-stat-item.wrong   { border-color: rgba(255, 107, 107, 0.2); }
-.result-stat-item.skipped { border-color: rgba(253, 203, 110, 0.2); }
-.result-stat-item.time    { border-color: rgba(108, 99, 255, 0.2); }
-
-.stat-icon { font-size: 1.2rem; }
-
-.stat-val {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.stat-lbl {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-/* ---------- Action Buttons ---------- */
-.result-actions {
-  display: flex;
-  gap: 14px;
-  justify-content: center;
-  flex-wrap: wrap;
-  animation: fadeInUp 0.5s 0.7s both;
-}
-
-.result-actions .btn {
-  min-width: 180px;
-}
-
-/* ---------- Review Section ---------- */
-.review-section {
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-}
-
-.review-header {
-  padding: 20px 28px;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-}
-
-.review-title {
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.review-list {
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* ---------- Review Item ---------- */
-.review-item {
-  padding: 16px 18px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  background: var(--bg-option);
-  transition: var(--transition);
-  opacity: 0;
-}
-
-.review-item.correct { border-left: 3px solid var(--success); }
-.review-item.wrong   { border-left: 3px solid var(--danger); }
-.review-item.skipped { border-left: 3px solid var(--warning); }
-
-.review-item:hover {
-  transform: translateX(3px);
-  box-shadow: var(--shadow-sm);
-}
-
-.review-item-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.review-num {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-.review-status-icon { font-size: 1rem; }
-
-.review-question {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 10px;
-  line-height: 1.5;
-}
-
-.review-answers {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.review-answer-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-}
-
-.ra-label {
-  color: var(--text-muted);
-  min-width: 110px;
-  flex-shrink: 0;
-}
-
-/* Javob tegchalari */
-.ua {
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.ua.correct { background: rgba(0, 184, 148, 0.12); color: var(--success); }
-.ua.wrong   { background: rgba(255, 107, 107, 0.12); color: var(--danger); }
-.ua.skipped { background: rgba(253, 203, 110, 0.12); color: #E17055; }
-
-/* ---------- Responsive ---------- */
-@media (max-width: 600px) {
-  .score-card { padding: 36px 20px 28px; }
-
-  .result-stats {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  .result-actions { flex-direction: column; }
-  .result-actions .btn { width: 100%; }
-
-  .percent-ring-wrapper { width: 140px; height: 140px; }
-  .percent-number { font-size: 2.2rem; }
-
-  .review-header { padding: 16px 20px; }
-  .review-list { padding: 12px; gap: 10px; }
-  .review-item { padding: 13px 14px; }
-  .ra-label { min-width: 90px; }
-}
-
-@media (max-width: 380px) {
-  .grade-display { flex-direction: column; gap: 8px; }
-  .result-stats { grid-template-columns: repeat(2, 1fr); }
-}
+// Eksport
+window.QuizEngine = { 
+    startQuiz, 
+    goNext, 
+    jumpToQuestion,
+    finishQuiz, 
+    QuizState 
+};
