@@ -5,30 +5,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>QuizMaster Pro — Online Test Platformasi</title>
   <meta name="description" content="Matematika, Fizika, Ingliz tili, Dasturlash va Tarix bo'yicha professional online testlar" />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/index.css" />
+  
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --accent: #f59e0b;
+      --bg: #ffffff;
+      --text: #1f2937;
+      --card-bg: #f3f4f6;
+    }
+    body.dark-mode {
+      --bg: #111827;
+      --text: #f9fafb;
+      --card-bg: #1f2937;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      transition: background 0.3s;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    .navbar { padding: 20px 0; border-bottom: 1px solid #e5e7eb; }
+    .navbar-brand { font-size: 24px; font-weight: bold; text-decoration: none; color: var(--text); display: flex; align-items: center; gap: 10px; }
+    .brand-icon { background: var(--primary); color: white; padding: 5px 12px; border-radius: 8px; }
+    .text-accent { color: var(--accent); }
+    .hero-section { padding: 80px 0; text-align: center; position: relative; overflow: hidden; }
+    .hero-title { font-size: 3rem; margin-bottom: 20px; }
+    .gradient-text { background: linear-gradient(90deg, #4f46e5, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subjects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 40px 0; }
+    .subject-card { 
+      background: var(--card-bg); 
+      border-radius: 20px; 
+      padding: 25px; 
+      cursor: pointer; 
+      transition: transform 0.3s; 
+      position: relative;
+      border: 1px solid #e5e7eb;
+    }
+    .subject-card:hover { transform: translateY(-10px); }
+    .btn-start { 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      padding: 12px 25px; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      width: 100%;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 50px 0; }
+    .feature-card { padding: 20px; text-align: center; background: var(--card-bg); border-radius: 15px; }
+    .footer { padding: 40px 0; border-top: 1px solid #e5e7eb; text-align: center; }
+    /* Animatsiyalar */
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+  </style>
 </head>
 <body>
 
-  <!-- ===== NAVBAR ===== -->
   <nav class="navbar" role="navigation" aria-label="Asosiy navigatsiya">
-    <div class="container">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
       <a href="index.html" class="navbar-brand" aria-label="QuizMaster Pro - Bosh sahifa">
         <div class="brand-icon" aria-hidden="true">Q</div>
         <span>QuizMaster <span class="text-accent">Pro</span></span>
       </a>
       <div class="navbar-actions">
-        <button class="theme-toggle" aria-label="Mavzuni almashtirish">🌙</button>
+        <button id="theme-btn" class="theme-toggle" style="background:none; border:1px solid #ccc; padding:8px; border-radius:50%; cursor:pointer;" aria-label="Mavzuni almashtirish">🌙</button>
       </div>
     </div>
   </nav>
 
-  <!-- ===== HERO SECTION ===== -->
   <section class="hero-section" aria-labelledby="hero-title">
     <div class="container">
       <div class="hero-content">
         <div class="hero-badge animate-fadeInUp">
-          <span class="badge badge-accent">🎯 5 ta fan · 100 ta savol</span>
+          <span class="badge" style="background: var(--accent); color: white; padding: 5px 15px; border-radius: 20px;">🎯 5 ta fan · 100 ta savol</span>
         </div>
         <h1 id="hero-title" class="hero-title animate-fadeInUp stagger-1">
           Bilimingizni <br />
@@ -38,172 +97,128 @@
           Professional darajadagi testlar orqali o'z bilimingizni baholang.
           Har bir test 20 ta savol va 10 daqiqa vaqtdan iborat.
         </p>
-        <div class="hero-stats animate-fadeInUp stagger-3">
+        <div class="hero-stats animate-fadeInUp stagger-2" style="display: flex; justify-content: center; gap: 30px; margin-top: 30px;">
           <div class="stat-item">
-            <span class="stat-number" id="stat-tests-taken">0</span>
+            <h2 class="stat-number" id="stat-tests-taken" style="margin:0; color: var(--primary);">0</h2>
             <span class="stat-label">O'tilgan testlar</span>
           </div>
-          <div class="stat-divider" aria-hidden="true"></div>
           <div class="stat-item">
-            <span class="stat-number">5</span>
+            <h2 class="stat-number" style="margin:0;">5</h2>
             <span class="stat-label">Fan bo'limlari</span>
           </div>
-          <div class="stat-divider" aria-hidden="true"></div>
           <div class="stat-item">
-            <span class="stat-number">100</span>
+            <h2 class="stat-number" style="margin:0;">100</h2>
             <span class="stat-label">Jami savollar</span>
           </div>
         </div>
       </div>
-
-      <!-- Dekorativ element -->
-      <div class="hero-decoration" aria-hidden="true">
-        <div class="deco-circle deco-1"></div>
-        <div class="deco-circle deco-2"></div>
-        <div class="deco-circle deco-3"></div>
-        <div class="floating-icons">
-          <span class="float-icon" style="--delay:0s">∑</span>
-          <span class="float-icon" style="--delay:0.8s">⚡</span>
-          <span class="float-icon" style="--delay:1.6s">🔤</span>
-          <span class="float-icon" style="--delay:2.4s">&lt;/&gt;</span>
-          <span class="float-icon" style="--delay:3.2s">🏛</span>
-        </div>
-      </div>
     </div>
   </section>
 
-  <!-- ===== SUBJECT CARDS ===== -->
   <main class="subjects-section" aria-labelledby="subjects-title">
     <div class="container">
-      <div class="section-header text-center animate-fadeInUp">
+      <div class="section-header text-center animate-fadeInUp" style="text-align: center;">
         <h2 id="subjects-title" class="section-title">Fan tanlang</h2>
         <p class="section-desc">Quyidagi fanlardan birini tanlab, testni boshlang</p>
       </div>
 
-      <!-- Fanlar grid -->
       <div class="subjects-grid" id="subjects-grid" role="list">
-        <!-- JavaScript orqali to'ldiriladi -->
-      </div>
+        </div>
     </div>
   </main>
 
-  <!-- ===== FEATURES SECTION ===== -->
   <section class="features-section" aria-labelledby="features-title">
     <div class="container">
-      <h2 id="features-title" class="section-title text-center animate-fadeInUp">
+      <h2 id="features-title" class="section-title text-center animate-fadeInUp" style="text-align:center">
         Nima uchun QuizMaster Pro?
       </h2>
       <div class="features-grid">
         <div class="feature-card animate-fadeInUp stagger-1">
-          <div class="feature-icon">⚡</div>
+          <div class="feature-icon" style="font-size: 2rem;">⚡</div>
           <h3>Tezkor va zamonaviy</h3>
-          <p>Har bir savol 30 soniyada javob berishingiz kerak. Bu bilimingizni real sinaydi.</p>
+          <p>Har bir savolga tezkor javob berish bilimingizni real sinaydi.</p>
         </div>
         <div class="feature-card animate-fadeInUp stagger-2">
-          <div class="feature-icon">🎲</div>
+          <div class="feature-icon" style="font-size: 2rem;">🎲</div>
           <h3>Tasodifiy savollar</h3>
-          <p>Har safar testni boshlaganingizda savollar va variantlar aralashtiriladi.</p>
+          <p>Savollar va variantlar har safar aralashtiriladi.</p>
         </div>
-        <div class="feature-card animate-fadeInUp stagger-3">
-          <div class="feature-icon">📊</div>
+        <div class="feature-card animate-fadeInUp stagger-1">
+          <div class="feature-icon" style="font-size: 2rem;">📊</div>
           <h3>Batafsil natija</h3>
-          <p>Test yakunida foiz, baho va har bir savolning to'g'ri javobini ko'rasiz.</p>
-        </div>
-        <div class="feature-card animate-fadeInUp stagger-4">
-          <div class="feature-icon">🌙</div>
-          <h3>Dark/Light rejim</h3>
-          <p>Ko'zingizni qoʻriqlash uchun tungi rejim mavjud. Istalgan vaqt almashtirishingiz mumkin.</p>
+          <p>Test yakunida foiz, baho va tahlillarni ko'rasiz.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ===== FOOTER ===== -->
-  <footer class="footer" role="contentinfo">
+  <footer class="footer">
     <div class="container">
-      <div class="footer-inner">
-        <span class="footer-brand">QuizMaster <span class="text-accent">Pro</span></span>
-        <p class="footer-text">Professional online test platformasi &copy; 2025</p>
-      </div>
+      <span class="footer-brand">QuizMaster <span class="text-accent">Pro</span></span>
+      <p>&copy; 2026 Professional online test platformasi</p>
     </div>
   </footer>
 
-  <!-- ===== SCRIPTS ===== -->
-  <script src="data/questions.js"></script>
-  <script src="js/app.js"></script>
   <script>
-    // -------------------------------------------------------
-    // Bosh sahifa logikasi — Fan kartochkalarini yaratish
-    // -------------------------------------------------------
+    // 1. DATA: Agar questions.js bo'lmasa, namunaviy ma'lumotlar
+    window.QUIZ_DATA = window.QUIZ_DATA || [
+      { subject: "Matematika", icon: "∑", color: "#4f46e5", gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
+      { subject: "Fizika", icon: "⚡", color: "#ef4444", gradient: "linear-gradient(135deg, #f87171 0%, #dc2626 100%)" },
+      { subject: "Ingliz tili", icon: "ABC", color: "#10b981", gradient: "linear-gradient(135deg, #34d399 0%, #059669 100%)" },
+      { subject: "Dasturlash", icon: "</>", color: "#8b5cf6", gradient: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)" },
+      { subject: "Tarix", icon: "🏛", color: "#f59e0b", gradient: "linear-gradient(135deg, #fbbf24 0%, #d97706 100%)" }
+    ];
+
+    // 2. QuizApp yordamchi obyekti (Local Storage bilan ishlash)
+    const QuizApp = {
+      getAllResults: function() {
+        const results = localStorage.getItem('quiz_results');
+        return results ? JSON.parse(results) : [];
+      }
+    };
+
+    // 3. Sahifa yuklanganda kartochkalarni yaratish
     document.addEventListener('DOMContentLoaded', () => {
       const grid = document.getElementById('subjects-grid');
-      if (!grid || !window.QUIZ_DATA) return;
+      const themeBtn = document.getElementById('theme-btn');
+      
+      // Mavzuni boshqarish (Dark/Light)
+      themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        themeBtn.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+      });
 
-      // O'tilgan testlar sonini ko'rsatish
       const results = QuizApp.getAllResults();
       const statEl = document.getElementById('stat-tests-taken');
       if (statEl) statEl.textContent = results.length;
 
-      // Har bir fan uchun karta yaratish
       window.QUIZ_DATA.forEach((subject, idx) => {
-        // Bu fan uchun eng yaxshi natijani topish
         const subjectResults = results.filter(r => r.subjectIndex === idx);
-        const bestResult = subjectResults.length > 0
-          ? Math.max(...subjectResults.map(r => r.percent))
-          : null;
+        const bestResult = subjectResults.length > 0 
+                           ? Math.max(...subjectResults.map(r => r.percent)) 
+                           : null;
 
         const card = document.createElement('article');
-        card.className = `subject-card animate-fadeInUp stagger-${(idx % 5) + 1}`;
-        card.setAttribute('role', 'listitem');
-        card.style.setProperty('--card-color', subject.color);
-        card.style.setProperty('--card-gradient', subject.gradient);
+        card.className = `subject-card animate-fadeInUp`;
+        card.style.animationDelay = `${idx * 0.1}s`;
 
         card.innerHTML = `
-          <div class="subject-card-bg" aria-hidden="true"></div>
           <div class="subject-card-content">
-            <div class="subject-icon-wrapper">
-              <span class="subject-icon" aria-hidden="true">${subject.icon}</span>
-            </div>
-            <div class="subject-info">
-              <h3 class="subject-name">${subject.subject}</h3>
-              <p class="subject-meta">20 ta savol · 10 daqiqa</p>
-              ${bestResult !== null
-                ? `<div class="subject-best">
-                    <span class="best-label">Eng yaxshi:</span>
-                    <span class="best-score" style="color: ${subject.color}">${bestResult}%</span>
-                   </div>`
-                : `<p class="subject-new-badge">Yangi</p>`
-              }
-            </div>
-            <div class="subject-arrow" aria-hidden="true">→</div>
-          </div>
-          <div class="subject-card-footer">
-            <button
-              class="btn btn-start"
-              onclick="startSubject(${idx})"
-              aria-label="${subject.subject} testini boshlash"
-            >
-              Testni boshlash
-            </button>
+            <div style="font-size: 40px; margin-bottom: 15px;">${subject.icon}</div>
+            <h3 class="subject-name">${subject.subject}</h3>
+            <p>20 ta savol · 10 daqiqa</p>
+            ${bestResult !== null 
+              ? `<p style="color:${subject.color}">Natija: ${bestResult}%</p>` 
+              : `<p style="color:#10b981">Yangi ✨</p>`}
+            <button class="btn-start" onclick="startSubject(${idx})">Boshlash</button>
           </div>
         `;
-
-        // Kartaga bosilganda ham testni boshlash
-        card.addEventListener('click', (e) => {
-          if (!e.target.closest('.btn-start')) {
-            startSubject(idx);
-          }
-        });
-
         grid.appendChild(card);
       });
     });
 
-    /**
-     * Tanlangan fan testiga o'tish.
-     * @param {number} idx
-     */
     function startSubject(idx) {
+      // Test sahifasiga yo'naltirish
       window.location.href = `quiz.html?subject=${idx}`;
     }
   </script>
