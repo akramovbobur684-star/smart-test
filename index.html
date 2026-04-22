@@ -817,6 +817,33 @@
             
             init();
         })();
+   <!-- ============================================================ -->
+<!-- SAHIFA BOSHI (HEAD QISMI) -->
+<!-- ============================================================ -->
+
+<body>
+    <!-- Sahifa mazmuni -->
+    
+    <!-- ============================================================ -->
+    <!-- SCRIPTS TARTIBI (MUHIM: questions.js BIRINCHI!) -->
+    <!-- ============================================================ -->
+    
+    <!-- 1️⃣ BIRINCHI: Ma'lumotlar bazasi -->
+    <script src="questions.js?v=6.0"></script>
+    
+    <!-- 2️⃣ KEYIN: App (yuklash mantiqi) -->
+    <script src="app.js?v=6.0"></script>
+    
+    <!-- 3️⃣ QO'SHIMCHA: Diagnostika -->
+    <script>
+        (function() {
+            console.log("=== HTML DIAGNOSTIKA ===");
+            console.log("window.QUIZ_DATA mavjudmi?", !!window.QUIZ_DATA);
+            if (window.QUIZ_DATA) {
+                console.log("window.QUIZ_DATA uzunligi:", window.QUIZ_DATA.length);
+            } else {
+                console.error("window.QUIZ_DATA undefined! questions.js yuklanmagan bo'lishi mumkin.");
+                console.log
     </script>
 </body>
 </html>
