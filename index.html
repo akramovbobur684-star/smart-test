@@ -4,59 +4,428 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuizMaster Pro — Intellektual Online Test Platformasi</title>
-    <meta name="description" content="AI tomonidan shaxsiylashtirilgan test tizimi">
+    <meta name="description" content="AI tomonidan shaxsiylashtirilgan test tizimi. Bilimingizni sinang va natijalaringizni tahlil qiling.">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Asosiy CSS (root papkada) -->
-    <link rel="stylesheet" href="style.css?v=1.2">
-    
     <style>
-        /* Qo'shimcha stillar (agar kerak bo'lsa) */
         :root {
             --primary: #4f46e5;
+            --primary-dark: #4338ca;
             --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
             --bg: #ffffff;
             --bg-secondary: #f3f4f6;
-            --text: #1f2937;
+            --bg-tertiary: #e5e7eb;
+            --text: #111827;
+            --text-secondary: #6b7280;
+            --card-bg: #ffffff;
+            --card-border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         body.dark-mode {
             --bg: #0f172a;
             --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
             --text: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            transition: all 0.3s;
+
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        .subjects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; padding: 40px 0; }
-        .subject-card { background: var(--bg-secondary); border-radius: 20px; padding: 25px; cursor: pointer; transition: transform 0.3s; }
-        .subject-card:hover { transform: translateY(-5px); }
-        .btn-start { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; width: 100%; }
-        .theme-toggle { background: var(--bg-secondary); border: 1px solid #ccc; padding: 8px 15px; border-radius: 30px; cursor: pointer; }
-        .dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 30px 0; }
-        .stat-card { background: var(--bg-secondary); border-radius: 20px; padding: 20px; text-align: center; }
-        .stat-number { font-size: 32px; font-weight: bold; color: var(--primary); }
-        
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: background-color var(--transition-base), color var(--transition-base);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ========== NAVBAR ========== */
+        .navbar {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: rgba(var(--bg-rgb, 255, 255, 255), 0.85);
+        }
+
+        body.dark-mode .navbar {
+            background-color: rgba(15, 23, 42, 0.85);
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 28px;
+            font-weight: 800;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text);
+        }
+
+        .brand-icon {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-weight: bold;
+            font-size: 20px;
+            color: white;
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--card-border);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition-base);
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.02);
+        }
+
+        /* ========== DASHBOARD ========== */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 32px 0;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--card-border);
+            transition: var(--transition-base);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ========== SEARCH ========== */
+        .search-section {
+            margin: 24px 0;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid var(--card-border);
+            border-radius: 50px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 15px;
+            transition: var(--transition-base);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* ========== FILTERS ========== */
+        .filter-section {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .filter-btn {
+            padding: 10px 24px;
+            border: 2px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text);
+            border-radius: 40px;
+            cursor: pointer;
+            transition: var(--transition-base);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .filter-btn:hover:not(.active) {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* ========== SUBJECTS GRID ========== */
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 28px;
+            padding: 20px 0 60px;
+        }
+
+        .subject-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px;
+            cursor: pointer;
+            transition: var(--transition-base);
+            border: 1px solid var(--card-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subject-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--card-gradient, var(--primary));
+        }
+
+        .subject-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .card-icon {
+            font-size: 44px;
+            margin-bottom: 16px;
+        }
+
+        .subject-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subject-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 16px 0;
+            padding: 12px 0;
+            border-top: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .best-score {
+            text-align: center;
+            flex: 1;
+        }
+
+        .score-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .attempt-count {
+            text-align: center;
+            flex: 1;
+            border-left: 1px solid var(--card-border);
+        }
+
+        .attempt-number {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .attempt-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .smart-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 12px 0;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .badge-retake {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-expert {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-good {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-new {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        body.dark-mode .badge-retake {
+            background: #78350f;
+            color: #fde68a;
+        }
+
+        body.dark-mode .badge-expert {
+            background: #064e3b;
+            color: #a7f3d0;
+        }
+
+        body.dark-mode .badge-good {
+            background: #1e3a8a;
+            color: #bfdbfe;
+        }
+
+        .btn-start {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition-base);
+            margin-top: 12px;
+        }
+
+        .btn-start:hover {
+            transform: scale(0.98);
+            filter: brightness(1.05);
+        }
+
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 1px solid var(--card-border);
+            margin-top: 40px;
+        }
+
+        /* ========== RESPONSIVE ========== */
         @media (max-width: 768px) {
-            .dashboard { grid-template-columns: repeat(2, 1fr); }
+            .container { padding: 0 16px; }
+            .dashboard { grid-template-columns: repeat(2, 1fr); gap: 12px; }
             .subjects-grid { grid-template-columns: 1fr; }
+            .filter-section { justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard { grid-template-columns: 1fr; }
+            .subject-stats { flex-direction: column; gap: 10px; }
+            .attempt-count { border-left: none; border-top: 1px solid var(--card-border); padding-top: 10px; }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.4s ease-out forwards;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar" style="padding: 20px 0; border-bottom: 1px solid #e5e7eb;">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <a href="index.html" style="font-size: 24px; font-weight: bold; text-decoration: none; color: var(--text);">
-                📝 QuizMaster <span style="color: var(--accent);">Pro</span>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">
+                <div class="brand-icon">Q</div>
+                <span>QuizMaster <span style="color: var(--accent);">Pro</span></span>
             </a>
             <button id="theme-btn" class="theme-toggle">🌙 Dark</button>
         </div>
@@ -67,56 +436,387 @@
             <!-- Dashboard -->
             <div class="dashboard">
                 <div class="stat-card">
-                    <div class="stat-number" id="total-tests">0</div>
-                    <div>Jami testlar</div>
+                    <div class="stat-icon"><i class="fas fa-chalkboard-user"></i></div>
+                    <div class="stat-number" id="stat-total-tests">0</div>
+                    <div class="stat-label">Jami testlar</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="avg-score">0%</div>
-                    <div>O'rtacha ball</div>
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-number" id="stat-avg-score">0%</div>
+                    <div class="stat-label">O'rtacha ball</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="mastered">0</div>
-                    <div>O'zlashtirilgan fanlar</div>
+                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-number" id="stat-mastered">0</div>
+                    <div class="stat-label">O'zlashtirilgan fanlar</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="total-questions">0</div>
-                    <div>Jami savollar</div>
+                    <div class="stat-icon"><i class="fas fa-database"></i></div>
+                    <div class="stat-number" id="stat-total-questions">0</div>
+                    <div class="stat-label">Jami savollar</div>
                 </div>
             </div>
 
             <!-- Search -->
-            <div style="margin: 30px 0;">
-                <input type="text" id="search-input" placeholder="🔍 Fan nomi bo'yicha qidirish..." style="width: 100%; padding: 15px; border-radius: 30px; border: 1px solid #ccc; background: var(--bg-secondary); color: var(--text);">
+            <div class="search-section">
+                <input type="text" id="search-input" class="search-input" placeholder="🔍 Fan nomi bo'yicha qidirish..." autocomplete="off">
             </div>
 
-            <!-- Filter -->
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;">
-                <button class="filter-btn active" data-filter="all">📚 Hammasi</button>
-                <button class="filter-btn" data-filter="exact">🔢 Aniq fanlar</button>
-                <button class="filter-btn" data-filter="humanitarian">📖 Gumanitar fanlar</button>
-                <button class="filter-btn" data-filter="retake">🔄 Qayta topshirish</button>
+            <!-- Filters -->
+            <div class="filter-section" id="filter-buttons">
+                <button class="filter-btn active" data-filter="all">
+                    <i class="fas fa-layer-group"></i> Hammasi
+                </button>
+                <button class="filter-btn" data-filter="exact">
+                    <i class="fas fa-square-root-variable"></i> Aniq fanlar
+                </button>
+                <button class="filter-btn" data-filter="humanitarian">
+                    <i class="fas fa-landmark"></i> Gumanitar fanlar
+                </button>
+                <button class="filter-btn" data-filter="retake">
+                    <i class="fas fa-rotate-right"></i> Qayta topshirish
+                </button>
             </div>
 
             <!-- Subjects Grid -->
-            <div id="subjects-grid" class="subjects-grid"></div>
+            <div id="subjects-grid" class="subjects-grid">
+                <div class="empty-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Ma'lumotlar yuklanmoqda...</p>
+                </div>
+            </div>
         </div>
     </main>
 
-    <footer style="text-align: center; padding: 40px 0; border-top: 1px solid #e5e7eb; margin-top: 40px;">
-        <p>&copy; 2026 QuizMaster Pro — Intellektual online test platformasi</p>
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 QuizMaster Pro — Intellektual online test platformasi</p>
+            <p style="font-size: 12px; margin-top: 8px; color: var(--text-secondary);">
+                <i class="fas fa-microchip"></i> AI tomonidan shaxsiylashtirilgan ta'lim
+            </p>
+        </div>
     </footer>
 
     <!-- ============================================================ -->
-    <!-- ROOT PAPKASIDAGI FAYLLAR (papkalarsiz)                       -->
+    <!-- ROOT PAPKASIDAGI FAYLLAR (TO'G'RI TARTIBDA)                  -->
     <!-- ============================================================ -->
-    
-    <!-- 1️⃣ Ma'lumotlar bazasi (questions.js) -->
-    <script src="questions.js?v=1.2"></script>
-    
+
+    <!-- 1️⃣ Ma'lumotlar bazasi -->
+    <script src="questions.js?v=3.0"></script>
+
     <!-- 2️⃣ App (umumiy funksiyalar) -->
-    <script src="app.js?v=1.2"></script>
-    
-    <!-- 3️⃣ Index sahifasi uchun JS -->
-    <script src="index.js?v=1.2"></script>
+    <script src="app.js?v=3.0"></script>
+
+    <!-- 3️⃣ Index sahifasi mantiqi -->
+    <script>
+        (function() {
+            'use strict';
+
+            // -------------------------------------------------------
+            // KONFIGURATSIYA
+            // -------------------------------------------------------
+            let allResults = [];
+            let currentFilter = "all";
+            let searchTerm = "";
+
+            // DOM elementlari
+            const gridContainer = document.getElementById('subjects-grid');
+            const searchInput = document.getElementById('search-input');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const themeBtn = document.getElementById('theme-btn');
+
+            // -------------------------------------------------------
+            // YORDAMCHI FUNKSIYALAR
+            // -------------------------------------------------------
+            function log(msg, type = 'info') {
+                const colors = { info: '#2ed573', error: '#ff4757', warning: '#ffa502' };
+                console.log(`%c[Index] ${msg}`, `color: ${colors[type] || colors.info}`);
+            }
+
+            function loadResults() {
+                try {
+                    const stored = localStorage.getItem('qm_results');
+                    allResults = stored ? JSON.parse(stored) : [];
+                    log(`${allResults.length} ta natija yuklandi`);
+                } catch (e) {
+                    log(`Natijalarni yuklashda xatolik: ${e.message}`, 'error');
+                    allResults = [];
+                }
+                updateDashboard();
+            }
+
+            function getSubjectStats(subjectId) {
+                const subjectResults = allResults.filter(r => r.subjectIndex === subjectId);
+                if (subjectResults.length === 0) return null;
+                
+                const bestScore = Math.max(...subjectResults.map(r => r.percent || 0));
+                const lastAttempt = subjectResults[0]?.timestamp;
+                const attemptsCount = subjectResults.length;
+                
+                return { bestScore, lastAttempt, attemptsCount };
+            }
+
+            function formatDate(timestamp) {
+                if (!timestamp) return "Hali topshirilmagan";
+                const date = new Date(timestamp);
+                return `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
+            }
+
+            function getSmartBadge(bestScore) {
+                if (bestScore === null) {
+                    return { text: "🆕 Hali topshirilmagan", type: "new", icon: "fa-hourglass-half" };
+                }
+                if (bestScore >= 85) {
+                    return { text: "🏆 Siz ushbu fanning ustasisiz!", type: "expert", icon: "fa-crown" };
+                }
+                if (bestScore >= 60) {
+                    return { text: "👍 Yaxshi natija", type: "good", icon: "fa-thumbs-up" };
+                }
+                return { text: "⚠️ Qayta topshirish tavsiya etiladi", type: "retake", icon: "fa-rotate-right" };
+            }
+
+            // -------------------------------------------------------
+            // DASHBOARDNI YANGILASH
+            // -------------------------------------------------------
+            function updateDashboard() {
+                const totalTests = allResults.length;
+                const avgScore = totalTests > 0 
+                    ? Math.round(allResults.reduce((sum, r) => sum + (r.percent || 0), 0) / totalTests)
+                    : 0;
+                
+                const masteredSubjects = new Set();
+                allResults.forEach(r => {
+                    if ((r.percent || 0) >= 85) masteredSubjects.add(r.subjectIndex);
+                });
+                
+                const totalQuestions = window.QUIZ_DATA 
+                    ? window.QUIZ_DATA.reduce((sum, s) => sum + (s.questions?.length || 20), 0)
+                    : 0;
+                
+                const totalTestsEl = document.getElementById('stat-total-tests');
+                const avgScoreEl = document.getElementById('stat-avg-score');
+                const masteredEl = document.getElementById('stat-mastered');
+                const totalQuestionsEl = document.getElementById('stat-total-questions');
+                
+                if (totalTestsEl) totalTestsEl.textContent = totalTests;
+                if (avgScoreEl) avgScoreEl.textContent = `${avgScore}%`;
+                if (masteredEl) masteredEl.textContent = masteredSubjects.size;
+                if (totalQuestionsEl) totalQuestionsEl.textContent = totalQuestions;
+            }
+
+            // -------------------------------------------------------
+            // KARTOCHKALARNI RENDER QILISH (ASOSIY FUNKSIYA)
+            // -------------------------------------------------------
+            function renderSubjects() {
+                if (!gridContainer) {
+                    log("subjects-grid elementi topilmadi!", 'error');
+                    return;
+                }
+                
+                if (!window.QUIZ_DATA || !window.QUIZ_DATA.length) {
+                    log("QUIZ_DATA topilmadi yoki bo'sh!", 'error');
+                    gridContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-database"></i>
+                            <h3>Ma'lumotlar bazasi topilmadi!</h3>
+                            <p>questions.js fayli mavjudligini tekshiring.</p>
+                            <button onclick="location.reload()" style="margin-top:15px; padding:10px 20px; cursor:pointer;">🔄 Qayta yuklash</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                log(`Fanlar render qilinmoqda... Jami: ${window.QUIZ_DATA.length} ta fan`);
+                
+                // Filtrlash
+                let filteredSubjects = window.QUIZ_DATA.map((subject, idx) => ({ ...subject, originalIndex: idx }));
+                
+                // Category filter
+                if (currentFilter === "exact") {
+                    filteredSubjects = filteredSubjects.filter(s => 
+                        ["Matematika", "Fizika", "Dasturlash", "Biologiya"].includes(s.subject)
+                    );
+                } else if (currentFilter === "humanitarian") {
+                    filteredSubjects = filteredSubjects.filter(s => 
+                        ["Ingliz tili", "Tarix", "Adabiyot"].includes(s.subject)
+                    );
+                } else if (currentFilter === "retake") {
+                    filteredSubjects = filteredSubjects.filter(s => {
+                        const stats = getSubjectStats(s.originalIndex);
+                        return stats && stats.bestScore < 60;
+                    });
+                }
+                
+                // Search filter
+                if (searchTerm.trim() !== "") {
+                    filteredSubjects = filteredSubjects.filter(s => 
+                        s.subject.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                }
+                
+                log(`Filtrlangan fanlar: ${filteredSubjects.length} ta (filter: ${currentFilter}, search: "${searchTerm}")`);
+                
+                if (filteredSubjects.length === 0) {
+                    gridContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <h3>Hech qanday fan topilmadi</h3>
+                            <p>Qidiruv so'zini o'zgartiring yoki filtrni bekor qiling</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                gridContainer.innerHTML = '';
+                
+                filteredSubjects.forEach((subject, idx) => {
+                    const stats = getSubjectStats(subject.originalIndex);
+                    const bestScore = stats?.bestScore || null;
+                    const attemptsCount = stats?.attemptsCount || 0;
+                    const lastAttempt = stats?.lastAttempt || null;
+                    const badge = getSmartBadge(bestScore);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'subject-card animate-fadeInUp';
+                    card.style.animationDelay = `${idx * 0.05}s`;
+                    card.style.setProperty('--card-gradient', `linear-gradient(135deg, ${subject.color || '#4f46e5'}, ${subject.color || '#4f46e5'}dd)`);
+                    
+                    card.innerHTML = `
+                        <div class="card-icon">
+                            <i class="fas ${subject.icon || 'fa-graduation-cap'}" style="color: ${subject.color || '#4f46e5'}"></i>
+                        </div>
+                        <h3 class="subject-name">${subject.subject}</h3>
+                        <div class="subject-stats">
+                            <div class="best-score">
+                                <div class="score-value">${bestScore ? bestScore + '%' : '—'}</div>
+                                <div class="score-label">Eng yaxshi natija</div>
+                            </div>
+                            <div class="attempt-count">
+                                <div class="attempt-number">${attemptsCount}</div>
+                                <div class="attempt-label">Urinishlar</div>
+                            </div>
+                        </div>
+                        <div class="smart-badge ${badge.type === 'retake' ? 'badge-retake' : badge.type === 'expert' ? 'badge-expert' : badge.type === 'good' ? 'badge-good' : 'badge-new'}">
+                            <i class="fas ${badge.icon}"></i> ${badge.text}
+                        </div>
+                        <button class="btn-start" data-subject-idx="${subject.originalIndex}">
+                            <i class="fas fa-play"></i> Testni boshlash
+                        </button>
+                    `;
+                    
+                    const startBtn = card.querySelector('.btn-start');
+                    startBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const idx = parseInt(startBtn.dataset.subjectIdx);
+                        window.location.href = `quiz.html?subject=${idx}`;
+                    });
+                    
+                    card.addEventListener('click', (e) => {
+                        if (e.target !== startBtn && !startBtn.contains(e.target)) {
+                            startBtn.click();
+                        }
+                    });
+                    
+                    gridContainer.appendChild(card);
+                });
+            }
+
+            // -------------------------------------------------------
+            // FILTR VA QIDIRUV EVENTLARI
+            // -------------------------------------------------------
+            function applyFilters() {
+                renderSubjects();
+            }
+            
+            function initFilters() {
+                // Filter tugmalari
+                filterBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        filterBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        currentFilter = btn.dataset.filter;
+                        log(`Filter o'zgartirildi: ${currentFilter}`);
+                        applyFilters();
+                    });
+                });
+                
+                // Qidiruv
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        searchTerm = e.target.value;
+                        log(`Qidiruv: "${searchTerm}"`);
+                        applyFilters();
+                    });
+                }
+            }
+
+            // -------------------------------------------------------
+            // DARK MODE (app.js bilan sinxron)
+            // -------------------------------------------------------
+            function initDarkMode() {
+                const savedTheme = localStorage.getItem('quiz_theme');
+                const isDark = savedTheme === 'dark' || (savedTheme === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                
+                if (isDark) {
+                    document.body.classList.add('dark-mode');
+                    if (themeBtn) themeBtn.innerHTML = '☀️ Light';
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    if (themeBtn) themeBtn.innerHTML = '🌙 Dark';
+                }
+            }
+            
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    if (isDark) {
+                        document.body.classList.remove('dark-mode');
+                        localStorage.setItem('quiz_theme', 'light');
+                        themeBtn.innerHTML = '🌙 Dark';
+                    } else {
+                        document.body.classList.add('dark-mode');
+                        localStorage.setItem('quiz_theme', 'dark');
+                        themeBtn.innerHTML = '☀️ Light';
+                    }
+                });
+            }
+
+            // -------------------------------------------------------
+            // ASOSIY INIT
+            // -------------------------------------------------------
+            function init() {
+                log("Index sahifasi ishga tushmoqda...");
+                
+                initDarkMode();
+                loadResults();
+                initFilters();
+                
+                // Ma'lumotlar bazasini kutish
+                let attempts = 0;
+                const checkData = setInterval(() => {
+                    if (window.QUIZ_DATA && window.QUIZ_DATA.length > 0) {
+                        clearInterval(checkData);
+                        log(`✅ ${window.QUIZ_DATA.length} ta fan topildi!`, 'success');
+                        renderSubjects();
+                    } else if (attempts >= 30) {
+                        clearInterval(checkData);
+                        log("QUIZ_DATA topilmadi!", 'error');
+                        if (gridContainer) {
+                            gridContainer.innerHTML = `
+                                <div class="empty-state">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <h3>Ma'lumotlar bazasi topilmadi!</h3>
+                                    <p>questions.js fayli mavjudligini tekshiring.</p>
+                                </div>
+                            `;
+                        }
+                    }
+                    attempts++;
+                }, 100);
+            }
+            
+            init();
+        })();
+    </script>
 </body>
 </html>
