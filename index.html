@@ -505,5 +505,45 @@
     // Sahifa yuklanganda ishga tushirish
     window.addEventListener('load', renderSubjects);
 </script>
+<script src="questions.js"></script>
+<script>
+    function renderSubjects() {
+        const container = document.getElementById('subjects-container');
+        
+        // Bazani tekshirish
+        if (typeof window.QUIZ_DATA === 'undefined') {
+            console.error("DIQQAT: questions.js hali yuklanmadi yoki xato yuklandi!");
+            setTimeout(renderSubjects, 1000); // 1 soniya kutib yana urinish
+            return;
+        }
+
+        console.log("Baza topildi:", window.QUIZ_DATA);
+        container.innerHTML = ""; 
+
+        const ids = Object.keys(window.QUIZ_DATA);
+        if (ids.length === 0) {
+            container.innerHTML = "<p style='color:white;'>Hozircha fanlar mavjud emas.</p>";
+            return;
+        }
+
+        ids.forEach(id => {
+            const data = window.QUIZ_DATA[id];
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div style="font-size: 40px; margin-bottom: 10px;">📚</div>
+                <h2>${data.subject || "Nomsiz fan"}</h2>
+                <p>${data.questions ? data.questions.length : 0} ta savol mavjud</p>
+                <button class="btn-start">Testni boshlash</button>
+            `;
+            card.onclick = () => {
+                window.location.href = `quiz.html?subject=${id}`;
+            };
+            container.appendChild(card);
+        });
+    }
+
+    window.addEventListener('load', renderSubjects);
+</script>
 </body>
 </html>
