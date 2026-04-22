@@ -3,80 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harbiy Aloqa Instituti | Test</title>
+    <title>Dashboard | Quiz Platform</title>
     <style>
-        body { background-color: #0f172a; color: white; font-family: sans-serif; text-align: center; margin: 0; }
-        .header { padding: 50px 20px; }
-        h1 { color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; }
-        
-        /* KARTALAR UCHUN KONTEYNER */
-        .subjects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
             padding: 20px;
+        }
+        .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            color: #bb86fc;
+        }
+        .sub {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #9e9e9e;
+        }
+        .loader {
+            text-align: center;
+            font-size: 1.5rem;
+            padding: 50px;
+            color: #bb86fc;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
         .card {
-            background: #1e293b;
-            border: 1px solid #334155;
+            background: #1e1e1e;
+            border-radius: 20px;
+            padding: 24px;
+            cursor: pointer;
+            border: 1px solid #333;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(187, 134, 252, 0.2);
+            border-color: #bb86fc;
+        }
+        .card h2 {
+            color: #bb86fc;
+            margin-bottom: 12px;
+        }
+        .card p {
+            color: #b0b0b0;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #757575;
+        }
+        .error {
+            background: #3e1e1e;
+            border-left: 5px solid #cf6679;
             padding: 20px;
             border-radius: 12px;
-            cursor: pointer;
-            transition: 0.3s;
+            text-align: center;
         }
-        .card:hover { border-color: #38bdf8; transform: translateY(-5px); }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <h1>Harbiy Aloqa Instituti</h1>
-        <p>Interaktiv Quiz Platformasi</p>
-        <hr style="width: 50%; border: 0.5px solid #334155; margin: 20px auto;">
-        <h3>Mavzular</h3>
+    <div class="container">
+        <h1>📚 Quiz Platform</h1>
+        <div class="sub">Fanlardan birini tanlang</div>
+        <div id="dashboard-content">
+            <div class="loader">⏳ Ma'lumotlar bazasi yuklanmoqda...</div>
+        </div>
+        <footer>Dark Mode | Smart Test Tizimi</footer>
     </div>
 
-    <div id="subjects-container" class="subjects-grid">
-        <p>Yuklanmoqda...</p>
-    </div>
-
-    <script src="questions.js"></script>
-
+    <script src="questions.js?v=2.0"></script>
     <script>
-        function loadDashboard() {
-            const container = document.getElementById('subjects-container');
-            
-            // window.QUIZ_DATA borligini tekshirish
-            if (typeof window.QUIZ_DATA === 'undefined') {
-                container.innerHTML = "<p style='color: #ef4444;'>Xato: questions.js topilmadi!</p>";
-                return;
+        (function() {
+            let checkInterval = null;
+            let attempts = 0;
+            const MAX_ATTEMPTS = 50;
+
+            function renderDashboard() {
+                const container = document.getElementById('dashboard-content');
+                if (!window.QUIZ_DATA || typeof window.QUIZ_DATA !== 'object') {
+                    container.innerHTML = '<div class="error">❌ Ma\'lumotlar bazasi topilmadi. Iltimos, sahifani qayta yuklang.</div>';
+                    return;
+                }
+                const subjects = Object.keys(window.QUIZ_DATA);
+                if (subjects.length === 0) {
+                    container.innerHTML = '<div class="error">📭 Hech qanday fan mavjud emas.</div>';
+                    return;
+                }
+                let cardsHtml = '<div class="cards-grid">';
+                for (let sub of subjects) {
+                    const info = window.QUIZ_DATA[sub];
+                    cardsHtml += `
+                        <div class="card" data-subject="${sub}">
+                            <h2>📖 ${info.title}</h2>
+                            <p>${info.description || 'Testni boshlash uchun bosing'}</p>
+                            <div class="card-meta">
+                                <span>📋 ${info.questions ? info.questions.length : 0} ta savol</span>
+                                <span>⏱️ 15 soniya/savol</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                cardsHtml += '</div>';
+                container.innerHTML = cardsHtml;
+
+                document.querySelectorAll('.card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const subjectId = card.getAttribute('data-subject');
+                        window.location.href = `quiz.html?subject=${encodeURIComponent(subjectId)}`;
+                    });
+                });
             }
 
-            container.innerHTML = ""; // "Yuklanmoqda"ni o'chirish
+            function waitForData() {
+                if (window.QUIZ_DATA && typeof window.QUIZ_DATA === 'object' && Object.keys(window.QUIZ_DATA).length > 0) {
+                    if (checkInterval) clearInterval(checkInterval);
+                    renderDashboard();
+                } else {
+                    attempts++;
+                    const container = document.getElementById('dashboard-content');
+                    if (attempts >= MAX_ATTEMPTS) {
+                        if (checkInterval) clearInterval(checkInterval);
+                        container.innerHTML = '<div class="error">⛔ Ma\'lumotlar bazasi yuklanmadi. questions.js faylini tekshiring.</div>';
+                    } else {
+                        container.innerHTML = `<div class="loader">🔄 Bazani kutish (${attempts}/${MAX_ATTEMPTS})...</div>`;
+                    }
+                }
+            }
 
-            Object.keys(window.QUIZ_DATA).forEach(id => {
-                const item = window.QUIZ_DATA[id];
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div style="font-size: 40px;">📚</div>
-                    <h2>${item.subject}</h2>
-                    <p>${item.questions.length} ta savol</p>
-                    <button class="btn">Boshlash</button>
-                `;
-                card.onclick = () => {
-                    window.location.href = `quiz.html?subject=${id}`;
-                };
-                container.appendChild(card);
-            });
-        }
-
-        // Sahifa yuklanganda ishga tushirish
-        window.onload = loadDashboard;
+            checkInterval = setInterval(waitForData, 200);
+        })();
     </script>
 </body>
 </html>
