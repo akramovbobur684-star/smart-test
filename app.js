@@ -1,71 +1,43 @@
 // ============================================================
-// app.js - QuizMaster Pro ULTRA OPTIMIZED v5.0
-// 1660+ savol bilan ishlash uchun maksimal tezlik
-// Lazy Loading, Timeout, Error Handling, Dark Mode
+// app.js - QuizMaster Pro ULTRA v6.0
+// Yuklash mantiqi, diagnostika, Dark Mode, Timeout
 // ============================================================
 
 (function() {
     'use strict';
 
-    // ========== 1. DARK MODE - ENG TEZKOR (BOG'LIQLIKSIZ) ==========
-    
-    // Dark Mode holatini olish
-    function getDarkModeState() {
-        const saved = localStorage.getItem('quiz_theme');
-        if (saved !== null) return saved === 'dark';
-        return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    
-    // Dark Mode ni qo'llash
+    // ========== 1. DARK MODE (ENG TEZKOR) ==========
     function applyDarkMode(isDark) {
         if (isDark) {
             document.body.classList.add('dark-mode');
         } else {
             document.body.classList.remove('dark-mode');
         }
-        
-        // Barcha dark mode tugmalarini yangilash
         const btns = document.querySelectorAll('#theme-toggle-btn, #theme-btn, .theme-toggle');
         btns.forEach(btn => {
-            if (btn) {
-                btn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
-            }
+            if (btn) btn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
         });
     }
-    
-    // Dark Mode toggle
+
+    function getDarkModeState() {
+        const saved = localStorage.getItem('quiz_theme');
+        if (saved !== null) return saved === 'dark';
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
     function toggleDarkMode() {
         const isDark = !document.body.classList.contains('dark-mode');
         applyDarkMode(isDark);
         localStorage.setItem('quiz_theme', isDark ? 'dark' : 'light');
-        
-        // Toast xabar (agar mavjud bo'lsa)
         if (window.showToast) {
             window.showToast(isDark ? '🌙 Tungi rejim yoqildi' : '🌞 Yorug\' rejim yoqildi', 'info');
         }
     }
-    
-    // Dark Mode ni ishga tushirish (darhol)
-    applyDarkMode(getDarkModeState());
-    
-    // DOM yuklangandan keyin tugmalarni ulash
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            const btns = document.querySelectorAll('#theme-toggle-btn, #theme-btn, .theme-toggle');
-            btns.forEach(btn => {
-                btn.removeEventListener('click', toggleDarkMode);
-                btn.addEventListener('click', toggleDarkMode);
-            });
-        });
-    } else {
-        const btns = document.querySelectorAll('#theme-toggle-btn, #theme-btn, .theme-toggle');
-        btns.forEach(btn => {
-            btn.removeEventListener('click', toggleDarkMode);
-            btn.addEventListener('click', toggleDarkMode);
-        });
-    }
 
-    // ========== 2. TOAST XABAR (TEZKOR) ==========
+    // Dark Mode ni darhol ishga tushirish
+    applyDarkMode(getDarkModeState());
+
+    // ========== 2. TOAST XABAR ==========
     window.showToast = function(message, type = 'info') {
         const existing = document.querySelector('.toast');
         if (existing) existing.remove();
@@ -89,25 +61,8 @@
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     };
-    
-    // Animatsiyalar
-    if (!document.querySelector('#toast-animations')) {
-        const style = document.createElement('style');
-        style.id = 'toast-animations';
-        style.textContent = `
-            @keyframes slideInToast {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOutToast {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
 
-    // ========== 3. YUKLASH INDIKATORI ==========
+    // ========== 3. LOADER ==========
     window.showLoader = function(message = "Ma'lumotlar yuklanmoqda...") {
         const existing = document.querySelector('.loader-overlay');
         if (existing) existing.remove();
@@ -123,14 +78,19 @@
             <div style="background: var(--card-bg, white); padding: 30px 40px; border-radius: 24px; text-align: center;">
                 <div style="width: 50px; height: 50px; border: 4px solid var(--card-border, #e5e7eb); border-top-color: var(--primary, #4f46e5); border-radius: 50%; margin: 0 auto 20px; animation: spinLoader 1s linear infinite;"></div>
                 <p style="color: var(--text, #1f2937);">${message}</p>
+                <p style="font-size: 12px; margin-top: 10px; color: var(--text-secondary, #6b7280);" id="loader-debug"></p>
             </div>
         `;
         
         if (!document.querySelector('#loader-animations')) {
-            const animStyle = document.createElement('style');
-            animStyle.id = 'loader-animations';
-            animStyle.textContent = `@keyframes spinLoader { to { transform: rotate(360deg); } }`;
-            document.head.appendChild(animStyle);
+            const style = document.createElement('style');
+            style.id = 'loader-animations';
+            style.textContent = `
+                @keyframes spinLoader { to { transform: rotate(360deg); } }
+                @keyframes slideInToast { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+                @keyframes slideOutToast { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+            `;
+            document.head.appendChild(style);
         }
         
         document.body.appendChild(loader);
@@ -141,117 +101,90 @@
         if (loader) loader.remove();
     };
     
-    window.showError = function(message, showRetry = true) {
-        const container = document.getElementById('subjects-grid');
-        if (container) {
-            container.innerHTML = `
-                <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 60px;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #ef4444; margin-bottom: 20px;"></i>
-                    <h3 style="color: #ef4444; margin-bottom: 15px;">Xatolik yuz berdi!</h3>
-                    <p style="margin-bottom: 20px;">${message}</p>
-                    ${showRetry ? '<button onclick="location.reload()" style="padding: 10px 24px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer;">🔄 Qayta yuklash</button>' : ''}
-                </div>
-            `;
-        }
-        window.hideLoader();
-        window.showToast(message, 'error');
+    window.updateLoaderMessage = function(msg) {
+        const debugEl = document.getElementById('loader-debug');
+        if (debugEl) debugEl.innerHTML = msg;
+        console.log(`[Loader] ${msg}`);
     };
 
-    // ========== 4. TEZKOR STATISTIKA (LAZY LOADING) ==========
-    // 1660+ savolni qotirmasdan hisoblash
-    window.calculateTotalQuestions = function() {
-        if (!window.QUIZ_DATA || !window.QUIZ_DATA.length) return 0;
-        
-        // TEZKOR USUL: reduce + length (brauzerni qotirmaydi)
-        let total = 0;
-        for (let i = 0; i < window.QUIZ_DATA.length; i++) {
-            if (window.QUIZ_DATA[i].questions) {
-                total += window.QUIZ_DATA[i].questions.length;
-            }
-        }
-        return total;
-    };
+    // ========== 4. YUKLASH DIAGNOSTIKASI ==========
+    let dataLoadAttempts = 0;
+    let dataCheckInterval = null;
+    let timeoutId = null;
     
-    // Jami testlar soni (localStorage'dan tezkor o'qish)
-    window.getTotalTestsCount = function() {
-        try {
-            const stored = localStorage.getItem('qm_results');
-            if (!stored) return 0;
-            const results = JSON.parse(stored);
-            return results.length;
-        } catch(e) {
-            return 0;
-        }
-    };
-    
-    // O'rtacha ball
-    window.getAverageScore = function() {
-        try {
-            const stored = localStorage.getItem('qm_results');
-            if (!stored) return 0;
-            const results = JSON.parse(stored);
-            if (!results.length) return 0;
-            const sum = results.reduce((acc, r) => acc + (r.percent || 0), 0);
-            return Math.round(sum / results.length);
-        } catch(e) {
-            return 0;
-        }
-    };
-    
-    // O'zlashtirilgan fanlar (85%+)
-    window.getMasteredSubjectsCount = function() {
-        try {
-            const stored = localStorage.getItem('qm_results');
-            if (!stored) return 0;
-            const results = JSON.parse(stored);
-            const mastered = new Set();
-            results.forEach(r => {
-                if ((r.percent || 0) >= 85) mastered.add(r.subjectIndex);
-            });
-            return mastered.size;
-        } catch(e) {
-            return 0;
-        }
+    window.waitForData = function() {
+        return new Promise((resolve, reject) => {
+            console.log("[App] Ma'lumotlarni kutish boshlandi...");
+            window.updateLoaderMessage("Kutish rejimi: ma'lumotlar tekshirilmoqda...");
+            
+            dataLoadAttempts = 0;
+            const MAX_ATTEMPTS = 100; // 10 soniya (100 * 100ms)
+            
+            if (dataCheckInterval) clearInterval(dataCheckInterval);
+            if (timeoutId) clearTimeout(timeoutId);
+            
+            dataCheckInterval = setInterval(() => {
+                dataLoadAttempts++;
+                
+                if (window.QUIZ_DATA && window.QUIZ_DATA.length > 0) {
+                    console.log(`[App] ✅ Ma'lumotlar topildi! (${window.QUIZ_DATA.length} ta fan, ${dataLoadAttempts} urinish)`);
+                    window.updateLoaderMessage(`✅ ${window.QUIZ_DATA.length} ta fan yuklandi!`);
+                    clearInterval(dataCheckInterval);
+                    if (timeoutId) clearTimeout(timeoutId);
+                    resolve(window.QUIZ_DATA);
+                } else if (dataLoadAttempts >= MAX_ATTEMPTS) {
+                    console.error("[App] ❌ Ma'lumotlar topilmadi! Maksimal urinish:", dataLoadAttempts);
+                    window.updateLoaderMessage("❌ Ma'lumotlar topilmadi!");
+                    clearInterval(dataCheckInterval);
+                    reject(new Error("Ma'lumotlar bazasi yuklanmadi - timeout"));
+                } else if (dataLoadAttempts % 10 === 0) {
+                    console.log(`[App] Ma'lumotlar kutilmoqda... (${dataLoadAttempts}/${MAX_ATTEMPTS})`);
+                    window.updateLoaderMessage(`Kutilmoqda... (${dataLoadAttempts}/${MAX_ATTEMPTS})`);
+                }
+            }, 100);
+            
+            // Umumiy timeout (15 soniya)
+            timeoutId = setTimeout(() => {
+                if (dataCheckInterval) {
+                    clearInterval(dataCheckInterval);
+                    dataCheckInterval = null;
+                }
+                console.error("[App] ❌ Umumiy timeout! Ma'lumotlar yuklanmadi.");
+                reject(new Error("Ma'lumotlar yuklashda umumiy timeout (15s)"));
+            }, 15000);
+        });
     };
 
-    // ========== 5. DASHBOARDNI YANGILASH (TEZKOR) ==========
-    window.updateDashboard = function() {
-        const totalTestsEl = document.getElementById('stat-total-tests');
-        const avgScoreEl = document.getElementById('stat-avg-score');
-        const masteredEl = document.getElementById('stat-mastered');
-        const totalQuestionsEl = document.getElementById('stat-total-questions');
-        
-        if (totalTestsEl) totalTestsEl.textContent = window.getTotalTestsCount();
-        if (avgScoreEl) avgScoreEl.textContent = `${window.getAverageScore()}%`;
-        if (masteredEl) masteredEl.textContent = window.getMasteredSubjectsCount();
-        
-        // Jami savollar (faqat bir marta hisoblanadi)
-        if (totalQuestionsEl && !window._totalQuestionsCached) {
-            window._totalQuestionsCached = window.calculateTotalQuestions();
-            totalQuestionsEl.textContent = window._totalQuestionsCached;
-        } else if (totalQuestionsEl) {
-            totalQuestionsEl.textContent = window._totalQuestionsCached || 0;
-        }
-    };
-
-    // ========== 6. FAN KARTOCHKALARINI RENDER QILISH (OPTIMIZED) ==========
+    // ========== 5. FAN KARTOCHKALARINI RENDER QILISH ==========
     window.renderSubjects = function() {
         const grid = document.getElementById('subjects-grid');
-        if (!grid) return;
+        if (!grid) {
+            console.error("[App] subjects-grid elementi topilmadi!");
+            return;
+        }
         
         if (!window.QUIZ_DATA || !window.QUIZ_DATA.length) {
+            console.error("[App] QUIZ_DATA mavjud emas yoki bo'sh!");
             grid.innerHTML = `
-                <div class="empty-state" style="grid-column: 1/-1;">
-                    <i class="fas fa-database"></i>
-                    <h3>Ma'lumotlar bazasi topilmadi!</h3>
-                    <p>questions.js fayli mavjudligini tekshiring.</p>
-                    <button onclick="location.reload()" style="margin-top:15px; padding:10px 20px; cursor:pointer;">🔄 Qayta yuklash</button>
+                <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                    <i class="fas fa-database" style="font-size: 64px; color: #ef4444; margin-bottom: 20px;"></i>
+                    <h3 style="color: #ef4444;">Ma'lumotlar bazasi topilmadi!</h3>
+                    <p style="margin: 15px 0;">Sabablari:</p>
+                    <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
+                        <li>questions.js fayli yuklanmagan</li>
+                        <li>Fayl yo'li noto'g'ri (root papkada bo'lishi kerak)</li>
+                        <li>questions.js da sintaksis xatosi</li>
+                    </ul>
+                    <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 24px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer;">🔄 Qayta yuklash</button>
+                    <button onclick="window.testQuestionsLoad()" style="margin-top: 20px; margin-left: 10px; padding: 10px 24px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer;">🔍 Test</button>
                 </div>
             `;
             return;
         }
         
-        // Natijalarni tezkor o'qish
+        console.log(`[App] ${window.QUIZ_DATA.length} ta fan render qilinmoqda...`);
+        
+        // Natijalarni localStorage'dan o'qish
         let resultsMap = new Map();
         try {
             const stored = localStorage.getItem('qm_results');
@@ -266,7 +199,6 @@
             }
         } catch(e) {}
         
-        // Kartochkalarni yaratish
         grid.innerHTML = '';
         
         for (let i = 0; i < window.QUIZ_DATA.length; i++) {
@@ -275,7 +207,6 @@
             const bestScore = subjectResults.length ? Math.max(...subjectResults.map(r => r.percent || 0)) : null;
             const attemptsCount = subjectResults.length;
             
-            // Badge turi
             let badgeClass = 'badge-new';
             let badgeText = '🆕 Hali topshirilmagan';
             let badgeIcon = 'fa-hourglass-half';
@@ -337,6 +268,9 @@
         }
         
         window.hideLoader();
+        if (window.QuizApp && window.QuizApp.updateDashboard) {
+            window.QuizApp.updateDashboard();
+        }
     };
     
     function escapeHtml(str) {
@@ -344,52 +278,44 @@
         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    // ========== 7. TIMEOUT BILAN MA'LUMOTLARNI KUTISH ==========
-    let dataCheckInterval = null;
-    let timeoutId = null;
-    
-    function waitForData() {
-        let attempts = 0;
-        const maxAttempts = 50; // 5 soniya (100ms * 50)
+    // ========== 6. DASHBOARD ==========
+    window.updateDashboard = function() {
+        // Jami savollar soni
+        const totalQuestions = window.QUIZ_DATA ? window.QUIZ_DATA.reduce((sum, s) => sum + (s.questions?.length || 0), 0) : 0;
         
-        if (dataCheckInterval) clearInterval(dataCheckInterval);
-        if (timeoutId) clearTimeout(timeoutId);
+        // Jami testlar
+        let totalTests = 0;
+        let avgScore = 0;
+        let masteredCount = 0;
         
-        dataCheckInterval = setInterval(() => {
-            attempts++;
-            
-            if (window.QUIZ_DATA && window.QUIZ_DATA.length > 0) {
-                // Ma'lumot tayyor!
-                clearInterval(dataCheckInterval);
-                if (timeoutId) clearTimeout(timeoutId);
-                dataCheckInterval = null;
-                
-                window.updateDashboard();
-                window.renderSubjects();
-                window.showToast(`✅ ${window.QUIZ_DATA.length} ta fan yuklandi!`, 'success');
-            } else if (attempts >= maxAttempts) {
-                // Timeout - ma'lumot yuklanmadi
-                clearInterval(dataCheckInterval);
-                if (timeoutId) clearTimeout(timeoutId);
-                dataCheckInterval = null;
-                
-                window.showError("Ma'lumotlar bazasi yuklanmadi! Iltimos, internet aloqangizni tekshiring yoki sahifani qayta yuklang.", true);
+        try {
+            const stored = localStorage.getItem('qm_results');
+            if (stored) {
+                const results = JSON.parse(stored);
+                totalTests = results.length;
+                if (totalTests > 0) {
+                    avgScore = Math.round(results.reduce((s, r) => s + (r.percent || 0), 0) / totalTests);
+                }
+                const masteredSet = new Set();
+                results.forEach(r => {
+                    if ((r.percent || 0) >= 85) masteredSet.add(r.subjectIndex);
+                });
+                masteredCount = masteredSet.size;
             }
-        }, 100);
+        } catch(e) {}
         
-        // Umumiy timeout (10 soniya)
-        timeoutId = setTimeout(() => {
-            if (dataCheckInterval) {
-                clearInterval(dataCheckInterval);
-                dataCheckInterval = null;
-            }
-            if (!window.QUIZ_DATA || !window.QUIZ_DATA.length) {
-                window.showError("Ma'lumotlar yuklashda vaqt tugadi! Iltimos, sahifani qayta yuklang.", true);
-            }
-        }, 10000);
-    }
+        const totalTestsEl = document.getElementById('stat-total-tests');
+        const avgScoreEl = document.getElementById('stat-avg-score');
+        const masteredEl = document.getElementById('stat-mastered');
+        const totalQuestionsEl = document.getElementById('stat-total-questions');
+        
+        if (totalTestsEl) totalTestsEl.textContent = totalTests;
+        if (avgScoreEl) avgScoreEl.textContent = `${avgScore}%`;
+        if (masteredEl) masteredEl.textContent = masteredCount;
+        if (totalQuestionsEl) totalQuestionsEl.textContent = totalQuestions;
+    };
 
-    // ========== 8. QIDIRUV VA FILTR (TEZKOR) ==========
+    // ========== 7. QIDIRUV VA FILTR ==========
     window.initSearchAndFilter = function() {
         const searchInput = document.getElementById('search-input');
         const filterBtns = document.querySelectorAll('.filter-btn');
@@ -400,11 +326,7 @@
                 const cards = document.querySelectorAll('.subject-card');
                 cards.forEach(card => {
                     const name = card.querySelector('.subject-name')?.innerText.toLowerCase() || '';
-                    if (name.includes(term)) {
-                        card.style.display = '';
-                    } else {
-                        card.style.display = 'none';
-                    }
+                    card.style.display = name.includes(term) ? '' : 'none';
                 });
             });
         }
@@ -423,33 +345,80 @@
                     if (filter === 'all') {
                         card.style.display = '';
                     } else if (filter === 'exact') {
-                        const exactSubjects = ['Matematika', 'Fizika', 'Dasturlash', 'Biologiya'];
-                        card.style.display = subject && exactSubjects.includes(subject.subject) ? '' : 'none';
+                        const exact = ['Matematika', 'Fizika', 'Dasturlash', 'Biologiya'];
+                        card.style.display = subject && exact.includes(subject.subject) ? '' : 'none';
                     } else if (filter === 'humanitarian') {
-                        const humanSubjects = ['Ingliz tili', 'Tarix', 'Adabiyot'];
-                        card.style.display = subject && humanSubjects.includes(subject.subject) ? '' : 'none';
+                        const human = ['Ingliz tili', 'Tarix', 'Adabiyot'];
+                        card.style.display = subject && human.includes(subject.subject) ? '' : 'none';
                     } else if (filter === 'retake') {
                         const badge = card.querySelector('.smart-badge');
-                        const isRetake = badge && badge.classList.contains('badge-retake');
-                        card.style.display = isRetake ? '' : 'none';
+                        card.style.display = badge && badge.classList.contains('badge-retake') ? '' : 'none';
                     }
                 });
             });
         });
     };
 
-    // ========== 9. ASOSIY INIT ==========
-    window.initApp = function() {
-        window.showLoader("Ma'lumotlar yuklanmoqda...");
-        waitForData();
-        
-        // DOM tayyor bo'lganda qidiruv va filtrni ulash
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                window.initSearchAndFilter();
-            });
+    // ========== 8. DIAGNOSTIK TEST ==========
+    window.testQuestionsLoad = function() {
+        console.log("=== DIAGNOSTIK TEST ===");
+        console.log("window.QUIZ_DATA mavjudmi?", !!window.QUIZ_DATA);
+        if (window.QUIZ_DATA) {
+            console.log("window.QUIZ_DATA uzunligi:", window.QUIZ_DATA.length);
+            console.log("Fanlar:", window.QUIZ_DATA.map(s => s.subject));
+            console.log("Jami savollar:", window.QUIZ_DATA.reduce((s, f) => s + (f.questions?.length || 0), 0));
         } else {
+            console.error("window.QUIZ_DATA undefined!");
+            console.log("document.querySelector('script[src*=\"questions\"]')", document.querySelector('script[src*="questions"]'));
+        }
+        console.log("========================");
+        window.showToast("Diagnostika tugallandi, konsolni tekshiring (F12)", 'info');
+    };
+
+    // ========== 9. ASOSIY INIT ==========
+    window.initApp = async function() {
+        console.log("[App] QuizMaster Pro v6.0 ishga tushmoqda...");
+        window.showLoader("Ma'lumotlar yuklanmoqda...");
+        
+        try {
+            // Dark Mode tugmalarini ulash
+            setTimeout(() => {
+                const btns = document.querySelectorAll('#theme-toggle-btn, #theme-btn, .theme-toggle');
+                btns.forEach(btn => {
+                    btn.removeEventListener('click', toggleDarkMode);
+                    btn.addEventListener('click', toggleDarkMode);
+                });
+            }, 100);
+            
+            // Ma'lumotlarni kutish
+            await window.waitForData();
+            
+            // Dashboard va kartochkalarni yangilash
+            window.updateDashboard();
+            window.renderSubjects();
             window.initSearchAndFilter();
+            
+            window.showToast(`✅ ${window.QUIZ_DATA.length} ta fan muvaffaqiyatli yuklandi!`, 'success');
+            console.log("[App] ✅ Initialization complete!");
+            
+        } catch (error) {
+            console.error("[App] ❌ Initialization failed:", error);
+            window.hideLoader();
+            
+            const grid = document.getElementById('subjects-grid');
+            if (grid) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #ef4444; margin-bottom: 20px;"></i>
+                        <h3 style="color: #ef4444;">Ma'lumotlar bazasi yuklanmadi!</h3>
+                        <p style="margin: 15px 0;">Xato: ${error.message}</p>
+                        <p style="margin: 10px 0; font-size: 13px;">Iltimos, F12 tugmasini bosing va konsolni tekshiring.</p>
+                        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 24px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer;">🔄 Qayta yuklash</button>
+                        <button onclick="window.testQuestionsLoad()" style="margin-top: 20px; margin-left: 10px; padding: 10px 24px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer;">🔍 Diagnostika</button>
+                    </div>
+                `;
+            }
+            window.showToast("❌ Ma'lumotlar bazasi yuklanmadi!", 'error');
         }
     };
     
@@ -462,7 +431,7 @@
         window.initApp();
     }
     
-    // Eksport
+    // Global eksport
     window.QuizApp = {
         darkMode: { getState: getDarkModeState, apply: applyDarkMode, toggle: toggleDarkMode },
         showToast: window.showToast,
@@ -470,11 +439,9 @@
         hideLoader: window.hideLoader,
         updateDashboard: window.updateDashboard,
         renderSubjects: window.renderSubjects,
-        calculateTotalQuestions: window.calculateTotalQuestions,
-        getTotalTestsCount: window.getTotalTestsCount,
-        getAverageScore: window.getAverageScore,
-        getMasteredSubjectsCount: window.getMasteredSubjectsCount
+        testQuestionsLoad: window.testQuestionsLoad,
+        waitForData: window.waitForData
     };
     
-    console.log("✅ app.js v5.0 yuklandi (Ultra Optimized for 1660+ questions)");
+    console.log("[App] ✅ app.js v6.0 yuklandi - Ultra Optimized with Diagnostics!");
 })();
