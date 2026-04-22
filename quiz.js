@@ -1,376 +1,144 @@
 /**
  * ============================================================
- * QuizMaster Pro — Intellectual Quiz Engine v3.0
- * Jigarim, bu kod xatolarni o'zi davolaydi va testni boshqaradi.
+ * QUIZ_DATA — Intellectual Quiz Database v3.0
+ * Global eksport va fallback tizimi bilan
  * ============================================================
  */
 
-'use strict';
+(function() {
+    'use strict';
 
-// -------------------------------------------------------
-// 1. INTELLEKTUAL HOLAT (State Management)
-// -------------------------------------------------------
-const QuizState = {
-    subjectIndex: 0,
-    subjectName: "",
-    questions: [],
-    currentIndex: 0,
-    answers: [],
-    selectedOption: null,
-    timeLeft: 0,
-    totalTime: 0,
-    timerInterval: null,
-    isFinished: false,
-    startTime: null,
-    endTime: null,
-    shuffledOptions: [],
-    // Intellektual metrikalar
-    userFocus: true,
-    skipsCount: 0,
-    timeAnalysis: [] // Har bir savolga sarflangan vaqt
-};
-
-const TIME_PER_QUESTION = 30; 
-const CIRCUMFERENCE = 125.66; // 2 * PI * 20
-
-// -------------------------------------------------------
-// 2. ENGINE MONITORING (Xatolarni nazorat qilish)
-// -------------------------------------------------------
-const EngineMonitor = {
-    log(msg, type = 'info') {
-        console.log(`%c[QuizEngine] ${msg}`, `color: ${type === 'error' ? '#ff4757' : '#2ed573'}; font-weight: bold;`);
-    },
-    validateData(idx) {
-        if (!window.QUIZ_DATA) return { valid: false, msg: "QUIZ_DATA topilmadi (questions.js ulanmagan)." };
-        if (!window.QUIZ_DATA[idx]) return { valid: false, msg: `${idx}-indeksli fan topilmadi.` };
-        return { valid: true };
-    }
-};
-
-// -------------------------------------------------------
-// 3. TESTNI BOSHLASH VA TIKLASH
-// -------------------------------------------------------
-
-function startQuiz(idx, resume = false) {
-    EngineMonitor.log("Test yuklanmoqda...");
-    
-    const check = EngineMonitor.validateData(idx);
-    if (!check.valid) return showError(check.msg);
-
-    const data = window.QUIZ_DATA[idx];
-
-    // Sessiyani tiklash mantiqi (Intellektual resume)
-    if (resume) {
-        const saved = QuizApp.loadSession();
-        if (saved && saved.subjectIndex === idx && saved.fullState) {
-            EngineMonitor.log("Eski sessiya tiklanmoqda...");
-            Object.assign(QuizState, saved.fullState);
-            renderQuestion();
-            return;
+    // Asosiy ma'lumotlar bazasi
+    const QUIZ_DATA_RAW = [
+        {
+            id: 0,
+            subject: "JavaScript Asoslari",
+            icon: "📘",
+            color: "#f7df1e",
+            questions: [
+                {
+                    question: "JavaScript qanday turdagi til?",
+                    options: ["Kompilyatsiya", "Interpretatsiya", "Gibrid", "Machine Code"],
+                    answer: "Interpretatsiya"
+                },
+                {
+                    question: "`var`, `let`, `const` orasida qaysi biri block-scoped?",
+                    options: ["Faqat var", "Faqat let", "let va const", "Hammasi"],
+                    answer: "let va const"
+                },
+                {
+                    question: "`===` va `==` farqi?",
+                    options: ["Hech qanday", "`===` tiplarni tekshiradi", "`==` tiplarni tekshiradi", "Teskari ishlaydi"],
+                    answer: "`===` tiplarni tekshiradi"
+                }
+            ]
+        },
+        {
+            id: 1,
+            subject: "React.js",
+            icon: "⚛️",
+            color: "#61dafb",
+            questions: [
+                {
+                    question: "React komponentlari qanday ma'lumotlarni qabul qiladi?",
+                    options: ["State", "Props", "Both", "Store"],
+                    answer: "Props"
+                },
+                {
+                    question: "Hook lar qaysi versiyada qo'shilgan?",
+                    options: ["v15", "v16.8", "v17", "v18"],
+                    answer: "v16.8"
+                }
+            ]
+        },
+        {
+            id: 2,
+            subject: "Python Dasturlash",
+            icon: "🐍",
+            color: "#3776ab",
+            questions: [
+                {
+                    question: "Python qaysi paradigmada ishlaydi?",
+                    options: ["Funktsional", "Obyektga yo'naltirilgan", "Ikkalasi", "Hech biri"],
+                    answer: "Ikkalasi"
+                }
+            ]
         }
-    }
+    ];
 
-    // Holatni noldan sozlash
-    QuizState.subjectIndex = idx;
-    QuizState.subjectName = data.subject;
-    // Fisher-Yates algoritmi orqali intellektual aralashtirish
-    QuizState.questions = QuizApp.shuffleArray(data.questions);
-    QuizState.currentIndex = 0;
-    QuizState.answers = new Array(QuizState.questions.length).fill(undefined);
-    QuizState.startTime = Date.now();
-    QuizState.isFinished = false;
-    
-    saveCurrentState();
-    renderQuestion();
-    
-    if (window.QuizApp && QuizApp.showToast) {
-        QuizApp.showToast(`${data.subject} testi boshlandi!`, 'success');
-    }
-}
+    // FALLBACK — agar asosiy ma'lumotlar yo'qolsa yoki buzilsa
+    const FALLBACK_QUIZ_DATA = [
+        {
+            id: 0,
+            subject: "Fallback Test",
+            icon: "🛡️",
+            color: "#ff6b6b",
+            questions: [
+                {
+                    question: "Bu fallback savol. Tizim asosiy ma'lumotlarni topa olmadi.",
+                    options: ["Davom etish", "Qayta yuklash", "Admin bilan bog'lanish", "Keyinroq"],
+                    answer: "Davom etish"
+                }
+            ]
+        }
+    ];
 
-// -------------------------------------------------------
-// 4. SAVOLNI CHIZISH (Visual & Data Integrity)
-// -------------------------------------------------------
+    // Xavfsiz global eksport
+    window.QUIZ_DATA = null;
+    window.QUIZ_DATA_LOADED = false;
+    window.QUIZ_DATA_ERROR = null;
 
-function renderQuestion() {
-    if (QuizState.isFinished) return;
-
-    const q = QuizState.questions[QuizState.currentIndex];
-    const total = QuizState.questions.length;
-    const currentNum = QuizState.currentIndex + 1;
-    const subject = window.QUIZ_DATA[QuizState.subjectIndex];
-
-    EngineMonitor.log(`${currentNum}-savol render qilinmoqda.`);
-
-    // 1. Matnlarni yangilash
-    setInner('quiz-subject-name', `<span style="font-size: 1.2rem; margin-right: 8px;">${subject.icon}</span> ${subject.subject}`);
-    setInner('quiz-question-counter', `${currentNum} / ${total}`);
-    setInner('quiz-question-text', q.question);
-    
-    const badge = document.getElementById('question-badge');
-    if (badge) badge.textContent = `SAVOL: ${currentNum}`;
-
-    // 2. Progress Bar (Silliq animatsiya bilan)
-    const pct = Math.round(((currentNum - 1) / total) * 100);
-    const progressBar = document.getElementById('quiz-progress-bar');
-    if (progressBar) {
-        progressBar.style.width = `${pct}%`;
-        progressBar.style.backgroundColor = subject.color;
-    }
-    setInner('quiz-progress-text', `${pct}% yakunlandi`);
-
-    // 3. Variantlarni generatsiya qilish
-    const optionsEl = document.getElementById('quiz-options');
-    if (!optionsEl) return;
-    optionsEl.innerHTML = '';
-
-    // Variantlarni aralashtirib saqlash (bir martalik)
-    if (!QuizState.shuffledOptions[QuizState.currentIndex]) {
-        QuizState.shuffledOptions[QuizState.currentIndex] = QuizApp.shuffleArray(q.options);
-    }
-    const currentOptions = QuizState.shuffledOptions[QuizState.currentIndex];
-
-    currentOptions.forEach((opt, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn animate-fadeInUp';
-        btn.style.animationDelay = `${i * 0.1}s`;
+    function validateData(data) {
+        if (!data || !Array.isArray(data)) return false;
+        if (data.length === 0) return false;
         
-        const letter = String.fromCharCode(65 + i);
-        btn.innerHTML = `
-            <span class="option-letter">${letter}</span>
-            <span class="option-text">${opt}</span>
-        `;
-
-        if (QuizState.answers[QuizState.currentIndex] === opt) {
-            btn.classList.add('selected');
+        // Har bir fanni tekshirish
+        for (let i = 0; i < data.length; i++) {
+            const subject = data[i];
+            if (!subject.subject || !subject.questions || !Array.isArray(subject.questions)) {
+                console.error(`[QuizData] ${i}-indeksli fan noto'g'ri formatda`);
+                return false;
+            }
+            if (subject.questions.length === 0) {
+                console.warn(`[QuizData] ${subject.subject} fanida savollar yo'q`);
+            }
         }
-
-        btn.onclick = () => selectOption(btn, opt, optionsEl);
-        optionsEl.appendChild(btn);
-    });
-
-    // 4. Integratsiya
-    updateNextButton();
-    resetTimer();
-    saveCurrentState();
-    
-    // UI rangini dinamik o'zgartirish
-    document.documentElement.style.setProperty('--subject-color', subject.color);
-}
-
-// -------------------------------------------------------
-// 5. TANLASH VA BOSHQARISH
-// -------------------------------------------------------
-
-function selectOption(btn, value, container) {
-    if (QuizState.isFinished) return;
-
-    // Vizual feedback
-    container.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    
-    QuizState.selectedOption = value;
-    QuizState.answers[QuizState.currentIndex] = value;
-
-    updateNextButton();
-    saveCurrentState();
-}
-
-function updateNextButton() {
-    const btn = document.getElementById('btn-next');
-    if (!btn) return;
-
-    const isLast = QuizState.currentIndex === QuizState.questions.length - 1;
-    const hasAns = QuizState.answers[QuizState.currentIndex] !== undefined;
-
-    btn.innerHTML = isLast ? 'Natijani ko\'rish ✅' : 'Keyingi savol <span style="margin-left:10px">→</span>';
-    btn.disabled = false; 
-    
-    if (hasAns) {
-        btn.style.opacity = '1';
-        btn.classList.add('has-answer');
-    } else {
-        btn.style.opacity = '0.7';
-        btn.classList.remove('has-answer');
-    }
-}
-
-function goNext() {
-    if (QuizState.isFinished) return;
-
-    // Metrika: Agar javobsiz o'tsa
-    if (QuizState.answers[QuizState.currentIndex] === undefined) {
-        QuizState.answers[QuizState.currentIndex] = null;
-        QuizState.skipsCount++;
+        return true;
     }
 
-    if (QuizState.currentIndex < QuizState.questions.length - 1) {
-        QuizState.currentIndex++;
-        QuizState.selectedOption = null;
-        renderQuestion();
-    } else {
-        finishQuiz();
-    }
-}
-
-// -------------------------------------------------------
-// 6. TIMER VA VAQT ANALIZI
-// -------------------------------------------------------
-
-function resetTimer() {
-    clearTimerInterval();
-    QuizState.timeLeft = TIME_PER_QUESTION;
-    updateTimerUI();
-
-    QuizState.timerInterval = setInterval(() => {
-        if (!QuizState.userFocus) return; // Tab ochiq bo'lmasa vaqtni to'xtatish (optional)
-
-        QuizState.timeLeft--;
-        updateTimerUI();
-
-        if (QuizState.timeLeft <= 0) {
-            EngineMonitor.log("Vaqt tugadi.", "error");
-            goNext();
+    // Asosiy ma'lumotlarni yuklash
+    try {
+        if (validateData(QUIZ_DATA_RAW)) {
+            window.QUIZ_DATA = QUIZ_DATA_RAW;
+            window.QUIZ_DATA_LOADED = true;
+            console.log("%c[QuizData] ✅ Ma'lumotlar bazasi muvaffaqiyatli yuklandi", "color: #2ed573; font-weight: bold;");
+        } else {
+            throw new Error("Asosiy ma'lumotlar validatsiyadan o'tmadi");
         }
-    }, 1000);
-}
-
-function updateTimerUI() {
-    const timerText = document.getElementById('quiz-timer');
-    const ring = document.getElementById('timer-ring');
-    if (!timerText) return;
-
-    timerText.textContent = QuizApp.formatTime(QuizState.timeLeft);
-
-    // Vizual ogohlantirishlar
-    if (QuizState.timeLeft <= 5) {
-        timerText.style.color = '#ff4757';
-        timerText.parentElement.classList.add('pulse-warning');
-    } else {
-        timerText.style.color = 'inherit';
-        timerText.parentElement.classList.remove('pulse-warning');
+    } catch (e) {
+        console.error("[QuizData] Asosiy ma'lumotlarni yuklashda xatolik:", e);
+        window.QUIZ_DATA_ERROR = e.message;
+        
+        // Fallback ni ishga tushirish
+        if (validateData(FALLBACK_QUIZ_DATA)) {
+            window.QUIZ_DATA = FALLBACK_QUIZ_DATA;
+            console.warn("%c[QuizData] ⚠️ Fallback ma'lumotlar ishlatilmoqda", "color: #ffa502; font-weight: bold;");
+        } else {
+            console.error("[QuizData] Fallback ham ishlamadi!");
+            window.QUIZ_DATA = [];
+        }
     }
 
-    if (ring) {
-        const pct = QuizState.timeLeft / TIME_PER_QUESTION;
-        ring.style.strokeDashoffset = CIRCUMFERENCE * (1 - pct);
-    }
-}
-
-function clearTimerInterval() {
-    if (QuizState.timerInterval) {
-        clearInterval(QuizState.timerInterval);
-        QuizState.timerInterval = null;
-    }
-}
-
-// -------------------------------------------------------
-// 7. TESTNI YAKUNLASH (Result Intelligence)
-// -------------------------------------------------------
-
-function finishQuiz() {
-    clearTimerInterval();
-    QuizState.isFinished = true;
-    QuizState.endTime = Date.now();
-
-    const subject = window.QUIZ_DATA[QuizState.subjectIndex];
-    let correct = 0;
-    const details = [];
-
-    QuizState.questions.forEach((q, i) => {
-        const userAns = QuizState.answers[i];
-        const isCorrect = userAns === q.answer;
-        if (isCorrect) correct++;
-
-        details.push({
-            q: q.question,
-            user: userAns || "Javob berilmadi",
-            correct: q.answer,
-            status: isCorrect
-        });
-    });
-
-    const result = {
-        subject: subject.subject,
-        subjectIndex: QuizState.subjectIndex,
-        correct,
-        total: QuizState.questions.length,
-        percent: QuizApp.calcPercent(correct, QuizState.questions.length),
-        timeSpent: Math.round((QuizState.endTime - QuizState.startTime) / 1000),
-        details: details,
-        skips: QuizState.skipsCount
+    // Qo'shimcha: ma'lumotlar holatini tekshirish funksiyasi
+    window.quizDataHealth = function() {
+        return {
+            loaded: window.QUIZ_DATA_LOADED,
+            subjectsCount: window.QUIZ_DATA ? window.QUIZ_DATA.length : 0,
+            error: window.QUIZ_DATA_ERROR,
+            details: window.QUIZ_DATA ? window.QUIZ_DATA.map(s => ({
+                name: s.subject,
+                questionsCount: s.questions.length
+            })) : []
+        };
     };
-
-    QuizApp.saveResult(result);
-    QuizApp.clearSession(); // Sessiyani o'chirish
-
-    // Natija sahifasiga xavfsiz yo'naltirish
-    const params = new URLSearchParams({
-        subject: result.subject,
-        score: result.correct,
-        total: result.total,
-        time: result.timeSpent
-    });
-    window.location.href = `result.html?${params.toString()}`;
-}
-
-// -------------------------------------------------------
-// 8. YORDAMCHI FUNKSIYALAR VA EVENTLAR
-// -------------------------------------------------------
-
-function saveCurrentState() {
-    QuizApp.saveSession({
-        subjectIndex: QuizState.subjectIndex,
-        fullState: QuizState,
-        lastUpdate: Date.now()
-    });
-}
-
-function setInner(id, html) {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = html;
-}
-
-function showError(msg) {
-    const container = document.getElementById('quiz-container');
-    if (container) {
-        container.innerHTML = `
-            <div class="error-box animate-scaleIn" style="text-align: center; padding: 100px 20px;">
-                <div style="font-size: 5rem; margin-bottom: 20px;">⚠️</div>
-                <h2 style="margin-bottom: 15px; color: #ff4757;">Tizimli xatolik!</h2>
-                <p style="margin-bottom: 30px; color: #747d8c;">${msg}</p>
-                <a href="index.html" class="btn btn-primary">Bosh sahifaga qaytish</a>
-            </div>`;
-    }
-}
-
-// Klaviatura boshqaruvi (1, 2, 3, 4 va Enter)
-document.addEventListener('keydown', (e) => {
-    if (QuizState.isFinished) return;
-    if (e.key >= '1' && e.key <= '4') {
-        const btns = document.querySelectorAll('.option-btn');
-        const idx = parseInt(e.key) - 1;
-        if (btns[idx]) btns[idx].click();
-    }
-    if (e.key === 'Enter') {
-        const nextBtn = document.getElementById('btn-next');
-        if (nextBtn && !nextBtn.disabled) goNext();
-    }
-});
-
-// Fokus nazorati
-window.onblur = () => QuizState.userFocus = false;
-window.onfocus = () => QuizState.userFocus = true;
-
-// INIT
-document.addEventListener('DOMContentLoaded', () => {
-    const urlIdx = QuizApp.getUrlParam('subject');
-    if (urlIdx !== null) {
-        startQuiz(parseInt(urlIdx), true);
-    }
-    
-    const nextBtn = document.getElementById('btn-next');
-    if (nextBtn) nextBtn.onclick = goNext;
-});
-
-window.QuizEngine = { startQuiz, goNext, finishQuiz, QuizState };
+})();
