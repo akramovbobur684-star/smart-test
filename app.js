@@ -249,3 +249,133 @@ window.QuizApp = {
     getUrlParam,
     STORAGE_KEYS
 };
+/**
+ * QuizMaster Pro — Core Application Helper
+ */
+
+const QuizApp = (function() {
+    'use strict';
+    
+    return {
+        // URL parametrlarini olish
+        getUrlParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        },
+        
+        // Array aralashtirish (Fisher-Yates)
+        shuffleArray(arr) {
+            const array = [...arr];
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        },
+        
+        // Foiz hisoblash
+        calcPercent(correct, total) {
+            if (total === 0) return 0;
+            return Math.round((correct / total) * 100);
+        },
+        
+        // Vaqt formatlash (mm:ss)
+        formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        },
+        
+        // HTML escaping (XSS dan himoya)
+        escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+        
+        // Session saqlash
+        saveSession(data) {
+            try {
+                localStorage.setItem('quiz_session', JSON.stringify(data));
+            } catch (e) {
+                console.warn("Session saqlashda xatolik:", e);
+            }
+        },
+        
+        // Session yuklash
+        loadSession() {
+            try {
+                const saved = localStorage.getItem('quiz_session');
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) {
+                console.warn("Session yuklashda xatolik:", e);
+                return null;
+            }
+        },
+        
+        // Session tozalash
+        clearSession() {
+            try {
+                localStorage.removeItem('quiz_session');
+            } catch (e) {
+                console.warn("Session tozalashda xatolik:", e);
+            }
+        },
+        
+        // Natijani saqlash
+        saveResult(result) {
+            try {
+                const results = JSON.parse(localStorage.getItem('quiz_results') || '[]');
+                results.unshift({ ...result, timestamp: Date.now() });
+                // Oxirgi 20 ta natijani saqlash
+                while (results.length > 20) results.pop();
+                localStorage.setItem('quiz_results', JSON.stringify(results));
+            } catch (e) {
+                console.warn("Natijani saqlashda xatolik:", e);
+            }
+        },
+        
+        // Toast xabar
+        showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 24px;
+                background: ${type === 'success' ? '#2ed573' : '#1e90ff'};
+                color: white;
+                border-radius: 8px;
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+                font-weight: 500;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    };
+})();
+
+// Animatsiyalar uchun CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
