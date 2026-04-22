@@ -1,418 +1,81 @@
-/**
- * ============================================================
- * quiz.js — QuizMaster Pro Test Engine (v2.0)
- * Mantiq: Savollar, Timer, Progress, Sessiya, Nuqtalar
- * ============================================================
- */
-
-'use strict';
-
-// -------------------------------------------------------
-// 1. TEST HOLATI (Advanced State Management)
-// -------------------------------------------------------
-const QuizState = {
-    subjectIndex: 0,
-    questions: [],
-    currentIndex: 0,
-    answers: [],
-    selectedOption: null,
-    timeLeft: 0,
-    totalTime: 0,
-    timerInterval: null,
-    isFinished: false,
-    startTime: null,
-    endTime: null,
-    shuffledOptions: [],
-    timePerQuestionLogs: [], // Har bir savolga sarflangan vaqt logi
-    lastActionTimestamp: null,
-    isPaused: false
-};
-
-const TIME_PER_QUESTION = 30; // 30 soniya har bir savol uchun
-const CIRCUMFERENCE = 125.66; // 2 * PI * 20 (Ring uchun)
-
-// -------------------------------------------------------
-// 2. TESTNI BOSHLASH VA TIKLASH
-// -------------------------------------------------------
-
-/**
- * Testni boshlash funksiyasi
- * @param {number} idx - Fan indeksi
- * @param {boolean} resume - Sessiyadan tiklash
- */
-function startQuiz(idx, resume = false) {
-    const data = window.QUIZ_DATA[idx];
-    if (!data) return showError('Tanlangan fan ma\'lumotlari topilmadi.');
-
-    if (resume) {
-        const saved = QuizApp.loadSession();
-        if (saved && saved.subjectIndex === idx && saved.fullState) {
-            Object.assign(QuizState, saved.fullState);
-            initDotsNavigation();
-            renderQuestion();
-            return;
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMaster Pro — Natijalar</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Asosiy CSS (root papkada) -->
+    <link rel="stylesheet" href="style.css?v=1.2">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --text: #1f2937;
         }
-    }
-
-    // Holatni tozalash va yangi testni sozlash
-    QuizState.subjectIndex = idx;
-    QuizState.questions = QuizApp.shuffleArray(data.questions);
-    QuizState.currentIndex = 0;
-    QuizState.answers = new Array(QuizState.questions.length).fill(undefined);
-    QuizState.timePerQuestionLogs = new Array(QuizState.questions.length).fill(0);
-    QuizState.selectedOption = null;
-    QuizState.isFinished = false;
-    QuizState.startTime = Date.now();
-    QuizState.lastActionTimestamp = Date.now();
-    QuizState.totalTime = QuizState.questions.length * TIME_PER_QUESTION;
-
-    // Boshlang'ich UI sozlamalari
-    initDotsNavigation();
-    saveCurrentState();
-    renderQuestion();
-    
-    // Kirish xabarnomasi
-    if (window.QuizApp && QuizApp.showToast) {
-        QuizApp.showToast(`${data.subject} testi boshlandi! Omad!`, 'info');
-    }
-}
-
-// -------------------------------------------------------
-// 3. SAVOLNI RENDER QILISH (UI Logic)
-// -------------------------------------------------------
-
-function renderQuestion() {
-    if (QuizState.isFinished) return;
-
-    const currentQuestion = QuizState.questions[QuizState.currentIndex];
-    const totalQuestions = QuizState.questions.length;
-    const currentNum = QuizState.currentIndex + 1;
-    const subject = window.QUIZ_DATA[QuizState.subjectIndex];
-
-    // Savol kartasiga animatsiya berish
-    const card = document.getElementById('question-card');
-    if (card) {
-        card.classList.remove('animate-fadeInUp');
-        void card.offsetWidth; // Reflow triggers animation restart
-        card.classList.add('animate-fadeInUp');
-    }
-
-    // Matnlarni o'rnatish
-    setInner('quiz-subject-name', subject.subject);
-    setInner('quiz-question-counter', `${currentNum} / ${totalQuestions}`);
-    setInner('quiz-question-text', currentQuestion.question);
-    
-    // Badge yangilash
-    const badge = document.getElementById('question-badge');
-    if (badge) badge.textContent = `S–${currentNum}`;
-
-    // Progress Bar yangilash
-    const pct = Math.round(((currentNum - 1) / totalQuestions) * 100);
-    const progressBar = document.getElementById('quiz-progress-bar');
-    if (progressBar) {
-        progressBar.style.width = `${pct}%`;
-        progressBar.style.backgroundColor = subject.color;
-    }
-    setInner('quiz-progress-text', `${pct}% bajarildi`);
-
-    // Variantlarni tozalash va chizish
-    const optionsGrid = document.getElementById('quiz-options');
-    if (!optionsGrid) return;
-    optionsGrid.innerHTML = '';
-
-    // Variantlarni aralashtirish
-    QuizState.shuffledOptions = QuizApp.shuffleArray(currentQuestion.options);
-
-    QuizState.shuffledOptions.forEach((opt, index) => {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn animate-fadeInUp';
-        btn.style.animationDelay = `${index * 0.1}s`;
         
-        const letter = String.fromCharCode(65 + index); // A, B, C, D
-        btn.innerHTML = `
-            <span class="option-letter">${letter}</span>
-            <span class="option-text">${opt}</span>
-        `;
-
-        if (QuizState.answers[QuizState.currentIndex] === opt) {
-            btn.classList.add('selected');
+        body.dark-mode {
+            --bg: #0f172a;
+            --bg-secondary: #1e293b;
+            --text: #f1f5f9;
         }
-
-        btn.onclick = () => handleOptionSelection(btn, opt);
-        optionsGrid.appendChild(btn);
-    });
-
-    updateNavigationUI();
-    resetTimer();
-    saveCurrentState();
-
-    // Dinamik ranglarni qo'llash
-    document.documentElement.style.setProperty('--subject-color', subject.color);
-    document.documentElement.style.setProperty('--accent', subject.color);
-}
-
-// -------------------------------------------------------
-// 4. JAVOB TANLASH VA NAVIGATSIYA
-// -------------------------------------------------------
-
-function handleOptionSelection(element, value) {
-    if (QuizState.isFinished) return;
-
-    const allBtns = document.querySelectorAll('.option-btn');
-    allBtns.forEach(btn => btn.classList.remove('selected'));
-    
-    element.classList.add('selected');
-    QuizState.selectedOption = value;
-    QuizState.answers[QuizState.currentIndex] = value;
-
-    // Logika: Savolga sarflangan vaqtni hisoblash
-    const now = Date.now();
-    QuizState.timePerQuestionLogs[QuizState.currentIndex] += Math.round((now - QuizState.lastActionTimestamp) / 1000);
-    QuizState.lastActionTimestamp = now;
-
-    updateNavigationUI();
-    saveCurrentState();
-}
-
-function initDotsNavigation() {
-    const dotsContainer = document.getElementById('question-dots');
-    if (!dotsContainer) return;
-
-    dotsContainer.innerHTML = '';
-    QuizState.questions.forEach((_, index) => {
-        const dot = document.createElement('div');
-        dot.className = 'q-dot';
-        dot.title = `${index + 1}-savol`;
-        dot.onclick = () => jumpToQuestion(index);
-        dotsContainer.appendChild(dot);
-    });
-}
-
-function updateNavigationUI() {
-    const nextBtn = document.getElementById('btn-next');
-    if (nextBtn) {
-        const isLast = QuizState.currentIndex === QuizState.questions.length - 1;
-        const hasAns = QuizState.answers[QuizState.currentIndex] !== undefined;
-
-        nextBtn.innerHTML = isLast ? 'Natijani ko\'rish ✅' : 'Keyingisi →';
-        nextBtn.classList.toggle('has-answer', hasAns);
-    }
-
-    const dots = document.querySelectorAll('.q-dot');
-    dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === QuizState.currentIndex);
-        dot.classList.toggle('answered', QuizState.answers[index] !== undefined && QuizState.answers[index] !== null);
-    });
-}
-
-function jumpToQuestion(index) {
-    if (QuizState.isFinished || index === QuizState.currentIndex) return;
-    
-    // Hozirgi holatni log qilish
-    const now = Date.now();
-    QuizState.timePerQuestionLogs[QuizState.currentIndex] += Math.round((now - QuizState.lastActionTimestamp) / 1000);
-    
-    QuizState.currentIndex = index;
-    QuizState.selectedOption = QuizState.answers[index] || null;
-    QuizState.lastActionTimestamp = Date.now();
-    renderQuestion();
-}
-
-function goNext() {
-    if (QuizState.isFinished) return;
-
-    const now = Date.now();
-    QuizState.timePerQuestionLogs[QuizState.currentIndex] += Math.round((now - QuizState.lastActionTimestamp) / 1000);
-    QuizState.lastActionTimestamp = now;
-
-    if (QuizState.answers[QuizState.currentIndex] === undefined) {
-        QuizState.answers[QuizState.currentIndex] = null;
-    }
-
-    if (QuizState.currentIndex < QuizState.questions.length - 1) {
-        QuizState.currentIndex++;
-        QuizState.selectedOption = QuizState.answers[QuizState.currentIndex] || null;
-        renderQuestion();
-    } else {
-        finishQuiz();
-    }
-}
-
-// -------------------------------------------------------
-// 5. TIMER VA VAQT NAZORATI
-// -------------------------------------------------------
-
-function resetTimer() {
-    stopTimer();
-    QuizState.timeLeft = TIME_PER_QUESTION;
-    updateTimerDisplay();
-
-    QuizState.timerInterval = setInterval(() => {
-        if (QuizState.isPaused) return;
         
-        QuizState.timeLeft--;
-        updateTimerDisplay();
-
-        if (QuizState.timeLeft <= 0) {
-            stopTimer();
-            if (window.QuizApp && QuizApp.showToast) {
-                QuizApp.showToast('Vaqt tugadi! Keyingi savolga o\'tildi.', 'warning');
-            }
-            goNext();
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: all 0.3s;
         }
-    }, 1000);
-}
+        
+        .result-wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .result-header { text-align: center; padding: 40px 0; border-bottom: 1px solid #e5e7eb; margin-bottom: 30px; }
+        .score-circle { width: 200px; height: 200px; margin: 0 auto 20px; }
+        .score-percent { font-size: 48px; font-weight: bold; color: var(--primary); }
+        .score-label { font-size: 18px; color: var(--text-secondary); }
+        .result-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 30px 0; }
+        .stat-box { background: var(--bg-secondary); border-radius: 20px; padding: 20px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; }
+        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 30px; }
+        .btn { padding: 12px 24px; border-radius: 30px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--bg-secondary); color: var(--text); border: 1px solid #ccc; }
+        
+        @media (max-width: 500px) {
+            .result-stats { grid-template-columns: 1fr; }
+            .btn-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
 
-function updateTimerDisplay() {
-    const textEl = document.getElementById('quiz-timer');
-    const ringEl = document.getElementById('timer-ring');
-    if (!textEl) return;
+<div class="result-wrapper">
+    <div class="result-header">
+        <h1>📊 Test <span style="color: var(--accent);">Natijalari</span></h1>
+    </div>
 
-    textEl.textContent = QuizApp.formatTime(QuizState.timeLeft);
+    <div id="result-content">
+        <div style="text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: var(--primary);"></i>
+            <p style="margin-top: 20px;">Natijalar yuklanmoqda...</p>
+        </div>
+    </div>
+</div>
 
-    if (QuizState.timeLeft <= 10) {
-        textEl.style.color = '#ef4444';
-        textEl.classList.add('timer-warning');
-    } else {
-        textEl.style.color = 'inherit';
-        textEl.classList.remove('timer-warning');
-    }
+<!-- ============================================================ -->
+<!-- ROOT PAPKASIDAGI FAYLLAR (papkalarsiz)                       -->
+<!-- ============================================================ -->
 
-    if (ringEl) {
-        const offset = CIRCUMFERENCE * (1 - QuizState.timeLeft / TIME_PER_QUESTION);
-        ringEl.style.strokeDashoffset = offset;
-    }
-}
+<script src="result.js?v=1.2"></script>
 
-function stopTimer() {
-    if (QuizState.timerInterval) {
-        clearInterval(QuizState.timerInterval);
-        QuizState.timerInterval = null;
-    }
-}
-
-// -------------------------------------------------------
-// 6. NATIJANI YAKUNLASH
-// -------------------------------------------------------
-
-function finishQuiz() {
-    stopTimer();
-    QuizState.isFinished = true;
-    QuizState.endTime = Date.now();
-
-    const subjectData = window.QUIZ_DATA[QuizState.subjectIndex];
-    let correctCount = 0;
-    const performanceDetails = [];
-
-    QuizState.questions.forEach((question, i) => {
-        const userSelection = QuizState.answers[i];
-        const isRight = userSelection === question.answer;
-        if (isRight) correctCount++;
-
-        performanceDetails.push({
-            questionText: question.question,
-            userAns: userSelection || "Javob berilmadi",
-            correctAns: question.answer,
-            isCorrect: isRight,
-            timeTaken: QuizState.timePerQuestionLogs[i]
-        });
-    });
-
-    const finalResult = {
-        subject: subjectData.subject,
-        subjectIndex: QuizState.subjectIndex,
-        correct: correctCount,
-        total: QuizState.questions.length,
-        percent: QuizApp.calcPercent(correctCount, QuizState.questions.length),
-        timeSpent: Math.round((QuizState.endTime - QuizState.startTime) / 1000),
-        detailedLogs: performanceDetails
-    };
-
-    QuizApp.saveResult(finalResult);
-    QuizApp.clearSession();
-
-    const query = new URLSearchParams({
-        subject: finalResult.subject,
-        score: finalResult.correct,
-        total: finalResult.total,
-        time: finalResult.timeSpent,
-        pct: finalResult.percent
-    }).toString();
-
-    window.location.href = `result.html?${query}`;
-}
-
-// -------------------------------------------------------
-// 7. YORDAMCHI FUNKSIYALAR VA EVENTLAR
-// -------------------------------------------------------
-
-function saveCurrentState() {
-    QuizApp.saveSession({
-        subjectIndex: QuizState.subjectIndex,
-        fullState: QuizState,
-        timestamp: Date.now()
-    });
-}
-
-function setInner(id, content) {
-    const element = document.getElementById(id);
-    if (element) element.innerHTML = content;
-}
-
-function showError(message) {
-    const container = document.getElementById('quiz-container');
-    if (container) {
-        container.innerHTML = `
-            <div class="error-state text-center" style="padding: 100px 20px;">
-                <h1 style="font-size: 4rem;">⚠️</h1>
-                <h2>Xatolik yuz berdi</h2>
-                <p>${message}</p>
-                <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Bosh sahifaga</a>
-            </div>
-        `;
-    }
-}
-
-// Klaviatura boshqaruvi (1-4 variantlar va Enter)
-document.addEventListener('keydown', (event) => {
-    if (QuizState.isFinished) return;
-
-    if (event.key >= '1' && event.key <= '4') {
-        const optionBtns = document.querySelectorAll('.option-btn');
-        const targetIndex = parseInt(event.key) - 1;
-        if (optionBtns[targetIndex]) optionBtns[targetIndex].click();
-    }
-
-    if (event.key === 'Enter') {
-        const next = document.getElementById('btn-next');
-        if (next) next.click();
-    }
-});
-
-// Sahifa yuklanganda ishga tushirish mantiqi
-document.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('quiz-container');
-    if (!container) return;
-
-    const subjectId = QuizApp.getUrlParam('subject');
-    if (subjectId !== null) {
-        startQuiz(parseInt(subjectId), true);
-    }
-
-    const nextBtn = document.getElementById('btn-next');
-    if (nextBtn) nextBtn.onclick = goNext;
-
-    // Tab o'zgarganda vaqtni boshqarish
-    document.addEventListener('visibilitychange', () => {
-        QuizState.isPaused = document.hidden;
-    });
-});
-
-// Eksport
-window.QuizEngine = { 
-    startQuiz, 
-    goNext, 
-    jumpToQuestion,
-    finishQuiz, 
-    QuizState 
-};
+</body>
+</html>
