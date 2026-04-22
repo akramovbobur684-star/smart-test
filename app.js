@@ -18,7 +18,7 @@
         }
         const btns = document.querySelectorAll('#theme-toggle-btn, #theme-btn, .theme-toggle');
         btns.forEach(btn => {
-            if (btn) btn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
+            if (btn) btn.innerHTML = isDark ? '☀️ Yorqinlik' : '🌙 Qorong'ulik';
         });
     }
 
@@ -33,7 +33,7 @@
         applyDarkMode(isDark);
         localStorage.setItem('quiz_theme', isDark ? 'dark' : 'light');
         if (window.showToast) {
-            window.showToast(isDark ? '🌙 Tungi rejim yoqildi' : '🌞 Yorug\' rejim yoqildi', 'info');
+            window.showToast(isDark ? '🌙 Qorong'i rejim yoqildi' : '🌞 Yorqinlik' rejim yoqildi', 'info');
         }
     }
 
