@@ -1,5 +1,5 @@
 // ============================================================
-// quiz.js v9.0 - BEAUTIFIED & FULLY FUNCTIONAL
+// quiz.js v10.0 - FULLY WORKING VERSION (FIXED)
 // Blitz Test - 15 seconds per question
 // ============================================================
 
@@ -31,14 +31,14 @@ let quizContentEl = null;
 let timeOverlay = null;
 let resetBtn = null;
 
-// ========== 2. URL PARAMETER (ENG TEPADA) ==========
+// ========== 2. URL PARAMETER ==========
 const urlParams = new URLSearchParams(window.location.search);
 const urlSubjectId = urlParams.get('subject');
 
 console.log('[Quiz] URL parametr "subject":', urlSubjectId);
 console.log('[Quiz] To\'liq URL:', window.location.href);
 
-// ========== 3. DARK MODE (DASHBOARD BILAN SINXRON) ==========
+// ========== 3. DARK MODE ==========
 function initDarkMode() {
     const savedTheme = localStorage.getItem('quiz_theme');
     if (savedTheme === 'dark') {
@@ -181,7 +181,6 @@ function renderQuestion() {
     const q = questions[currentIndex];
     const current = currentIndex + 1;
     
-    // Update UI elements
     if (subjectNameEl) {
         subjectNameEl.innerHTML = currentSubject;
     }
@@ -194,7 +193,6 @@ function renderQuestion() {
         questionTextEl.innerHTML = escapeHtml(q.question);
     }
     
-    // Render options
     if (optionsEl) {
         optionsEl.innerHTML = '';
         isAnswered = false;
@@ -214,15 +212,12 @@ function renderQuestion() {
                 answers[currentIndex] = opt;
                 isAnswered = true;
                 
-                // Remove selected class from all options
                 document.querySelectorAll('.option-btn').forEach(b => {
                     b.classList.remove('selected');
                 });
                 
-                // Add selected class to clicked button
                 btn.classList.add('selected');
                 
-                // Enable next button
                 if (nextBtn) {
                     nextBtn.disabled = false;
                 }
@@ -232,14 +227,12 @@ function renderQuestion() {
         });
     }
     
-    // Update next button text
     if (nextBtn) {
         nextBtn.disabled = true;
         const isLast = currentIndex === totalQuestions - 1;
         nextBtn.innerHTML = isLast ? '✅ Natijani ko\'rish' : '▶ Keyingi savol';
     }
     
-    // Start timer for this question
     startTimer();
 }
 
@@ -254,13 +247,11 @@ function nextQuestion() {
     
     stopTimer();
     
-    // Check current answer
     const currentQ = questions[currentIndex];
     if (answers[currentIndex] === currentQ.answer) {
         score++;
     }
     
-    // Move to next question or finish
     if (currentIndex < totalQuestions - 1) {
         currentIndex++;
         renderQuestion();
@@ -273,22 +264,17 @@ function nextQuestion() {
 function restartQuiz() {
     stopTimer();
     
-    // Reset all state variables
     currentIndex = 0;
     answers = [];
     score = 0;
     isActive = true;
     isAnswered = false;
     
-    // Reselect random questions
     questions = selectRandomQuestions(allQuestionsArray);
     answers = new Array(totalQuestions).fill(undefined);
     startTime = Date.now();
     
-    // Hide time overlay if visible
     hideTimeOverModal();
-    
-    // Render first question
     renderQuestion();
     
     showToast("⚡ Test qayta boshlandi!", 'success');
@@ -299,7 +285,6 @@ function finishQuiz() {
     stopTimer();
     isActive = false;
     
-    // Check last answer
     const lastQ = questions[currentIndex];
     if (answers[currentIndex] === lastQ.answer) {
         score++;
@@ -308,7 +293,6 @@ function finishQuiz() {
     const percent = Math.round((score / totalQuestions) * 100);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
     
-    // Prepare details array
     const details = [];
     for (let i = 0; i < questions.length; i++) {
         details.push({
@@ -319,7 +303,6 @@ function finishQuiz() {
         });
     }
     
-    // Create result object
     const result = {
         subject: currentSubject,
         subjectIndex: subjectId,
@@ -331,7 +314,6 @@ function finishQuiz() {
         timestamp: Date.now()
     };
     
-    // Save to localStorage
     try {
         const results = JSON.parse(localStorage.getItem('qm_results') || '[]');
         results.unshift(result);
@@ -342,7 +324,6 @@ function finishQuiz() {
         console.error('[Quiz] Natijani saqlashda xatolik:', e);
     }
     
-    // Redirect to result page
     window.location.href = `result.html?subject=${encodeURIComponent(result.subject)}&score=${result.correct}&total=${result.total}&percent=${result.percent}&time=${result.timeSpent}`;
 }
 
@@ -393,11 +374,10 @@ function waitForData(callback) {
     }, 100);
 }
 
-// ========== 13. ASOSIY INIT QUIZ FUNKSIYASI ==========
+// ========== 13. ASOSIY INIT QUIZ ==========
 function initQuiz() {
     console.log('[Quiz] 🚀 Sahifa ishga tushmoqda...');
     
-    // Get DOM elements
     subjectNameEl = document.getElementById('quiz-subject-name');
     counterEl = document.getElementById('quiz-question-counter');
     questionTextEl = document.getElementById('quiz-question-text');
@@ -410,10 +390,8 @@ function initQuiz() {
     timeOverlay = document.getElementById('time-overlay');
     resetBtn = document.getElementById('reset-test-btn');
     
-    // Initialize Dark Mode
     initDarkMode();
     
-    // Check URL parameter
     if (urlSubjectId === null) {
         console.error('[Quiz] ❌ "subject" parametri topilmadi!');
         showErrorPage(
@@ -437,7 +415,6 @@ function initQuiz() {
     console.log('[Quiz] ✅ Qabul qilingan ID:', subjectId);
     console.log('[Quiz] ⏳ Ma\'lumotlar yuklanishi kutilmoqda...');
     
-    // Wait for data to load
     waitForData((isReady) => {
         if (!isReady) {
             showErrorPage(
@@ -468,7 +445,6 @@ function initQuiz() {
         console.log(`[Quiz] 🎯 Fan topildi: "${subject.subject}"`);
         console.log(`[Quiz] 📚 Jami savollar: ${subject.questions.length} ta`);
         
-        // Set global variables
         currentSubject = subject.subject;
         allQuestionsArray = subject.questions;
         questions = selectRandomQuestions(allQuestionsArray);
@@ -479,14 +455,11 @@ function initQuiz() {
         isAnswered = false;
         startTime = Date.now();
         
-        // Update document title
         document.title = `${currentSubject} — Blitz Test`;
         
-        // Show quiz content
         if (skeletonEl) skeletonEl.style.display = 'none';
         if (quizContentEl) quizContentEl.style.display = 'block';
         
-        // Setup event listeners
         if (nextBtn) {
             nextBtn.onclick = nextQuestion;
         }
@@ -495,7 +468,6 @@ function initQuiz() {
             resetBtn.onclick = restartQuiz;
         }
         
-        // Render first question
         renderQuestion();
         
         showToast(`⚡ ${currentSubject} testi boshlandi! Har bir savolga 15 soniya`, 'success');
