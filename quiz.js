@@ -1,388 +1,118 @@
 (function() {
-    const TIME_PER_QUESTION = 15
-    const TOTAL_QUESTIONS = 25
-    
-    let currentQuestions = []
-    let currentIndex = 0
-    let score = 0
-    let timer = null
-    let timeLeft = TIME_PER_QUESTION
-    let quizActive = false
-    let dataCheckInterval = null
-    
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerInterval = null;
+    let timeLeft = 15;
+
     const elements = {
-        questionText: null,
-        optionsContainer: null,
-        nextBtn: null,
-        restartBtn: null,
-        timerDisplay: null,
-        progressText: null,
-        scoreDisplay: null
-    }
-    
-    function getSubjectFromURL() {
-        const params = new URLSearchParams(window.location.search)
-        const subjectParam = params.get('subject')
-        return subjectParam !== null ? parseInt(subjectParam) : 0
-    }
-    
-    function loadDarkMode() {
-        const isDark = localStorage.getItem('darkMode') === 'true'
-        if (isDark) {
-            document.body.classList.add('dark-mode')
-        }
-        return isDark
-    }
-    
-    function showModal(message, showRestart = true) {
-        const existingModal = document.querySelector('.quiz-modal')
-        if (existingModal) existingModal.remove()
-        
-        const modal = document.createElement('div')
-        modal.className = 'quiz-modal'
-        
-        const content = document.createElement('div')
-        content.className = 'quiz-modal-content'
-        
-        const messageEl = document.createElement('p')
-        messageEl.className = 'quiz-modal-message'
-        messageEl.textContent = message
-        
-        content.appendChild(messageEl)
-        
-        if (showRestart) {
-            const restartIcon = document.createElement('button')
-            restartIcon.className = 'quiz-modal-restart'
-            restartIcon.innerHTML = '🔄'
-            restartIcon.onclick = () => {
-                modal.remove()
-                fullRestart()
-            }
-            content.appendChild(restartIcon)
-        } else {
-            const closeBtn = document.createElement('button')
-            closeBtn.className = 'quiz-modal-close'
-            closeBtn.textContent = 'OK'
-            closeBtn.onclick = () => modal.remove()
-            content.appendChild(closeBtn)
-        }
-        
-        modal.appendChild(content)
-        document.body.appendChild(modal)
-    }
-    
-    function stopTimer() {
-        if (timer) {
-            clearInterval(timer)
-            timer = null
-        }
-    }
-    
-    function startTimer() {
-        stopTimer()
-        timeLeft = TIME_PER_QUESTION
-        updateTimerDisplay()
-        
-        timer = setInterval(() => {
-            if (!quizActive) return
-            
-            timeLeft--
-            updateTimerDisplay()
-            
-            if (timeLeft <= 0) {
-                stopTimer()
-                handleTimeOut()
-            }
-        }, 1000)
-    }
-    
-    function updateTimerDisplay() {
-        if (elements.timerDisplay) {
-            elements.timerDisplay.textContent = `${timeLeft}s`
-            if (timeLeft <= 5) {
-                elements.timerDisplay.style.color = '#ef4444'
-            } else {
-                elements.timerDisplay.style.color = '#94a3b8'
-            }
-        }
-    }
-    
-    function handleTimeOut() {
-        quizActive = false
-        disableOptions(true)
-        showModal('Vaqt tugadi!', true)
-    }
-    
-    function disableOptions(disabled) {
-        const allOptions = document.querySelectorAll('.quiz-option')
-        allOptions.forEach(option => {
-            if (disabled) {
-                option.style.pointerEvents = 'none'
-                option.style.opacity = '0.6'
-            } else {
-                option.style.pointerEvents = 'auto'
-                option.style.opacity = '1'
-            }
-        })
-    }
-    
-    function updateProgress() {
-        if (elements.progressText) {
-            elements.progressText.textContent = `${currentIndex + 1} / ${currentQuestions.length}`
-        }
-    }
-    
-    function updateScore() {
-        if (elements.scoreDisplay) {
-            elements.scoreDisplay.textContent = `Ball: ${score}`
-        }
-    }
-    
-    function renderQuestion() {
-        if (!quizActive) return
-        if (currentIndex >= currentQuestions.length) {
-            finishQuiz()
-            return
-        }
-        
-        const question = currentQuestions[currentIndex]
-        if (!question) return
-        
-        if (elements.questionText) {
-            elements.questionText.textContent = question.question
-        }
-        
-        if (elements.optionsContainer) {
-            elements.optionsContainer.innerHTML = ''
-            
-            question.options.forEach((option, idx) => {
-                const optionDiv = document.createElement('div')
-                optionDiv.className = 'quiz-option'
-                optionDiv.textContent = `${String.fromCharCode(65 + idx)}. ${option}`
-                optionDiv.onclick = () => handleAnswer(option, optionDiv)
-                elements.optionsContainer.appendChild(optionDiv)
-            })
-        }
-        
-        updateProgress()
-        startTimer()
-        disableOptions(false)
-    }
-    
-    function handleAnswer(selectedOption, element) {
-        if (!quizActive) return
-        
-        const question = currentQuestions[currentIndex]
-        const isCorrect = selectedOption === question.correct
-        
-        if (isCorrect) {
-            score++
-            updateScore()
-            element.classList.add('correct')
-        } else {
-            element.classList.add('wrong')
-            const allOptions = document.querySelectorAll('.quiz-option')
-            allOptions.forEach(opt => {
-                if (opt.textContent.includes(question.correct)) {
-                    opt.classList.add('correct-highlight')
-                }
-            })
-        }
-        
-        quizActive = false
-        stopTimer()
-        disableOptions(true)
-        
-        setTimeout(() => {
-            if (currentIndex + 1 < currentQuestions.length) {
-                currentIndex++
-                quizActive = true
-                renderQuestion()
-            } else {
-                currentIndex++
-                if (currentIndex >= currentQuestions.length) {
-                    finishQuiz()
-                }
-            }
-        }, 1500)
-    }
-    
-    function finishQuiz() {
-        stopTimer()
-        quizActive = false
-        
-        const percentage = (score / currentQuestions.length) * 100
-        let message = `Test yakunlandi!\nBall: ${score}/${currentQuestions.length} (${percentage}%)\n`
-        
-        if (percentage >= 80) message += 'Ajoyib natija! 🎉'
-        else if (percentage >= 60) message += 'Yaxshi natija! 👍'
-        else if (percentage >= 40) message += 'O\'rtacha natija 📚'
-        else message += 'Ko\'proq mashq qiling 💪'
-        
-        showModal(message, true)
-    }
-    
-    function getRandomQuestions(allQuestions) {
-        if (!allQuestions || allQuestions.length === 0) {
-            return []
-        }
-        
-        const shuffled = [...allQuestions]
-        
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1))
-            ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-        }
-        
-        return shuffled.slice(0, TOTAL_QUESTIONS)
-    }
-    
-    function fullRestart() {
-        stopTimer()
-        currentIndex = 0
-        score = 0
-        quizActive = true
-        updateScore()
-        
-        const subjectId = getSubjectFromURL()
-        let questionsForSubject = null
-        
-        if (subjectId === 0) {
-            questionsForSubject = window.QUIZ_DATA
-        } else if (window.QUIZ_DATA && window.QUIZ_DATA[subjectId]) {
-            questionsForSubject = window.QUIZ_DATA[subjectId]
-        } else if (window.QUIZ_DATA && window.QUIZ_DATA.questions) {
-            questionsForSubject = window.QUIZ_DATA.questions
-        } else {
-            questionsForSubject = window.QUIZ_DATA
-        }
-        
-        let allQuestions = Array.isArray(questionsForSubject) ? questionsForSubject : (questionsForSubject.questions || [])
-        
-        currentQuestions = getRandomQuestions(allQuestions)
-        
-        if (currentQuestions.length > 0) {
-            renderQuestion()
-        } else {
-            showModal('Savollar topilmadi!', false)
-        }
-    }
-    
-    function nextQuestion() {
-        if (!quizActive) return
-        
-        if (currentIndex + 1 < currentQuestions.length) {
-            currentIndex++
-            quizActive = true
-            renderQuestion()
-        } else if (currentIndex + 1 === currentQuestions.length) {
-            currentIndex++
-            finishQuiz()
-        }
-    }
-    
-    function startQuizWithData() {
-        const subjectId = getSubjectFromURL()
-        
-        let questionsForSubject = null
-        
-        if (subjectId === 0) {
-            questionsForSubject = window.QUIZ_DATA
-        } else if (window.QUIZ_DATA && window.QUIZ_DATA[subjectId]) {
-            questionsForSubject = window.QUIZ_DATA[subjectId]
-        } else if (window.QUIZ_DATA && window.QUIZ_DATA.questions) {
-            questionsForSubject = window.QUIZ_DATA.questions
-        } else {
-            questionsForSubject = window.QUIZ_DATA
-        }
-        
-        if (!questionsForSubject) {
-            showModal('Ma\'lumotlar topilmadi!', false)
-            return false
-        }
-        
-        let allQuestions = Array.isArray(questionsForSubject) ? questionsForSubject : (questionsForSubject.questions || [])
-        
-        if (allQuestions.length === 0) {
-            showModal('Savollar topilmadi!', false)
-            return false
-        }
-        
-        currentQuestions = getRandomQuestions(allQuestions)
-        
-        if (currentQuestions.length === 0) {
-            showModal('Savollarni tanlashda xatolik!', false)
-            return false
-        }
-        
-        currentIndex = 0
-        score = 0
-        quizActive = true
-        updateScore()
-        renderQuestion()
-        
-        return true
-    }
-    
-    function startDataCheck() {
-        if (dataCheckInterval) {
-            clearInterval(dataCheckInterval)
-        }
-        
-        dataCheckInterval = setInterval(() => {
-            if (window.QUIZ_DATA) {
-                clearInterval(dataCheckInterval)
-                dataCheckInterval = null
-                startQuizWithData()
-            }
-        }, 100)
-        
-        setTimeout(() => {
-            if (dataCheckInterval) {
-                clearInterval(dataCheckInterval)
-                dataCheckInterval = null
-                if (!window.QUIZ_DATA) {
-                    showModal('Ma\'lumot yuklanmadi! Sahifani yangilang.', false)
-                } else {
-                    startQuizWithData()
-                }
-            }
-        }, 5000)
-    }
-    
-    function bindElements() {
-        elements.questionText = document.getElementById('questionText')
-        elements.optionsContainer = document.getElementById('optionsContainer')
-        elements.nextBtn = document.getElementById('nextBtn')
-        elements.restartBtn = document.getElementById('restartBtn')
-        elements.timerDisplay = document.getElementById('timerDisplay')
-        elements.progressText = document.getElementById('progressText')
-        elements.scoreDisplay = document.getElementById('scoreDisplay')
-        
-        if (elements.nextBtn) {
-            const newNextBtn = elements.nextBtn.cloneNode(true)
-            elements.nextBtn.parentNode.replaceChild(newNextBtn, elements.nextBtn)
-            elements.nextBtn = newNextBtn
-            elements.nextBtn.addEventListener('click', () => nextQuestion())
-        }
-        
-        if (elements.restartBtn) {
-            const newRestartBtn = elements.restartBtn.cloneNode(true)
-            elements.restartBtn.parentNode.replaceChild(newRestartBtn, elements.restartBtn)
-            elements.restartBtn = newRestartBtn
-            elements.restartBtn.addEventListener('click', () => fullRestart())
-        }
-    }
-    
+        questionText: document.getElementById('quiz-question-text'),
+        optionsContainer: document.getElementById('quiz-options'),
+        timerDisplay: document.getElementById('timer-text'),
+        progressFill: document.getElementById('timer-progress-fill'),
+        counter: document.getElementById('quiz-question-counter'),
+        subjectTitle: document.getElementById('quiz-subject-name'),
+        modal: document.getElementById('time-overlay'),
+        nextBtn: document.getElementById('btn-next')
+    };
+
     function initQuiz() {
-        loadDarkMode()
-        bindElements()
-        startDataCheck()
+        const params = new URLSearchParams(window.location.search);
+        const subjectId = params.get('subject');
+
+        if (subjectId === null || !window.QUIZ_DATA || !window.QUIZ_DATA[subjectId]) {
+            let attempts = 0;
+            const checkData = setInterval(() => {
+                attempts++;
+                if (window.QUIZ_DATA && window.QUIZ_DATA[subjectId]) {
+                    clearInterval(checkData);
+                    setupQuiz(subjectId);
+                } else if (attempts > 10) {
+                    clearInterval(checkData);
+                    alert("Ma'lumotlar yuklanmadi!");
+                }
+            }, 500);
+        } else {
+            setupQuiz(subjectId);
+        }
     }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initQuiz)
-    } else {
-        initQuiz()
+
+    function setupQuiz(id) {
+        const data = window.QUIZ_DATA[id];
+        elements.subjectTitle.innerText = data.subject;
+        currentQuestions = [...data.questions].sort(() => Math.random() - 0.5).slice(0, 25);
+        currentIndex = 0;
+        score = 0;
+        renderQuestion();
     }
-})()
+
+    function renderQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            alert("Test yakunlandi! Balingiz: " + score);
+            window.location.href = 'index.html';
+            return;
+        }
+
+        const q = currentQuestions[currentIndex];
+        elements.questionText.innerText = q.question;
+        elements.optionsContainer.innerHTML = '';
+        elements.counter.innerText = (currentIndex + 1) + ' / ' + currentQuestions.length;
+        elements.nextBtn.disabled = true;
+
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = String.fromCharCode(65 + idx) + ') ' + opt;
+            btn.onclick = () => selectAnswer(btn, opt, q.answer);
+            elements.optionsContainer.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 15;
+        updateTimerUI();
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerUI();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                showTimeOver();
+            }
+        }, 1000);
+    }
+
+    function updateTimerUI() {
+        elements.timerDisplay.innerText = timeLeft + ' soniya qoldi';
+        const percent = (timeLeft / 15) * 100;
+        elements.progressFill.style.width = percent + '%';
+    }
+
+    function selectAnswer(btn, selected, correct) {
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        elements.nextBtn.disabled = false;
+        
+        elements.nextBtn.onclick = () => {
+            if (selected === correct) score++;
+            currentIndex++;
+            renderQuestion();
+        };
+    }
+
+    function showTimeOver() {
+        elements.modal.style.display = 'flex';
+        const resetBtn = document.getElementById('reset-test-btn');
+        resetBtn.onclick = () => {
+            elements.modal.style.display = 'none';
+            currentIndex = 0;
+            score = 0;
+            renderQuestion();
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', initQuiz);
+})();
