@@ -1,155 +1,792 @@
+<!-- ============================================================ -->
+<!-- quiz.html - YANGILANGAN VERSIYA (Dark Mode sinxron, Time Over Overlay) -->
+<!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizMaster Pro — Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0">
+    <title>QuizMaster Pro — Blitz Test</title>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Asosiy CSS (root papkada) -->
-    <link rel="stylesheet" href="style.css?v=1.2">
+    <!-- Google Fonts (Dashboard bilan bir xil) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
             --primary: #4f46e5;
+            --primary-dark: #4338ca;
             --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
             --bg: #ffffff;
             --bg-secondary: #f3f4f6;
-            --text: #1f2937;
+            --bg-tertiary: #e5e7eb;
+            --text: #111827;
+            --text-secondary: #6b7280;
+            --card-bg: #ffffff;
             --card-border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         body.dark-mode {
             --bg: #0f172a;
             --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
             --text: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --card-bg: #1e293b;
             --card-border: #334155;
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
-            transition: all 0.3s;
+            transition: background var(--transition-base), color var(--transition-base);
+            line-height: 1.5;
+            min-height: 100vh;
         }
-        
-        .quiz-wrapper { max-width: 800px; margin: 0 auto; padding: 20px; }
-        .quiz-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--card-border); margin-bottom: 30px; }
-        .theme-toggle { background: var(--bg-secondary); border: 1px solid var(--card-border); padding: 8px 20px; border-radius: 30px; cursor: pointer; color: var(--text); }
-        .question-text { font-size: 24px; margin: 30px 0; line-height: 1.4; }
-        .options-grid { display: grid; gap: 15px; margin-bottom: 30px; }
-        .option-btn {
+
+        /* ========== ASOSIY KONTEYNER (DASHBOARD STANDARTI) ========== */
+        .quiz-container {
+            max-width: 550px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ========== HEADER (Dark Mode tugmasi YO'Q) ========== */
+        .quiz-header {
+            padding: 8px 0 16px 0;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 20px;
+        }
+
+        .quiz-logo {
+            font-size: 24px;
+            font-weight: 800;
+            text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 15px 20px;
-            background: var(--bg-secondary);
-            border: 2px solid var(--card-border);
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
+            gap: 10px;
             color: var(--text);
         }
-        .option-btn:hover { border-color: var(--primary); transform: translateX(5px); }
-        .option-btn.selected { border-color: var(--primary); background: var(--primary); color: white; }
-        .option-letter {
-            font-weight: bold;
-            width: 30px;
-            height: 30px;
+
+        .brand-icon {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bg);
-            border-radius: 50%;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
         }
-        .progress-bar { height: 8px; background: var(--card-border); border-radius: 10px; overflow: hidden; margin: 20px 0; }
-        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+
+        /* ========== FAN VA SAVOL RAQAMI ========== */
+        .quiz-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .subject-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--primary);
+        }
+
+        .question-counter {
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 30px;
+        }
+
+        /* ========== TIMER PROGRESS ========== */
+        .timer-section {
+            margin-bottom: 24px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+
+        .progress-fill.danger {
+            background: var(--danger);
+        }
+
+        .timer-text {
+            text-align: center;
+            font-size: 13px;
+            margin-top: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .timer-text.warning {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* ========== SAVOL MATNI ========== */
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 24px;
+            padding: 18px;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            border-left: 4px solid var(--primary);
+        }
+
+        /* ========== VARIANTLAR (FULL WIDTH) ========== */
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .option-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: var(--transition-base);
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text);
+            width: 100%;
+            text-align: left;
+        }
+
+        .option-btn:hover {
+            transform: translateX(6px);
+            border-color: var(--primary);
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .option-letter {
+            font-weight: 800;
+            font-size: 17px;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            border-radius: 50%;
+            transition: var(--transition-base);
+        }
+
+        .option-btn.selected .option-letter {
+            background: white;
+            color: var(--primary);
+        }
+
+        .option-text {
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        /* ========== NEXT TUGMASI ========== */
         .next-btn {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, var(--primary), #4338ca);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
-            border-radius: 16px;
-            font-size: 18px;
-            font-weight: bold;
+            border-radius: 60px;
+            font-size: 17px;
+            font-weight: 700;
             cursor: pointer;
+            transition: var(--transition-base);
+            margin-top: 8px;
         }
-        .quiz-timer { font-size: 28px; font-weight: bold; font-family: monospace; }
-        .quiz-subject { text-align: center; margin-bottom: 20px; }
-        .question-badge { display: inline-block; background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; }
-        
-        @media (max-width: 600px) {
-            .question-text { font-size: 18px; }
-            .quiz-wrapper { padding: 10px; }
+
+        .next-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .next-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        /* ========== TIME OVER OVERLAY ========== */
+        .time-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .time-overlay-content {
+            text-align: center;
+            background: var(--card-bg);
+            padding: 40px 30px;
+            border-radius: 32px;
+            max-width: 320px;
+            width: 85%;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--card-border);
+        }
+
+        .time-overlay-icon {
+            font-size: 64px;
+            color: var(--danger);
+            margin-bottom: 16px;
+        }
+
+        .time-overlay-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--danger);
+        }
+
+        .time-overlay-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition-base);
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.02);
+            filter: brightness(1.05);
+        }
+
+        /* ========== TOAST ========== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 60px;
+            color: white;
+            z-index: 10001;
+            animation: slideUp 0.3s ease-out;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            box-shadow: var(--shadow-lg);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 550px) {
+            .quiz-container { padding: 16px 14px; }
+            .question-text { font-size: 18px; padding: 14px; }
+            .option-btn { padding: 14px 16px; font-size: 14px; }
+            .option-letter { width: 30px; height: 30px; font-size: 15px; }
+            .next-btn { padding: 14px; font-size: 16px; }
+            .time-overlay-content { padding: 30px 20px; }
+            .time-overlay-icon { font-size: 52px; }
+            .time-overlay-title { font-size: 20px; }
         }
     </style>
 </head>
 <body>
 
-<div class="quiz-wrapper">
+<div class="quiz-container">
+    <!-- Header (Dark Mode tugmasi yo'q) -->
     <div class="quiz-header">
-        <h1>📝 QuizMaster <span style="color: var(--accent);">Pro</span></h1>
-        <div style="display: flex; gap: 15px; align-items: center;">
-            <div class="quiz-timer" id="quiz-timer">00:00</div>
-            <button id="theme-toggle-btn" class="theme-toggle">🌙 Dark</button>
+        <div class="quiz-logo">
+            <div class="brand-icon">Q</div>
+            <span>QuizMaster <span style="color: var(--accent);">Pro</span></span>
         </div>
     </div>
 
-    <div id="quiz-content">
-        <div class="quiz-subject"><h2 id="quiz-subject-name">Yuklanmoqda...</h2></div>
-        <div style="text-align: center; margin-bottom: 10px; color: var(--text-secondary);">
-            <span id="quiz-question-counter">0 / 0</span>
+    <!-- Fan nomi va savol raqami -->
+    <div class="quiz-info">
+        <div class="subject-name" id="quiz-subject-name">Yuklanmoqda...</div>
+        <div class="question-counter" id="quiz-question-counter">0 / 0</div>
+    </div>
+
+    <!-- Timer progress bar -->
+    <div class="timer-section">
+        <div class="progress-container">
+            <div class="progress-fill" id="timer-progress-fill"></div>
         </div>
-        <div style="text-align: center; margin-bottom: 20px;">
-            <span class="question-badge" id="question-badge">SAVOL</span>
-        </div>
-        <div class="question-text" id="quiz-question-text">Savollar yuklanmoqda...</div>
-        <div class="options-grid" id="quiz-options"></div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="quiz-progress-bar"></div>
-        </div>
-        <div style="text-align: center; font-size: 14px; margin-bottom: 20px;" id="quiz-progress-text">0%</div>
-        <button id="btn-next" class="next-btn">▶ Keyingi savol</button>
+        <div class="timer-text" id="timer-text">15 soniya qoldi</div>
+    </div>
+
+    <!-- Savol matni -->
+    <div class="question-text" id="quiz-question-text">Savollar yuklanmoqda...</div>
+
+    <!-- Variantlar -->
+    <div class="options-grid" id="quiz-options"></div>
+
+    <!-- Next tugmasi -->
+    <button id="btn-next" class="next-btn" disabled>▶ Keyingi savol</button>
+</div>
+
+<!-- Time Over Overlay (dastlab yashirin) -->
+<div id="time-overlay" class="time-overlay" style="display: none;">
+    <div class="time-overlay-content">
+        <div class="time-overlay-icon"><i class="fas fa-hourglass-end"></i></div>
+        <div class="time-overlay-title">Vaqt tugadi!</div>
+        <div class="time-overlay-text">Savolga javob berish uchun 15 soniya vaqtingiz bor edi.<br>Testni qaytadan boshlang.</div>
+        <button class="reset-btn" id="reset-test-btn">
+            <i class="fas fa-rotate-right"></i> Qayta boshlash
+        </button>
     </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- ROOT PAPKASIDAGI FAYLLAR (papkalarsiz)                       -->
-<!-- ============================================================ -->
-
-<!-- 1️⃣ BIRINCHI: Ma'lumotlar bazasi -->
-<script src="questions.js?v=1.2"></script>
-
-<!-- 2️⃣ KEYIN: Quiz Engine -->
-<script src="quiz.js?v=1.2"></script>
-
-<!-- 3️⃣ QO'SHIMCHA: Tekshiruv -->
 <script>
-    (function() {
-        console.log("=== QUIZ SAHIFASI YUKLANDI ===");
-        console.log("window.QUIZ_DATA mavjudmi?", !!window.QUIZ_DATA);
-        console.log("window.QUIZ_DATA uzunligi:", window.QUIZ_DATA ? window.QUIZ_DATA.length : 0);
+// ============================================================
+// quiz.js - BLITZ TEST v2.0 (Dark Mode sinxron, Time Over Overlay)
+// ============================================================
+
+(function() {
+    'use strict';
+
+    // ========== KONFIGURATSIYA ==========
+    const TIME_PER_QUESTION = 15;
+    const TOTAL_QUESTIONS = 25;
+
+    // ========== STATE ==========
+    let state = {
+        subjectIndex: null,
+        subjectName: "",
+        allQuestions: [],
+        selectedQuestions: [],
+        currentIndex: 0,
+        answers: [],
+        timeLeft: TIME_PER_QUESTION,
+        timerInterval: null,
+        isFinished: false,
+        isTimeOver: false,
+        startTime: null,
+        isAnswered: false
+    };
+
+    // DOM elementlari
+    const elements = {
+        subjectName: document.getElementById('quiz-subject-name'),
+        counter: document.getElementById('quiz-question-counter'),
+        questionText: document.getElementById('quiz-question-text'),
+        options: document.getElementById('quiz-options'),
+        nextBtn: document.getElementById('btn-next'),
+        progressFill: document.getElementById('timer-progress-fill'),
+        timerText: document.getElementById('timer-text'),
+        timeOverlay: document.getElementById('time-overlay'),
+        resetBtn: document.getElementById('reset-test-btn')
+    };
+
+    // ========== YORDAMCHI FUNKSIYALAR ==========
+    function shuffleArray(arr) {
+        const array = [...arr];
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function getUrlParam(param) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(param);
+    }
+
+    function showToast(message, type = 'info') {
+        const existing = document.querySelector('.toast');
+        if (existing) existing.remove();
         
-        if (!window.QUIZ_DATA || window.QUIZ_DATA.length === 0) {
-            const questionEl = document.getElementById('quiz-question-text');
-            if (questionEl) {
-                questionEl.innerHTML = `
-                    <div style="text-align:center; padding:40px;">
-                        <i class="fas fa-database" style="font-size:48px; color:#ef4444;"></i>
-                        <h3 style="color:#ef4444; margin:20px 0;">Ma'lumotlar bazasi topilmadi!</h3>
-                        <p>questions.js fayli mavjudligini tekshiring.</p>
-                        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; cursor:pointer;">🔄 Qayta yuklash</button>
-                        <button onclick="location.href='index.html'" style="margin-top:20px; margin-left:10px; padding:10px 20px; cursor:pointer;">🏠 Bosh sahifa</button>
-                    </div>
-                `;
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        const colors = { success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#4f46e5' };
+        toast.style.backgroundColor = colors[type];
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${message}`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.remove(), 2500);
+    }
+
+    function clearTimer() {
+        if (state.timerInterval) {
+            clearInterval(state.timerInterval);
+            state.timerInterval = null;
+        }
+    }
+
+    // ========== DARK MODE (Dashboard bilan sinxron) ==========
+    function applyDarkModeFromStorage() {
+        const savedTheme = localStorage.getItem('quiz_theme');
+        const isDark = savedTheme === 'dark';
+        
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+
+    // ========== TIME OVER OVERLAY ==========
+    function showTimeOverlay() {
+        clearTimer();
+        state.isTimeOver = true;
+        state.isFinished = true;
+        
+        if (elements.timeOverlay) {
+            elements.timeOverlay.style.display = 'flex';
+        }
+    }
+
+    function hideTimeOverlay() {
+        if (elements.timeOverlay) {
+            elements.timeOverlay.style.display = 'none';
+        }
+    }
+
+    function resetAndRestart() {
+        hideTimeOverlay();
+        state.isFinished = false;
+        state.isTimeOver = false;
+        state.currentIndex = 0;
+        state.answers = [];
+        state.isAnswered = false;
+        
+        // Yangi random savollar tanlash
+        state.selectedQuestions = selectRandomQuestions(state.allQuestions);
+        state.answers = new Array(TOTAL_QUESTIONS).fill(undefined);
+        state.startTime = Date.now();
+        
+        renderQuestion();
+        showToast("⚡ Test qayta boshlandi! Har bir savolga 15 soniya", 'success');
+    }
+
+    // ========== TAYMER (15 SONIYA) ==========
+    function startTimer() {
+        clearTimer();
+        state.timeLeft = TIME_PER_QUESTION;
+        updateTimerUI();
+        
+        state.timerInterval = setInterval(() => {
+            if (state.isFinished || state.isTimeOver) {
+                clearTimer();
+                return;
+            }
+            
+            if (!state.isAnswered) {
+                state.timeLeft--;
+                updateTimerUI();
+                
+                if (state.timeLeft <= 0) {
+                    clearTimer();
+                    showTimeOverlay();
+                }
+            }
+        }, 1000);
+    }
+
+    function updateTimerUI() {
+        const percent = Math.max(0, (state.timeLeft / TIME_PER_QUESTION) * 100);
+        
+        if (elements.progressFill) {
+            elements.progressFill.style.width = `${percent}%`;
+            
+            if (percent < 30) {
+                elements.progressFill.classList.add('danger');
+            } else {
+                elements.progressFill.classList.remove('danger');
             }
         }
-    })();
+        
+        if (elements.timerText) {
+            elements.timerText.innerHTML = `${state.timeLeft} soniya qoldi`;
+            if (state.timeLeft <= 5) {
+                elements.timerText.classList.add('warning');
+            } else {
+                elements.timerText.classList.remove('warning');
+            }
+        }
+    }
+
+    // ========== SAVOLLARNI TANLASH (RANDOM 25) ==========
+    function selectRandomQuestions(allQuestions) {
+        const shuffled = shuffleArray(allQuestions);
+        return shuffled.slice(0, TOTAL_QUESTIONS);
+    }
+
+    // ========== SAVOLNI RENDER QILISH ==========
+    function renderQuestion() {
+        if (!state.selectedQuestions.length || state.isFinished) return;
+        
+        const q = state.selectedQuestions[state.currentIndex];
+        const current = state.currentIndex + 1;
+        
+        if (elements.subjectName && state.subjectName) {
+            elements.subjectName.innerHTML = state.subjectName;
+        }
+        
+        if (elements.counter) {
+            elements.counter.innerHTML = `${current} / ${TOTAL_QUESTIONS}`;
+        }
+        
+        if (elements.questionText) {
+            elements.questionText.innerHTML = escapeHtml(q.question);
+        }
+        
+        if (elements.options) {
+            elements.options.innerHTML = '';
+            state.isAnswered = false;
+            
+            q.options.forEach((opt, i) => {
+                const letter = String.fromCharCode(65 + i);
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="option-letter">${letter}</span>
+                    <span class="option-text">${escapeHtml(opt)}</span>
+                `;
+                
+                btn.onclick = () => {
+                    if (state.isFinished || state.isTimeOver || state.isAnswered) return;
+                    
+                    state.answers[state.currentIndex] = opt;
+                    state.isAnswered = true;
+                    
+                    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    
+                    if (elements.nextBtn) {
+                        elements.nextBtn.disabled = false;
+                    }
+                    
+                    showToast("✅ Javob qabul qilindi!", 'success');
+                };
+                
+                elements.options.appendChild(btn);
+            });
+        }
+        
+        if (elements.nextBtn) {
+            elements.nextBtn.disabled = true;
+            const isLast = state.currentIndex === TOTAL_QUESTIONS - 1;
+            elements.nextBtn.innerHTML = isLast ? '✅ Natijani ko\'rish' : '▶ Keyingi savol';
+        }
+        
+        startTimer();
+    }
+
+    // ========== KEYINGI SAVOL ==========
+    function nextQuestion() {
+        if (state.isFinished || state.isTimeOver) return;
+        
+        if (!state.isAnswered) {
+            showToast("⚠️ Iltimos, javob tanlang!", 'warning');
+            return;
+        }
+        
+        clearTimer();
+        
+        if (state.currentIndex < TOTAL_QUESTIONS - 1) {
+            state.currentIndex++;
+            renderQuestion();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    // ========== TESTNI YAKUNLASH ==========
+    function finishQuiz() {
+        if (state.isFinished) return;
+        
+        clearTimer();
+        state.isFinished = true;
+        
+        let correct = 0;
+        const details = [];
+        
+        for (let i = 0; i < state.selectedQuestions.length; i++) {
+            const q = state.selectedQuestions[i];
+            const userAnswer = state.answers[i];
+            const isCorrect = userAnswer === q.answer;
+            if (isCorrect) correct++;
+            
+            details.push({
+                question: q.question,
+                userAnswer: userAnswer || "Javob berilmadi",
+                correctAnswer: q.answer,
+                isCorrect: isCorrect
+            });
+        }
+        
+        const percent = Math.round((correct / TOTAL_QUESTIONS) * 100);
+        const timeSpent = Math.round((Date.now() - state.startTime) / 1000);
+        
+        const result = {
+            subject: state.subjectName,
+            subjectIndex: state.subjectIndex,
+            correct: correct,
+            total: TOTAL_QUESTIONS,
+            percent: percent,
+            timeSpent: timeSpent,
+            details: details,
+            timestamp: Date.now()
+        };
+        
+        // Natijani saqlash
+        try {
+            const results = JSON.parse(localStorage.getItem('qm_results') || '[]');
+            results.unshift(result);
+            while (results.length > 50) results.pop();
+            localStorage.setItem('qm_results', JSON.stringify(results));
+        } catch(e) {}
+        
+        // Natija sahifasiga o'tish
+        const params = new URLSearchParams({
+            subject: result.subject,
+            score: result.correct,
+            total: result.total,
+            percent: result.percent,
+            time: result.timeSpent
+        });
+        
+        window.location.href = `result.html?${params.toString()}`;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // ========== ASOSIY START ==========
+    function startQuiz() {
+        const idx = parseInt(getUrlParam('subject'));
+        
+        if (isNaN(idx)) {
+            if (elements.questionText) elements.questionText.innerHTML = '❌ URL xato!';
+            return;
+        }
+        
+        if (!window.QUIZ_DATA || !window.QUIZ_DATA[idx]) {
+            if (elements.questionText) {
+                elements.questionText.innerHTML = `❌ "${idx}"-fan topilmadi!`;
+            }
+            return;
+        }
+        
+        const subject = window.QUIZ_DATA[idx];
+        state.subjectIndex = idx;
+        state.subjectName = subject.subject;
+        state.allQuestions = subject.questions;
+        
+        // RANDOM 25 savol tanlash
+        state.selectedQuestions = selectRandomQuestions(state.allQuestions);
+        state.currentIndex = 0;
+        state.answers = new Array(TOTAL_QUESTIONS).fill(undefined);
+        state.isFinished = false;
+        state.isTimeOver = false;
+        state.isAnswered = false;
+        state.startTime = Date.now();
+        
+        document.title = `${subject.subject} — Blitz Test`;
+        
+        renderQuestion();
+        
+        showToast(`⚡ ${subject.subject} testi boshlandi! Har bir savolga 15 soniya`, 'success');
+    }
+
+    // ========== EVENT LISTENERLAR ==========
+    if (elements.nextBtn) {
+        elements.nextBtn.addEventListener('click', nextQuestion);
+    }
+    
+    if (elements.resetBtn) {
+        elements.resetBtn.addEventListener('click', resetAndRestart);
+    }
+    
+    // ========== DARK MODENI QO'LLASH ==========
+    applyDarkModeFromStorage();
+    
+    // ========== BOSHLASH ==========
+    startQuiz();
+})();
 </script>
 
 </body>
