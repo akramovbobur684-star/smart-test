@@ -1,4 +1,18 @@
 window.QUIZ_DATA = {
+    "0": {
+        "subject": "Matematika",
+        "questions": [
+            { "question": "...", "options": ["", "", "", ""], "answer": "...", "explanation": "..." }
+        ]
+    },
+    "1": {
+        "subject": "Fizika",
+        "questions": [
+            { "question": "...", "options": ["", "", "", ""], "answer": "...", "explanation": "..." }
+        ]
+    }
+};
+window.QUIZ_DATA = {
   0: [
     { question: "log₂(8) + log₃(27) ifodaning qiymatini toping.", options: ["3", "5", "6", "9"], answer: "6", explanation: "log₂(8)=3, log₃(27)=3, yig'indisi 6 ga teng." },
     { question: "f(x) = 3x² - 4x + 2 funksiyaning hosilasini toping.", options: ["6x - 4", "3x - 4", "6x + 2", "6x - 2"], answer: "6x - 4", explanation: "f'(x)=2·3x - 4 = 6x - 4" },
