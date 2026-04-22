@@ -3,198 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harbiy aloqa instituti - Test tizimi</title>
+    <title>Harbiy Aloqa Instituti | Test Platformasi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --text-color: #f1f5f9;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Rajdhani', sans-serif;
             margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-            padding: 30px;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            justify-content: center;
-        }
-        select, button {
-            padding: 12px 24px;
-            font-size: 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        select {
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-        }
-        button {
-            background: #667eea;
-            color: white;
-            font-weight: bold;
-        }
-        button:hover:not(:disabled) {
-            background: #764ba2;
-            transform: translateY(-2px);
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .quiz-card {
-            background: #f9f9f9;
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 20px;
-        }
-        .question {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #333;
-            line-height: 1.4;
-        }
-        .options {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .option {
-            display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: white;
-            border-radius: 10px;
-            border: 2px solid #e0e0e0;
-            transition: all 0.2s;
+            min-height: 100vh;
         }
-        .option:hover {
-            border-color: #667eea;
-            background: #f0f0ff;
-        }
-        .option.correct {
-            background: #d4edda;
-            border-color: #28a745;
-        }
-        .option.wrong {
-            background: #f8d7da;
-            border-color: #dc3545;
-        }
-        input[type="radio"] {
-            margin-right: 10px;
-            cursor: pointer;
-            width: 20px;
-            height: 20px;
-        }
-        label {
-            flex: 1;
-            cursor: pointer;
-            font-size: 1em;
-        }
-        .explanation {
-            background: #e7f3ff;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid #2196f3;
-            font-size: 0.95em;
-        }
-        .nav-buttons {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .nav-buttons button {
-            flex: 1;
-        }
-        .progress {
+        header {
             text-align: center;
-            margin-top: 15px;
-            color: #666;
+            padding: 40px 20px;
+        }
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            width: 90%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+        .card h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.5rem;
+        }
+        .card p {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+        .btn-start {
+            background: var(--accent-color);
+            color: #0f172a;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
             font-weight: bold;
-        }
-        .result-details {
-            max-height: 500px;
-            overflow-y: auto;
-            margin-top: 20px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 10px;
-        }
-        .result-details ol {
-            margin: 0;
-            padding-left: 20px;
-        }
-        .result-details li {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-        }
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
-            }
-            .question {
-                font-size: 1.1em;
-            }
+            text-transform: uppercase;
+            margin-top: 15px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎯 Harbiy aloqa instituti<br>Test tizimi</h1>
-        
-        <div class="controls">
-            <select id="subjectSelect">
-                <option value="0">📐 Matematika (Logarifm, Hosila, Integral)</option>
-                <option value="1">⚡ Fizika (Magnetizm, Elektrodinamika, Optika)</option>
-                <option value="2">💻 Dasturlash (C++, Python, Algoritmlar)</option>
-                <option value="3">📜 Tarix (O‘zbekiston va Jahon tarixi)</option>
-                <option value="4">🇬🇧 Ingliz tili (Harbiy-texnik terminologiya)</option>
-            </select>
-            <button id="startBtn">🚀 Testni boshlash</button>
+    <header>
+        <h1>Harbiy Aloqa Instituti</h1>
+        <p>IntelliTest v2.0 | Kelajak ofitserlari uchun bilim sinovi</p>
+    </header>
+
+    <div class="container" id="subjects-container">
         </div>
-        
-        <div id="quizContainer" style="display: none;">
-            <div class="quiz-card">
-                <div class="question" id="questionText"></div>
-                <div class="options" id="optionsContainer"></div>
-                <div class="explanation" id="explanation" style="display: none;"></div>
-                <div class="nav-buttons">
-                    <button id="prevBtn">◀ Oldingi</button>
-                    <button id="nextBtn">Keyingi ▶</button>
-                </div>
-                <div class="progress" id="progress"></div>
-            </div>
-        </div>
-        
-        <div id="resultContainer" style="display: none;"></div>
-    </div>
-    
+
     <script src="questions.js"></script>
-    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('subjects-container');
+            
+            // window.QUIZ_DATA dagi fanlarni o'qish
+            Object.keys(window.QUIZ_DATA).forEach(id => {
+                const subject = window.QUIZ_DATA[id];
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h2>${subject.subject}</h2>
+                    <p>${subject.questions.length} ta savol mavjud</p>
+                    <button class="btn-start">Testni boshlash</button>
+                `;
+                card.onclick = () => {
+                    window.location.href = `quiz.html?subject=${id}`;
+                };
+                container.appendChild(card);
+            });
+        });
+    </script>
 </body>
 </html>
