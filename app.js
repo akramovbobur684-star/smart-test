@@ -1,7 +1,7 @@
 /**
  * ============================================================
  * QuizMaster Pro — Core Application v3.0
- * UI, Dark Mode, Toast, Loader va umumiy funksiyalar
+ * Yagona Dark Mode tizimi, Toast, Loader va umumiy funksiyalar
  * ============================================================
  */
 
@@ -9,7 +9,7 @@
     'use strict';
 
     // -------------------------------------------------------
-    // 1. APP KONFIGURATSIYASI
+    // 1. KONFIGURATSIYA
     // -------------------------------------------------------
     const AppConfig = {
         storageKey: 'qm_results',
@@ -18,41 +18,7 @@
     };
 
     // -------------------------------------------------------
-    // 2. TOAST XABARLAR
-    // -------------------------------------------------------
-    function showToast(message, type = 'info') {
-        // Mavjud toastni o'chirish
-        const existingToast = document.querySelector('.toast');
-        if (existingToast) existingToast.remove();
-        
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        
-        // Ranglar
-        const colors = {
-            success: '#10b981',
-            error: '#ef4444',
-            warning: '#f59e0b',
-            info: '#4f46e5'
-        };
-        
-        toast.style.backgroundColor = colors[type] || colors.info;
-        toast.innerHTML = `
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-            <span style="margin-left: 10px;">${message}</span>
-        `;
-        
-        document.body.appendChild(toast);
-        
-        // 3 soniyadan keyin o'chirish
-        setTimeout(() => {
-            toast.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    // -------------------------------------------------------
-    // 3. DARK MODE BOSHQARUVI (ASOSIY FUNKSIYA)
+    // 2. DARK MODE — YAGONA TIZIM
     // -------------------------------------------------------
     function initDarkMode() {
         console.log("[App] Dark Mode init...");
@@ -68,60 +34,105 @@
         }
         
         // Dark mode ni qo'llash
-        if (isDark) {
-            document.body.classList.add('dark-mode');
-        } else {
-            document.body.classList.remove('dark-mode');
-        }
-        
-        // Tugma matnini yangilash
-        updateThemeButton(isDark);
+        applyDarkMode(isDark);
         
         console.log(`[App] Dark Mode: ${isDark ? 'yoqilgan' : 'o\'chirilgan'}`);
         return isDark;
     }
     
-    function updateThemeButton(isDark) {
-        const themeBtn = document.getElementById('theme-toggle-btn');
-        if (!themeBtn) return;
-        
-        const icon = themeBtn.querySelector('i');
-        const textSpan = themeBtn.querySelector('#theme-text');
-        
-        if (icon) {
-            icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+    function applyDarkMode(isDark) {
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
         }
-        if (textSpan) {
-            textSpan.textContent = isDark ? 'Light' : 'Dark';
-        }
+        
+        // Barcha sahifalardagi tugmalarni yangilash
+        updateAllThemeButtons(isDark);
+    }
+    
+    function updateAllThemeButtons(isDark) {
+        const themeBtns = document.querySelectorAll('#theme-toggle-btn, #theme-btn');
+        themeBtns.forEach(btn => {
+            const icon = btn.querySelector('i');
+            const textSpan = btn.querySelector('#theme-text');
+            
+            if (icon) {
+                icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            }
+            if (textSpan) {
+                textSpan.textContent = isDark ? 'Light' : 'Dark';
+            } else {
+                btn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
+            }
+        });
     }
     
     function toggleDarkMode() {
-        const isDark = document.body.classList.contains('dark-mode');
+        const isDark = !document.body.classList.contains('dark-mode');
+        applyDarkMode(isDark);
+        localStorage.setItem(AppConfig.themeKey, isDark ? 'dark' : 'light');
         
-        if (isDark) {
-            document.body.classList.remove('dark-mode');
-            localStorage.setItem(AppConfig.themeKey, 'light');
-            showToast('🌞 Yorug\' rejim yoqildi', 'info');
-        } else {
-            document.body.classList.add('dark-mode');
-            localStorage.setItem(AppConfig.themeKey, 'dark');
-            showToast('🌙 Tungi rejim yoqildi', 'info');
-        }
-        
-        updateThemeButton(!isDark);
-        console.log(`[App] Dark Mode toggled: ${!isDark ? 'yoqilgan' : 'o\'chirilgan'}`);
+        showToast(isDark ? '🌙 Tungi rejim yoqildi' : '🌞 Yorug\' rejim yoqildi', 'info');
+        console.log(`[App] Dark Mode toggled: ${isDark ? 'yoqilgan' : 'o\'chirilgan'}`);
     }
 
     // -------------------------------------------------------
-    // 4. LOADER (Yuklanish indikatori)
+    // 3. TOAST XABARLAR
     // -------------------------------------------------------
-    function showLoader() {
-        const container = document.getElementById('quiz-content');
-        if (!container) return;
+    function showToast(message, type = 'info') {
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) existingToast.remove();
         
-        // Agar loader allaqachon mavjud bo'lsa, qayta yaratmaslik
-        if (document.querySelector('.loader-overlay')) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        
+        const colors = {
+            success: '#10b981',
+            error: '#ef4444',
+            warning: '#f59e0b',
+            info: '#4f46e5'
+        };
+        
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle'
+        };
+        
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 24px;
+            background: ${colors[type]};
+            color: white;
+            border-radius: 16px;
+            z-index: 10000;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: slideInRight 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        `;
+        
+        toast.innerHTML = `<i class="fas ${icons[type]}"></i><span>${message}</span>`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // -------------------------------------------------------
+    // 4. LOADER
+    // -------------------------------------------------------
+    function showLoader(message = "Ma'lumotlar yuklanmoqda...") {
+        const existingLoader = document.querySelector('.loader-overlay');
+        if (existingLoader) existingLoader.remove();
         
         const loader = document.createElement('div');
         loader.className = 'loader-overlay';
@@ -131,32 +142,39 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
+            backdrop-filter: blur(4px);
         `;
         loader.innerHTML = `
-            <div style="background: var(--card-bg); padding: 30px; border-radius: 20px; text-align: center;">
-                <div style="width: 50px; height: 50px; border: 4px solid var(--card-border); border-top-color: var(--primary); border-radius: 50%; margin: 0 auto 20px; animation: spin 1s linear infinite;"></div>
-                <p>Ma'lumotlar yuklanmoqda...</p>
+            <div style="background: var(--card-bg, white); padding: 30px 40px; border-radius: 24px; text-align: center; box-shadow: 0 20px 35px rgba(0,0,0,0.2);">
+                <div style="width: 50px; height: 50px; border: 4px solid var(--card-border, #e5e7eb); border-top-color: var(--primary, #4f46e5); border-radius: 50%; margin: 0 auto 20px; animation: spin 1s linear infinite;"></div>
+                <p style="color: var(--text, #1f2937);">${message}</p>
             </div>
         `;
         
-        // Spin animatsiyasini qo'shish
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
+        if (!document.querySelector('style#loader-animation')) {
+            const style = document.createElement('style');
+            style.id = 'loader-animation';
+            style.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
         
         document.body.appendChild(loader);
     }
@@ -183,20 +201,14 @@
         try {
             const results = getAllResults();
             results.unshift({ ...result, timestamp: Date.now() });
-            // Oxirgi 100 ta natijani saqlash
             while (results.length > 100) results.pop();
             localStorage.setItem(AppConfig.storageKey, JSON.stringify(results));
             showToast(`✅ Natija saqlandi: ${result.correct}/${result.total}`, 'success');
+            return true;
         } catch (e) {
             console.error("[App] Natijani saqlashda xatolik:", e);
             showToast("❌ Natijani saqlashda xatolik", 'error');
-        }
-    }
-    
-    function clearAllResults() {
-        if (confirm("Barcha natijalarni o'chirmoqchimisiz?")) {
-            localStorage.removeItem(AppConfig.storageKey);
-            showToast("🗑️ Barcha natijalar o'chirildi", 'warning');
+            return false;
         }
     }
 
@@ -204,8 +216,8 @@
     // 6. YORDAMCHI FUNKSIYALAR
     // -------------------------------------------------------
     function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
+        const mins = Math.floor(Math.abs(seconds) / 60);
+        const secs = Math.abs(seconds) % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
     
@@ -232,51 +244,66 @@
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(param);
     }
+    
+    function getSmartFeedback(percent) {
+        if (percent >= 90) {
+            return { 
+                message: "🎉 Ajoyib! Siz ushbu fan bo'yicha mutaxassissiz! Bilimingiz yuqori darajada.", 
+                type: "expert",
+                icon: "fa-crown",
+                advice: "Keyingi bosqichga tayyorsiz!"
+            };
+        } else if (percent >= 70) {
+            return { 
+                message: "👍 Yaxshi natija! Bilimingiz mustahkam, ammo yana bir bor takrorlash zarar emas.", 
+                type: "good",
+                icon: "fa-thumbs-up",
+                advice: "Xato qilgan savollaringizni tahlil qiling."
+            };
+        } else if (percent >= 50) {
+            return { 
+                message: "📚 O'rtacha natija. Ko'proq mashq qilish va nazariyani takrorlash tavsiya etiladi.", 
+                type: "average",
+                icon: "fa-book",
+                advice: "Har bir xato — bu o'rganish imkoniyati."
+            };
+        } else {
+            return { 
+                message: "⚠️ Sizga ko'proq nazariya o'qish va amaliyot mashqlarini bajarish tavsiya etiladi. Taslim bo'lmang!", 
+                type: "poor",
+                icon: "fa-chart-line",
+                advice: "Testni qayta topshirib, o'z o'sishingizni kuzating."
+            };
+        }
+    }
 
     // -------------------------------------------------------
-    // 7. ASOSIY INIT FUNKSIYASI
+    // 7. ASOSIY INIT
     // -------------------------------------------------------
     function initApp() {
-        console.log("[App] Initializing QuizMaster Pro App...");
+        console.log("[App] QuizMaster Pro v3.0 ishga tushmoqda...");
         
-        // Dark Mode ni ishga tushirish
+        // Dark Mode
         initDarkMode();
         
-        // Dark Mode tugmasini ulash
-        const themeBtn = document.getElementById('theme-toggle-btn');
-        if (themeBtn) {
-            // Eski event listenerlarni o'chirish
-            const newBtn = themeBtn.cloneNode(true);
-            themeBtn.parentNode.replaceChild(newBtn, themeBtn);
-            newBtn.addEventListener('click', toggleDarkMode);
-            console.log("[App] Dark Mode tugmasi ulandi");
-        } else {
-            console.warn("[App] Dark Mode tugmasi topilmadi!");
-        }
-        
-        // Ma'lumotlar bazasini tekshirish
-        if (!window.QUIZ_DATA) {
-            console.error("[App] QUIZ_DATA topilmadi! questions.js faylini tekshiring.");
-            showToast("⚠️ Ma'lumotlar bazasi topilmadi!", 'error');
-        } else {
-            console.log(`[App] QUIZ_DATA mavjud: ${window.QUIZ_DATA.length} ta fan`);
-        }
+        // Dark Mode tugmalarini ulash
+        document.querySelectorAll('#theme-toggle-btn, #theme-btn').forEach(btn => {
+            btn.removeEventListener('click', toggleDarkMode);
+            btn.addEventListener('click', toggleDarkMode);
+        });
         
         console.log("[App] Initialization complete!");
     }
     
-    // -------------------------------------------------------
-    // 8. DOMContentLoaded EVENT
-    // -------------------------------------------------------
+    // DOMContentLoaded
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initApp);
     } else {
-        // DOM allaqachon yuklangan
         initApp();
     }
     
     // -------------------------------------------------------
-    // 9. GLOBAL EKSPORT
+    // 8. GLOBAL EKSPORT
     // -------------------------------------------------------
     window.QuizApp = {
         // UI
@@ -287,17 +314,18 @@
         // Dark Mode
         initDarkMode,
         toggleDarkMode,
+        applyDarkMode,
         
         // Natijalar
         getAllResults,
         saveResult,
-        clearAllResults,
         
         // Yordamchi funksiyalar
         formatTime,
         shuffleArray,
         escapeHtml,
         getUrlParam,
+        getSmartFeedback,
         
         // Konfig
         config: AppConfig
