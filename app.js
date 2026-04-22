@@ -1,9 +1,5 @@
-<!-- ============================================================ -->
-<!-- app.js - Dashboard (Fan kartochkalari va ulanish) -->
-<!-- ============================================================ -->
-<script>
 // ============================================================
-// app.js v6.0 - Dashboard (To'g'ri URL yaratish)
+// app.js - Dashboard (To'g'ri URL yaratish + Debug Logs)
 // ============================================================
 
 (function() {
@@ -18,7 +14,7 @@
         }
         const btns = document.querySelectorAll('#theme-toggle-btn, #theme-btn, .theme-toggle');
         btns.forEach(btn => {
-            if (btn) btn.innerHTML = isDark ? '☀️ Yorqinlik' : '🌙 Qorong'ulik';
+            if (btn) btn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
         });
     }
 
@@ -33,7 +29,7 @@
         applyDarkMode(isDark);
         localStorage.setItem('quiz_theme', isDark ? 'dark' : 'light');
         if (window.showToast) {
-            window.showToast(isDark ? '🌙 Qorong'i rejim yoqildi' : '🌞 Yorqinlik' rejim yoqildi', 'info');
+            window.showToast(isDark ? '🌙 Tungi rejim yoqildi' : '🌞 Yorug\' rejim yoqildi', 'info');
         }
     }
 
@@ -47,80 +43,23 @@
         const toast = document.createElement('div');
         toast.className = 'toast';
         const colors = { success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#4f46e5' };
-        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-        
+        toast.style.backgroundColor = colors[type];
         toast.style.cssText = `
-            position: fixed; bottom: 30px; right: 30px; padding: 12px 20px;
-            background: ${colors[type]}; color: white; border-radius: 12px;
-            z-index: 10000; font-weight: 500; display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: slideInToast 0.3s ease-out;
-            max-width: 85%; font-size: 14px;
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            padding: 12px 24px; border-radius: 60px; color: white; z-index: 10000;
+            font-weight: 600; font-size: 14px; white-space: nowrap; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease-out; background-color: ${colors[type]};
         `;
-        toast.innerHTML = `<i class="fas ${icons[type]}"></i> <span>${message}</span>`;
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${message}`;
         document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.style.animation = 'slideOutToast 0.3s ease-out';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    };
-
-    // ========== ANIMATSIYALAR ==========
-    if (!document.querySelector('#toast-animations')) {
-        const style = document.createElement('style');
-        style.id = 'toast-animations';
-        style.textContent = `
-            @keyframes slideInToast {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOutToast {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    // ========== LOADER ==========
-    window.showLoader = function(message = "Ma'lumotlar yuklanmoqda...") {
-        const existing = document.querySelector('.loader-overlay');
-        if (existing) existing.remove();
-        
-        const loader = document.createElement('div');
-        loader.className = 'loader-overlay';
-        loader.style.cssText = `
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7); display: flex; justify-content: center;
-            align-items: center; z-index: 9999; backdrop-filter: blur(4px);
-        `;
-        loader.innerHTML = `
-            <div style="background: var(--card-bg, white); padding: 25px 30px; border-radius: 24px; text-align: center; max-width: 85%;">
-                <div style="width: 45px; height: 45px; border: 4px solid var(--card-border, #e5e7eb); border-top-color: var(--primary, #4f46e5); border-radius: 50%; margin: 0 auto 15px; animation: spinLoader 1s linear infinite;"></div>
-                <p style="color: var(--text, #1f2937);">${message}</p>
-            </div>
-        `;
-        
-        if (!document.querySelector('#loader-animations')) {
-            const animStyle = document.createElement('style');
-            animStyle.id = 'loader-animations';
-            animStyle.textContent = `@keyframes spinLoader { to { transform: rotate(360deg); } }`;
-            document.head.appendChild(animStyle);
-        }
-        
-        document.body.appendChild(loader);
-    };
-    
-    window.hideLoader = function() {
-        const loader = document.querySelector('.loader-overlay');
-        if (loader) loader.remove();
+        setTimeout(() => toast.remove(), 2500);
     };
 
     // ========== DASHBOARD FUNKSIYALARI ==========
     function getSubjectsMeta() {
         if (!window.QUIZ_DATA || !window.QUIZ_DATA.length) return [];
-        return window.QUIZ_DATA.map(s => ({
-            id: s.id,
+        return window.QUIZ_DATA.map((s, idx) => ({
+            id: idx,
             subject: s.subject,
             icon: s.icon,
             color: s.color,
@@ -257,12 +196,13 @@
             `;
             
             const btn = card.querySelector('.btn-start');
-            // MUHIM: To'g'ri URL yaratish
+            // ========== MUHIM: To'g'ri URL yaratish ==========
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const idx = parseInt(btn.getAttribute('data-idx'));
-                console.log('[Dashboard] Test boshlash:', idx, '→ quiz.html?subject=' + idx);
-                window.location.href = 'quiz.html?subject=' + idx;
+                const idx = parseInt(btn.getAttribute('data-idx'), 10);
+                const targetUrl = `quiz.html?subject=${idx}`;
+                console.log(`[Dashboard] 🔗 Testga o'tish: ID=${idx} → ${targetUrl}`);
+                window.location.href = targetUrl;
             });
             
             card.addEventListener('click', (e) => {
@@ -273,6 +213,8 @@
             
             grid.appendChild(card);
         }
+        
+        console.log(`[Dashboard] ✅ ${meta.length} ta fan kartochkasi yaratildi`);
     }
     
     function escapeHtml(str) {
@@ -336,9 +278,11 @@
                 attempts++;
                 if (window.QUIZ_DATA && window.QUIZ_DATA.length > 0) {
                     clearInterval(interval);
+                    console.log(`[Dashboard] ✅ Ma'lumotlar yuklandi: ${window.QUIZ_DATA.length} ta fan`);
                     resolve();
                 } else if (attempts >= maxAttempts) {
                     clearInterval(interval);
+                    console.error('[Dashboard] ❌ Ma\'lumotlar yuklanmadi!');
                     reject();
                 }
             }, 100);
@@ -346,17 +290,17 @@
     }
 
     async function initApp() {
-        window.showLoader("Ma'lumotlar yuklanmoqda...");
+        console.log('[Dashboard] 🚀 Sahifa ishga tushmoqda...');
         
         try {
             await waitForData();
             updateDashboard();
             renderSubjects();
             initSearchAndFilter();
-            window.hideLoader();
             window.showToast(`✅ ${window.QUIZ_DATA.length} ta fan yuklandi!`, 'success');
+            console.log('[Dashboard] ✅ Initialization complete!');
         } catch(e) {
-            window.hideLoader();
+            console.error('[Dashboard] ❌ Initialization failed:', e);
             const grid = document.getElementById('subjects-grid');
             if (grid) {
                 grid.innerHTML = `
