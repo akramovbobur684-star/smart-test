@@ -572,3 +572,7 @@ window.QuizEngine = {
     QuizState,
     renderQuestion 
 };
+// Global function for starting quiz from index.html
+window.startSubject = function(subjectIndex) {
+    window.location.href = `quiz.html?subject=${subjectIndex}`;
+};
