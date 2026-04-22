@@ -238,16 +238,34 @@
     }
     
     function fullRestart() {
-        if (dataCheckInterval) {
-            clearInterval(dataCheckInterval)
-            dataCheckInterval = null
-        }
-        
         stopTimer()
         currentIndex = 0
         score = 0
+        quizActive = true
         updateScore()
-        startDataCheck()
+        
+        const subjectId = getSubjectFromURL()
+        let questionsForSubject = null
+        
+        if (subjectId === 0) {
+            questionsForSubject = window.QUIZ_DATA
+        } else if (window.QUIZ_DATA && window.QUIZ_DATA[subjectId]) {
+            questionsForSubject = window.QUIZ_DATA[subjectId]
+        } else if (window.QUIZ_DATA && window.QUIZ_DATA.questions) {
+            questionsForSubject = window.QUIZ_DATA.questions
+        } else {
+            questionsForSubject = window.QUIZ_DATA
+        }
+        
+        let allQuestions = Array.isArray(questionsForSubject) ? questionsForSubject : (questionsForSubject.questions || [])
+        
+        currentQuestions = getRandomQuestions(allQuestions)
+        
+        if (currentQuestions.length > 0) {
+            renderQuestion()
+        } else {
+            showModal('Savollar topilmadi!', false)
+        }
     }
     
     function nextQuestion() {
@@ -278,7 +296,7 @@
             questionsForSubject = window.QUIZ_DATA
         }
         
-        if (!questionsForSubject || (Array.isArray(questionsForSubject) && questionsForSubject.length === 0)) {
+        if (!questionsForSubject) {
             showModal('Ma\'lumotlar topilmadi!', false)
             return false
         }
