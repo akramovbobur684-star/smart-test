@@ -333,3 +333,33 @@
     
     console.log("[App] QuizApp global obyekti eksport qilindi!");
 })();
+/**
+ * QuizMaster Pro — Core Application v3.0
+ * Umumiy funksiyalar (agar app.js alohida kerak bo'lsa)
+ */
+
+window.QuizApp = window.QuizApp || {};
+
+(function() {
+    'use strict';
+    
+    window.QuizApp = {
+        showToast: function(message, type) {
+            console.log(`[Toast] ${type}: ${message}`);
+            // Toast implementatsiyasi (agar kerak bo'lsa)
+        },
+        
+        formatTime: function(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        },
+        
+        getUrlParam: function(param) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(param);
+        }
+    };
+    
+    console.log("[App] QuizApp loaded");
+})();
