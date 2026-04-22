@@ -1,347 +1,370 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
-    transition: background 0.3s ease;
-}
-
-body.dark-mode {
-    background: linear-gradient(135deg, #0f172a 0%, #0f172a 100%);
-}
-
-.quiz-container {
-    max-width: 800px;
-    width: 100%;
-    background: #1e293b;
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-
-.quiz-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #334155;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.quiz-timer {
-    background: #0f172a;
-    padding: 8px 20px;
-    border-radius: 12px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #94a3b8;
-    font-family: monospace;
-}
-
-.quiz-score {
-    background: #0f172a;
-    padding: 8px 20px;
-    border-radius: 12px;
-    font-size: 18px;
-    font-weight: 600;
-    color: #38bdf8;
-}
-
-.quiz-progress {
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 14px;
-    color: #94a3b8;
-    font-weight: 500;
-}
-
-.quiz-question {
-    background: #0f172a;
-    padding: 28px;
-    border-radius: 20px;
-    margin-bottom: 24px;
-}
-
-.quiz-question-text {
-    color: #f1f5f9;
-    font-size: 22px;
-    font-weight: 600;
-    line-height: 1.4;
-    text-align: center;
-    word-wrap: break-word;
-}
-
-.quiz-options {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.quiz-option {
-    background: #334155;
-    padding: 14px 20px;
-    border-radius: 14px;
-    color: #f1f5f9;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-    word-wrap: break-word;
-}
-
-.quiz-option:hover {
-    background: #475569;
-    transform: translateX(5px);
-}
-
-.quiz-option.correct {
-    background: #10b981;
-    border-color: #059669;
-    animation: pulse 0.5s ease;
-}
-
-.quiz-option.wrong {
-    background: #ef4444;
-    border-color: #dc2626;
-    animation: shake 0.5s ease;
-}
-
-.quiz-option.correct-highlight {
-    background: #10b981;
-    border-color: #059669;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
-}
-
-.quiz-buttons {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.quiz-btn {
-    padding: 12px 28px;
-    font-size: 16px;
-    font-weight: 600;
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: inherit;
-}
-
-.quiz-btn-next {
-    background: #3b82f6;
-    color: white;
-}
-
-.quiz-btn-next:hover {
-    background: #2563eb;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
-}
-
-.quiz-btn-restart {
-    background: #ef4444;
-    color: white;
-}
-
-.quiz-btn-restart:hover {
-    background: #dc2626;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
-}
-
-.quiz-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    animation: fadeIn 0.3s ease;
-}
-
-.quiz-modal-content {
-    background: #1e293b;
-    padding: 36px;
-    border-radius: 24px;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    animation: slideUp 0.3s ease;
-}
-
-.quiz-modal-message {
-    color: #f1f5f9;
-    font-size: 20px;
-    margin-bottom: 28px;
-    line-height: 1.5;
-    white-space: pre-line;
-}
-
-.quiz-modal-restart {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 14px 28px;
-    border-radius: 14px;
-    font-size: 24px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.quiz-modal-restart:hover {
-    background: #2563eb;
-    transform: scale(1.05);
-}
-
-.quiz-modal-close {
-    background: #64748b;
-    color: white;
-    border: none;
-    padding: 12px 28px;
-    border-radius: 14px;
-    font-size: 16px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.quiz-modal-close:hover {
-    background: #475569;
-    transform: scale(1.05);
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.02);
-    }
-}
-
-@keyframes shake {
-    0%, 100% {
-        transform: translateX(0);
-    }
-    25% {
-        transform: translateX(-5px);
-    }
-    75% {
-        transform: translateX(5px);
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@media (max-width: 768px) {
-    .quiz-container {
-        padding: 16px;
+(function() {
+    const TIME_PER_QUESTION = 15
+    const TOTAL_QUESTIONS = 25
+    
+    let currentQuestions = []
+    let currentIndex = 0
+    let score = 0
+    let timer = null
+    let timeLeft = TIME_PER_QUESTION
+    let quizActive = false
+    let dataCheckInterval = null
+    
+    const elements = {
+        questionText: null,
+        optionsContainer: null,
+        nextBtn: null,
+        restartBtn: null,
+        timerDisplay: null,
+        progressText: null,
+        scoreDisplay: null
     }
     
-    .quiz-question {
-        padding: 20px;
+    function getSubjectFromURL() {
+        const params = new URLSearchParams(window.location.search)
+        const subjectParam = params.get('subject')
+        return subjectParam !== null ? parseInt(subjectParam) : 0
     }
     
-    .quiz-question-text {
-        font-size: 18px;
+    function loadDarkMode() {
+        const isDark = localStorage.getItem('darkMode') === 'true'
+        if (isDark) {
+            document.body.classList.add('dark-mode')
+        }
+        return isDark
     }
     
-    .quiz-option {
-        padding: 12px 16px;
-        font-size: 14px;
+    function showModal(message, showRestart = true) {
+        const existingModal = document.querySelector('.quiz-modal')
+        if (existingModal) existingModal.remove()
+        
+        const modal = document.createElement('div')
+        modal.className = 'quiz-modal'
+        
+        const content = document.createElement('div')
+        content.className = 'quiz-modal-content'
+        
+        const messageEl = document.createElement('p')
+        messageEl.className = 'quiz-modal-message'
+        messageEl.textContent = message
+        
+        content.appendChild(messageEl)
+        
+        if (showRestart) {
+            const restartIcon = document.createElement('button')
+            restartIcon.className = 'quiz-modal-restart'
+            restartIcon.innerHTML = '🔄'
+            restartIcon.onclick = () => {
+                modal.remove()
+                fullRestart()
+            }
+            content.appendChild(restartIcon)
+        } else {
+            const closeBtn = document.createElement('button')
+            closeBtn.className = 'quiz-modal-close'
+            closeBtn.textContent = 'OK'
+            closeBtn.onclick = () => modal.remove()
+            content.appendChild(closeBtn)
+        }
+        
+        modal.appendChild(content)
+        document.body.appendChild(modal)
     }
     
-    .quiz-timer {
-        font-size: 20px;
-        padding: 6px 16px;
+    function stopTimer() {
+        if (timer) {
+            clearInterval(timer)
+            timer = null
+        }
     }
     
-    .quiz-score {
-        font-size: 16px;
-        padding: 6px 16px;
+    function startTimer() {
+        stopTimer()
+        timeLeft = TIME_PER_QUESTION
+        updateTimerDisplay()
+        
+        timer = setInterval(() => {
+            if (!quizActive) return
+            
+            timeLeft--
+            updateTimerDisplay()
+            
+            if (timeLeft <= 0) {
+                stopTimer()
+                handleTimeOut()
+            }
+        }, 1000)
     }
     
-    .quiz-btn {
-        padding: 10px 22px;
-        font-size: 14px;
+    function updateTimerDisplay() {
+        if (elements.timerDisplay) {
+            elements.timerDisplay.textContent = `${timeLeft}s`
+            if (timeLeft <= 5) {
+                elements.timerDisplay.style.color = '#ef4444'
+            } else {
+                elements.timerDisplay.style.color = '#94a3b8'
+            }
+        }
     }
     
-    .quiz-modal-content {
-        padding: 28px;
+    function handleTimeOut() {
+        quizActive = false
+        disableOptions(true)
+        showModal('Vaqt tugadi!', true)
     }
     
-    .quiz-modal-message {
-        font-size: 18px;
-    }
-}
-
-@media (max-width: 480px) {
-    .quiz-header {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-    }
-    
-    .quiz-timer {
-        text-align: center;
+    function disableOptions(disabled) {
+        const allOptions = document.querySelectorAll('.quiz-option')
+        allOptions.forEach(option => {
+            if (disabled) {
+                option.style.pointerEvents = 'none'
+                option.style.opacity = '0.6'
+            } else {
+                option.style.pointerEvents = 'auto'
+                option.style.opacity = '1'
+            }
+        })
     }
     
-    .quiz-score {
-        text-align: center;
+    function updateProgress() {
+        if (elements.progressText) {
+            elements.progressText.textContent = `${currentIndex + 1} / ${currentQuestions.length}`
+        }
     }
     
-    .quiz-buttons {
-        flex-direction: column;
+    function updateScore() {
+        if (elements.scoreDisplay) {
+            elements.scoreDisplay.textContent = `Ball: ${score}`
+        }
     }
     
-    .quiz-btn {
-        width: 100%;
+    function renderQuestion() {
+        if (!quizActive) return
+        if (currentIndex >= currentQuestions.length) {
+            finishQuiz()
+            return
+        }
+        
+        const question = currentQuestions[currentIndex]
+        if (!question) return
+        
+        if (elements.questionText) {
+            elements.questionText.textContent = question.question
+        }
+        
+        if (elements.optionsContainer) {
+            elements.optionsContainer.innerHTML = ''
+            
+            question.options.forEach((option, idx) => {
+                const optionDiv = document.createElement('div')
+                optionDiv.className = 'quiz-option'
+                optionDiv.textContent = `${String.fromCharCode(65 + idx)}. ${option}`
+                optionDiv.onclick = () => handleAnswer(option, optionDiv)
+                elements.optionsContainer.appendChild(optionDiv)
+            })
+        }
+        
+        updateProgress()
+        startTimer()
+        disableOptions(false)
     }
     
-    .quiz-question-text {
-        font-size: 16px;
+    function handleAnswer(selectedOption, element) {
+        if (!quizActive) return
+        
+        const question = currentQuestions[currentIndex]
+        const isCorrect = selectedOption === question.correct
+        
+        if (isCorrect) {
+            score++
+            updateScore()
+            element.classList.add('correct')
+        } else {
+            element.classList.add('wrong')
+            const allOptions = document.querySelectorAll('.quiz-option')
+            allOptions.forEach(opt => {
+                if (opt.textContent.includes(question.correct)) {
+                    opt.classList.add('correct-highlight')
+                }
+            })
+        }
+        
+        quizActive = false
+        stopTimer()
+        disableOptions(true)
+        
+        setTimeout(() => {
+            if (currentIndex + 1 < currentQuestions.length) {
+                currentIndex++
+                quizActive = true
+                renderQuestion()
+            } else {
+                currentIndex++
+                if (currentIndex >= currentQuestions.length) {
+                    finishQuiz()
+                }
+            }
+        }, 1500)
     }
     
-    .quiz-option {
-        font-size: 13px;
-        padding: 10px 14px;
+    function finishQuiz() {
+        stopTimer()
+        quizActive = false
+        
+        const percentage = (score / currentQuestions.length) * 100
+        let message = `Test yakunlandi!\nBall: ${score}/${currentQuestions.length} (${percentage}%)\n`
+        
+        if (percentage >= 80) message += 'Ajoyib natija! 🎉'
+        else if (percentage >= 60) message += 'Yaxshi natija! 👍'
+        else if (percentage >= 40) message += 'O\'rtacha natija 📚'
+        else message += 'Ko\'proq mashq qiling 💪'
+        
+        showModal(message, true)
     }
-}
+    
+    function getRandomQuestions(allQuestions) {
+        if (!allQuestions || allQuestions.length === 0) {
+            return []
+        }
+        
+        const shuffled = [...allQuestions]
+        
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+        }
+        
+        return shuffled.slice(0, TOTAL_QUESTIONS)
+    }
+    
+    function fullRestart() {
+        if (dataCheckInterval) {
+            clearInterval(dataCheckInterval)
+            dataCheckInterval = null
+        }
+        
+        stopTimer()
+        currentIndex = 0
+        score = 0
+        updateScore()
+        startDataCheck()
+    }
+    
+    function nextQuestion() {
+        if (!quizActive) return
+        
+        if (currentIndex + 1 < currentQuestions.length) {
+            currentIndex++
+            quizActive = true
+            renderQuestion()
+        } else if (currentIndex + 1 === currentQuestions.length) {
+            currentIndex++
+            finishQuiz()
+        }
+    }
+    
+    function startQuizWithData() {
+        const subjectId = getSubjectFromURL()
+        
+        let questionsForSubject = null
+        
+        if (subjectId === 0) {
+            questionsForSubject = window.QUIZ_DATA
+        } else if (window.QUIZ_DATA && window.QUIZ_DATA[subjectId]) {
+            questionsForSubject = window.QUIZ_DATA[subjectId]
+        } else if (window.QUIZ_DATA && window.QUIZ_DATA.questions) {
+            questionsForSubject = window.QUIZ_DATA.questions
+        } else {
+            questionsForSubject = window.QUIZ_DATA
+        }
+        
+        if (!questionsForSubject || (Array.isArray(questionsForSubject) && questionsForSubject.length === 0)) {
+            showModal('Ma\'lumotlar topilmadi!', false)
+            return false
+        }
+        
+        let allQuestions = Array.isArray(questionsForSubject) ? questionsForSubject : (questionsForSubject.questions || [])
+        
+        if (allQuestions.length === 0) {
+            showModal('Savollar topilmadi!', false)
+            return false
+        }
+        
+        currentQuestions = getRandomQuestions(allQuestions)
+        
+        if (currentQuestions.length === 0) {
+            showModal('Savollarni tanlashda xatolik!', false)
+            return false
+        }
+        
+        currentIndex = 0
+        score = 0
+        quizActive = true
+        updateScore()
+        renderQuestion()
+        
+        return true
+    }
+    
+    function startDataCheck() {
+        if (dataCheckInterval) {
+            clearInterval(dataCheckInterval)
+        }
+        
+        dataCheckInterval = setInterval(() => {
+            if (window.QUIZ_DATA) {
+                clearInterval(dataCheckInterval)
+                dataCheckInterval = null
+                startQuizWithData()
+            }
+        }, 100)
+        
+        setTimeout(() => {
+            if (dataCheckInterval) {
+                clearInterval(dataCheckInterval)
+                dataCheckInterval = null
+                if (!window.QUIZ_DATA) {
+                    showModal('Ma\'lumot yuklanmadi! Sahifani yangilang.', false)
+                } else {
+                    startQuizWithData()
+                }
+            }
+        }, 5000)
+    }
+    
+    function bindElements() {
+        elements.questionText = document.getElementById('questionText')
+        elements.optionsContainer = document.getElementById('optionsContainer')
+        elements.nextBtn = document.getElementById('nextBtn')
+        elements.restartBtn = document.getElementById('restartBtn')
+        elements.timerDisplay = document.getElementById('timerDisplay')
+        elements.progressText = document.getElementById('progressText')
+        elements.scoreDisplay = document.getElementById('scoreDisplay')
+        
+        if (elements.nextBtn) {
+            const newNextBtn = elements.nextBtn.cloneNode(true)
+            elements.nextBtn.parentNode.replaceChild(newNextBtn, elements.nextBtn)
+            elements.nextBtn = newNextBtn
+            elements.nextBtn.addEventListener('click', () => nextQuestion())
+        }
+        
+        if (elements.restartBtn) {
+            const newRestartBtn = elements.restartBtn.cloneNode(true)
+            elements.restartBtn.parentNode.replaceChild(newRestartBtn, elements.restartBtn)
+            elements.restartBtn = newRestartBtn
+            elements.restartBtn.addEventListener('click', () => fullRestart())
+        }
+    }
+    
+    function initQuiz() {
+        loadDarkMode()
+        bindElements()
+        startDataCheck()
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initQuiz)
+    } else {
+        initQuiz()
+    }
+})()
