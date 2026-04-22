@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- quiz.html - YANGILANGAN VERSIYA (Dark Mode sinxron, Time Over Overlay) -->
+<!-- quiz.html - TO'LIQ QAYTA ISHLANGAN VERSIYA (Index Matching + Layout Fix) -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="uz">
@@ -11,8 +11,25 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Google Fonts (Dashboard bilan bir xil) -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    
+    <!-- ========== DARK MODE SINXRON (Dashboarddan) ========== -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('quiz_theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+                document.body.classList.add('dark-mode');
+            } else if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark-mode');
+                document.body.classList.remove('dark-mode');
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark-mode');
+                document.body.classList.add('dark-mode');
+            }
+        })();
+    </script>
     
     <style>
         * {
@@ -33,11 +50,13 @@
             --bg-tertiary: #e5e7eb;
             --text: #111827;
             --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
             --card-bg: #ffffff;
             --card-border: #e5e7eb;
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -47,6 +66,7 @@
             --bg-tertiary: #334155;
             --text: #f1f5f9;
             --text-secondary: #94a3b8;
+            --text-tertiary: #64748b;
             --card-bg: #1e293b;
             --card-border: #334155;
         }
@@ -58,78 +78,83 @@
             transition: background var(--transition-base), color var(--transition-base);
             line-height: 1.5;
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* ========== ASOSIY KONTEYNER (DASHBOARD STANDARTI) ========== */
-        .quiz-container {
+        /* ========== ASOSIY KONTEYNER (MARKAZDA) ========== */
+        .quiz-wrapper {
             max-width: 550px;
+            width: 100%;
             margin: 0 auto;
-            padding: 20px 16px;
+            padding: 24px 20px;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            justify-content: center;
         }
 
-        /* ========== HEADER (Dark Mode tugmasi YO'Q) ========== */
+        /* ========== HEADER ========== */
         .quiz-header {
-            padding: 8px 0 16px 0;
-            border-bottom: 1px solid var(--card-border);
+            padding: 0 0 20px 0;
             margin-bottom: 20px;
         }
 
         .quiz-logo {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 800;
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             color: var(--text);
         }
 
         .brand-icon {
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            width: 38px;
-            height: 38px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 12px;
+            border-radius: 14px;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 20px;
             color: white;
         }
 
         /* ========== FAN VA SAVOL RAQAMI ========== */
         .quiz-info {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .subject-name {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             color: var(--primary);
         }
 
         .question-counter {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-secondary);
             background: var(--bg-secondary);
             display: inline-block;
-            padding: 4px 14px;
-            border-radius: 30px;
+            padding: 5px 16px;
+            border-radius: 40px;
+            font-weight: 500;
         }
 
         /* ========== TIMER PROGRESS ========== */
         .timer-section {
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
 
         .progress-container {
             width: 100%;
-            height: 6px;
+            height: 8px;
             background: var(--bg-tertiary);
             border-radius: 10px;
             overflow: hidden;
@@ -149,8 +174,8 @@
 
         .timer-text {
             text-align: center;
-            font-size: 13px;
-            margin-top: 8px;
+            font-size: 14px;
+            margin-top: 10px;
             color: var(--text-secondary);
             font-weight: 500;
         }
@@ -164,33 +189,33 @@
         .question-text {
             font-size: 20px;
             font-weight: 600;
-            line-height: 1.4;
-            margin-bottom: 24px;
-            padding: 18px;
+            line-height: 1.45;
+            margin-bottom: 28px;
+            padding: 20px;
             background: var(--bg-secondary);
-            border-radius: 20px;
-            border-left: 4px solid var(--primary);
+            border-radius: 24px;
+            border-left: 5px solid var(--primary);
         }
 
-        /* ========== VARIANTLAR (FULL WIDTH) ========== */
+        /* ========== VARIANTLAR ========== */
         .options-grid {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-bottom: 30px;
+            gap: 14px;
+            margin-bottom: 32px;
         }
 
         .option-btn {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 16px 18px;
+            gap: 16px;
+            padding: 16px 20px;
             background: var(--card-bg);
             border: 2px solid var(--card-border);
-            border-radius: 16px;
+            border-radius: 18px;
             cursor: pointer;
             transition: var(--transition-base);
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 500;
             color: var(--text);
             width: 100%;
@@ -198,7 +223,7 @@
         }
 
         .option-btn:hover {
-            transform: translateX(6px);
+            transform: translateX(8px);
             border-color: var(--primary);
         }
 
@@ -210,9 +235,9 @@
 
         .option-letter {
             font-weight: 800;
-            font-size: 17px;
-            width: 34px;
-            height: 34px;
+            font-size: 18px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -234,7 +259,7 @@
         /* ========== NEXT TUGMASI ========== */
         .next-btn {
             width: 100%;
-            padding: 16px;
+            padding: 18px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
@@ -257,6 +282,40 @@
             filter: brightness(1.05);
         }
 
+        /* ========== SKELETON LOADING ========== */
+        .skeleton-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .skeleton-header {
+            height: 60px;
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            animation: shimmer 1.5s infinite;
+        }
+
+        .skeleton-text {
+            height: 100px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            animation: shimmer 1.5s infinite;
+        }
+
+        .skeleton-option {
+            height: 65px;
+            background: var(--bg-tertiary);
+            border-radius: 18px;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
         /* ========== TIME OVER OVERLAY ========== */
         .time-overlay {
             position: fixed;
@@ -276,22 +335,22 @@
         .time-overlay-content {
             text-align: center;
             background: var(--card-bg);
-            padding: 40px 30px;
+            padding: 40px 32px;
             border-radius: 32px;
-            max-width: 320px;
+            max-width: 340px;
             width: 85%;
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow-xl);
             border: 1px solid var(--card-border);
         }
 
         .time-overlay-icon {
-            font-size: 64px;
+            font-size: 70px;
             color: var(--danger);
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .time-overlay-title {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 800;
             margin-bottom: 12px;
             color: var(--danger);
@@ -300,27 +359,69 @@
         .time-overlay-text {
             font-size: 14px;
             color: var(--text-secondary);
-            margin-bottom: 28px;
+            margin-bottom: 32px;
+            line-height: 1.5;
         }
 
         .reset-btn {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
-            padding: 14px 32px;
+            padding: 14px 36px;
             border-radius: 60px;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             transition: var(--transition-base);
         }
 
         .reset-btn:hover {
             transform: scale(1.02);
             filter: brightness(1.05);
+        }
+
+        /* ========== ERROR STATE ========== */
+        .error-container {
+            text-align: center;
+            padding: 50px 20px;
+            background: var(--bg-secondary);
+            border-radius: 28px;
+            border: 1px solid var(--card-border);
+        }
+
+        .error-icon {
+            font-size: 60px;
+            color: var(--danger);
+            margin-bottom: 20px;
+        }
+
+        .error-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--danger);
+        }
+
+        .error-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+        }
+
+        .error-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
         }
 
         /* ========== TOAST ========== */
@@ -358,50 +459,68 @@
 
         /* ========== RESPONSIVE ========== */
         @media (max-width: 550px) {
-            .quiz-container { padding: 16px 14px; }
-            .question-text { font-size: 18px; padding: 14px; }
-            .option-btn { padding: 14px 16px; font-size: 14px; }
-            .option-letter { width: 30px; height: 30px; font-size: 15px; }
-            .next-btn { padding: 14px; font-size: 16px; }
-            .time-overlay-content { padding: 30px 20px; }
-            .time-overlay-icon { font-size: 52px; }
-            .time-overlay-title { font-size: 20px; }
+            .quiz-wrapper { padding: 20px 16px; }
+            .quiz-logo { font-size: 22px; }
+            .brand-icon { width: 38px; height: 38px; font-size: 18px; }
+            .subject-name { font-size: 19px; }
+            .question-text { font-size: 17px; padding: 16px; }
+            .option-btn { padding: 14px 16px; font-size: 14px; gap: 12px; }
+            .option-letter { width: 32px; height: 32px; font-size: 16px; }
+            .next-btn { padding: 15px; font-size: 16px; }
+            .time-overlay-content { padding: 30px 24px; }
+            .time-overlay-icon { font-size: 55px; }
+            .time-overlay-title { font-size: 22px; }
         }
     </style>
 </head>
 <body>
 
-<div class="quiz-container">
-    <!-- Header (Dark Mode tugmasi yo'q) -->
-    <div class="quiz-header">
-        <div class="quiz-logo">
-            <div class="brand-icon">Q</div>
-            <span>QuizMaster <span style="color: var(--accent);">Pro</span></span>
+<div class="quiz-wrapper" id="quiz-wrapper">
+    <!-- Skeleton loading (dastlab ko'rinadi) -->
+    <div id="skeleton-loading">
+        <div class="quiz-header">
+            <div class="quiz-logo">
+                <div class="brand-icon">Q</div>
+                <span>QuizMaster <span style="color: var(--accent);">Pro</span></span>
+            </div>
+        </div>
+        <div class="skeleton-container">
+            <div class="skeleton-header"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-option"></div>
+            <div class="skeleton-option"></div>
+            <div class="skeleton-option"></div>
+            <div class="skeleton-option"></div>
         </div>
     </div>
 
-    <!-- Fan nomi va savol raqami -->
-    <div class="quiz-info">
-        <div class="subject-name" id="quiz-subject-name">Yuklanmoqda...</div>
-        <div class="question-counter" id="quiz-question-counter">0 / 0</div>
-    </div>
-
-    <!-- Timer progress bar -->
-    <div class="timer-section">
-        <div class="progress-container">
-            <div class="progress-fill" id="timer-progress-fill"></div>
+    <!-- Asosiy kontent (dastlab yashirin) -->
+    <div id="quiz-content" style="display: none;">
+        <div class="quiz-header">
+            <div class="quiz-logo">
+                <div class="brand-icon">Q</div>
+                <span>QuizMaster <span style="color: var(--accent);">Pro</span></span>
+            </div>
         </div>
-        <div class="timer-text" id="timer-text">15 soniya qoldi</div>
+
+        <div class="quiz-info">
+            <div class="subject-name" id="quiz-subject-name">Yuklanmoqda...</div>
+            <div class="question-counter" id="quiz-question-counter">0 / 0</div>
+        </div>
+
+        <div class="timer-section">
+            <div class="progress-container">
+                <div class="progress-fill" id="timer-progress-fill"></div>
+            </div>
+            <div class="timer-text" id="timer-text">15 soniya qoldi</div>
+        </div>
+
+        <div class="question-text" id="quiz-question-text">Savollar yuklanmoqda...</div>
+
+        <div class="options-grid" id="quiz-options"></div>
+
+        <button id="btn-next" class="next-btn" disabled>▶ Keyingi savol</button>
     </div>
-
-    <!-- Savol matni -->
-    <div class="question-text" id="quiz-question-text">Savollar yuklanmoqda...</div>
-
-    <!-- Variantlar -->
-    <div class="options-grid" id="quiz-options"></div>
-
-    <!-- Next tugmasi -->
-    <button id="btn-next" class="next-btn" disabled>▶ Keyingi savol</button>
 </div>
 
 <!-- Time Over Overlay (dastlab yashirin) -->
@@ -418,7 +537,7 @@
 
 <script>
 // ============================================================
-// quiz.js - BLITZ TEST v2.0 (Dark Mode sinxron, Time Over Overlay)
+// quiz.js v3.0 - INDEX MATCHING + INIT FIX + RESET LOGIC
 // ============================================================
 
 (function() {
@@ -445,17 +564,7 @@
     };
 
     // DOM elementlari
-    const elements = {
-        subjectName: document.getElementById('quiz-subject-name'),
-        counter: document.getElementById('quiz-question-counter'),
-        questionText: document.getElementById('quiz-question-text'),
-        options: document.getElementById('quiz-options'),
-        nextBtn: document.getElementById('btn-next'),
-        progressFill: document.getElementById('timer-progress-fill'),
-        timerText: document.getElementById('timer-text'),
-        timeOverlay: document.getElementById('time-overlay'),
-        resetBtn: document.getElementById('reset-test-btn')
-    };
+    let elements = {};
 
     // ========== YORDAMCHI FUNKSIYALAR ==========
     function shuffleArray(arr) {
@@ -493,16 +602,21 @@
         }
     }
 
-    // ========== DARK MODE (Dashboard bilan sinxron) ==========
-    function applyDarkModeFromStorage() {
-        const savedTheme = localStorage.getItem('quiz_theme');
-        const isDark = savedTheme === 'dark';
-        
-        if (isDark) {
-            document.body.classList.add('dark-mode');
-        } else {
-            document.body.classList.remove('dark-mode');
-        }
+    // ========== UI ELEMENTLARNI YANGILASH ==========
+    function initElements() {
+        elements = {
+            subjectName: document.getElementById('quiz-subject-name'),
+            counter: document.getElementById('quiz-question-counter'),
+            questionText: document.getElementById('quiz-question-text'),
+            options: document.getElementById('quiz-options'),
+            nextBtn: document.getElementById('btn-next'),
+            progressFill: document.getElementById('timer-progress-fill'),
+            timerText: document.getElementById('timer-text'),
+            timeOverlay: document.getElementById('time-overlay'),
+            resetBtn: document.getElementById('reset-test-btn'),
+            skeletonLoading: document.getElementById('skeleton-loading'),
+            quizContent: document.getElementById('quiz-content')
+        };
     }
 
     // ========== TIME OVER OVERLAY ==========
@@ -539,7 +653,7 @@
         showToast("⚡ Test qayta boshlandi! Har bir savolga 15 soniya", 'success');
     }
 
-    // ========== TAYMER (15 SONIYA) ==========
+    // ========== TAYMER ==========
     function startTimer() {
         clearTimer();
         state.timeLeft = TIME_PER_QUESTION;
@@ -586,10 +700,11 @@
         }
     }
 
-    // ========== SAVOLLARNI TANLASH (RANDOM 25) ==========
+    // ========== SAVOLLARNI TANLASH ==========
     function selectRandomQuestions(allQuestions) {
+        if (!allQuestions || allQuestions.length === 0) return [];
         const shuffled = shuffleArray(allQuestions);
-        return shuffled.slice(0, TOTAL_QUESTIONS);
+        return shuffled.slice(0, Math.min(TOTAL_QUESTIONS, shuffled.length));
     }
 
     // ========== SAVOLNI RENDER QILISH ==========
@@ -735,23 +850,46 @@
         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    // ========== ASOSIY START ==========
-    function startQuiz() {
-        const idx = parseInt(getUrlParam('subject'));
+    // ========== MA'LUMOTLARNI TEKSHIRISH VA TESTNI BOSHLASH ==========
+    function initQuiz() {
+        initElements();
         
-        if (isNaN(idx)) {
-            if (elements.questionText) elements.questionText.innerHTML = '❌ URL xato!';
+        const subjectParam = getUrlParam('subject');
+        console.log('[Quiz] URL subject param:', subjectParam);
+        
+        if (subjectParam === null) {
+            showError("URL da 'subject' parametri topilmadi!", "Misol: quiz.html?subject=0");
             return;
         }
         
-        if (!window.QUIZ_DATA || !window.QUIZ_DATA[idx]) {
-            if (elements.questionText) {
-                elements.questionText.innerHTML = `❌ "${idx}"-fan topilmadi!`;
-            }
+        const idx = parseInt(subjectParam);
+        if (isNaN(idx)) {
+            showError(`'subject' parametri son emas: ${subjectParam}`, "0 dan 4 gacha bo'lgan son kiriting");
+            return;
+        }
+        
+        console.log('[Quiz] window.QUIZ_DATA mavjudmi?', !!window.QUIZ_DATA);
+        console.log('[Quiz] window.QUIZ_DATA uzunligi:', window.QUIZ_DATA ? window.QUIZ_DATA.length : 0);
+        
+        if (!window.QUIZ_DATA || window.QUIZ_DATA.length === 0) {
+            showError("Ma'lumotlar bazasi topilmadi!", "questions.js fayli yuklanganligini tekshiring");
+            return;
+        }
+        
+        if (idx >= window.QUIZ_DATA.length) {
+            showError(`${idx}-indeksli fan topilmadi!`, `Mavjud fanlar: 0 dan ${window.QUIZ_DATA.length - 1} gacha`);
             return;
         }
         
         const subject = window.QUIZ_DATA[idx];
+        if (!subject || !subject.questions || subject.questions.length === 0) {
+            showError(`${subject ? subject.subject : 'Fan'} da savollar yo'q!`, "Ma'lumotlar bazasini tekshiring");
+            return;
+        }
+        
+        console.log('[Quiz] Fan topildi:', subject.subject);
+        console.log('[Quiz] Jami savollar soni:', subject.questions.length);
+        
         state.subjectIndex = idx;
         state.subjectName = subject.subject;
         state.allQuestions = subject.questions;
@@ -767,25 +905,54 @@
         
         document.title = `${subject.subject} — Blitz Test`;
         
-        renderQuestion();
+        // Skeletorni yashirib, asosiy kontentni ko'rsatish
+        if (elements.skeletonLoading) elements.skeletonLoading.style.display = 'none';
+        if (elements.quizContent) elements.quizContent.style.display = 'block';
         
+        renderQuestion();
         showToast(`⚡ ${subject.subject} testi boshlandi! Har bir savolga 15 soniya`, 'success');
+    }
+    
+    function showError(title, message) {
+        if (elements.skeletonLoading) elements.skeletonLoading.style.display = 'none';
+        
+        const wrapper = document.getElementById('quiz-wrapper');
+        if (wrapper) {
+            wrapper.innerHTML = `
+                <div class="error-container">
+                    <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="error-title">${escapeHtml(title)}</div>
+                    <div class="error-text">${escapeHtml(message)}</div>
+                    <a href="index.html" class="error-btn"><i class="fas fa-home"></i> Bosh sahifaga</a>
+                </div>
+            `;
+        }
+        console.error('[Quiz] Xato:', title, message);
     }
 
     // ========== EVENT LISTENERLAR ==========
-    if (elements.nextBtn) {
-        elements.nextBtn.addEventListener('click', nextQuestion);
+    function bindEvents() {
+        if (elements.nextBtn) {
+            elements.nextBtn.addEventListener('click', nextQuestion);
+        }
+        
+        if (elements.resetBtn) {
+            elements.resetBtn.addEventListener('click', resetAndRestart);
+        }
     }
-    
-    if (elements.resetBtn) {
-        elements.resetBtn.addEventListener('click', resetAndRestart);
-    }
-    
-    // ========== DARK MODENI QO'LLASH ==========
-    applyDarkModeFromStorage();
-    
+
     // ========== BOSHLASH ==========
-    startQuiz();
+    function start() {
+        bindEvents();
+        initQuiz();
+    }
+    
+    // Sahifa yuklanganda boshlash
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+    } else {
+        start();
+    }
 })();
 </script>
 
