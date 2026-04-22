@@ -472,5 +472,38 @@
 
   <script src="questions.js"></script>
   <script src="app.js"></script>
+<script src="questions.js"></script>
+<script>
+    function renderSubjects() {
+        const container = document.getElementById('subjects-container');
+        
+        // Agar window.QUIZ_DATA hali yuklanmagan bo'lsa, 500ms kutib qayta urinish
+        if (!window.QUIZ_DATA) {
+            console.log("Baza kutilmoqda...");
+            setTimeout(renderSubjects, 500);
+            return;
+        }
+
+        container.innerHTML = ""; // Tozalash
+
+        Object.keys(window.QUIZ_DATA).forEach(id => {
+            const subject = window.QUIZ_DATA[id];
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <h2>${subject.subject}</h2>
+                <p>${subject.questions.length} ta savol mavjud</p>
+                <button class="btn-start">Testni boshlash</button>
+            `;
+            card.onclick = () => {
+                window.location.href = `quiz.html?subject=${id}`;
+            };
+            container.appendChild(card);
+        });
+    }
+
+    // Sahifa yuklanganda ishga tushirish
+    window.addEventListener('load', renderSubjects);
+</script>
 </body>
 </html>
