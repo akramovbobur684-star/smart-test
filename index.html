@@ -1,162 +1,196 @@
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Quiz Platform</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            transition: all 0.2s ease;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0a0a0a;
-            color: #e0e0e0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 2.5rem;
-            color: #bb86fc;
-        }
-        .sub {
-            text-align: center;
-            margin-bottom: 40px;
-            color: #9e9e9e;
-        }
-        .loader {
-            text-align: center;
-            font-size: 1.5rem;
-            padding: 50px;
-            color: #bb86fc;
-        }
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-        .card {
-            background: #1e1e1e;
-            border-radius: 20px;
-            padding: 24px;
-            cursor: pointer;
-            border: 1px solid #333;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(187, 134, 252, 0.2);
-            border-color: #bb86fc;
-        }
-        .card h2 {
-            color: #bb86fc;
-            margin-bottom: 12px;
-        }
-        .card p {
-            color: #b0b0b0;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-        .card-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            color: #757575;
-        }
-        .error {
-            background: #3e1e1e;
-            border-left: 5px solid #cf6679;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            color: #555;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>📚 Quiz Platform</h1>
-        <div class="sub">Fanlardan birini tanlang</div>
-        <div id="dashboard-content">
-            <div class="loader">⏳ Ma'lumotlar bazasi yuklanmoqda...</div>
-        </div>
-        <footer>Dark Mode | Smart Test Tizimi</footer>
-    </div>
-
-    <script src="questions.js?v=2.0"></script>
-    <script>
-        (function() {
-            let checkInterval = null;
-            let attempts = 0;
-            const MAX_ATTEMPTS = 50;
-
-            function renderDashboard() {
-                const container = document.getElementById('dashboard-content');
-                if (!window.QUIZ_DATA || typeof window.QUIZ_DATA !== 'object') {
-                    container.innerHTML = '<div class="error">❌ Ma\'lumotlar bazasi topilmadi. Iltimos, sahifani qayta yuklang.</div>';
-                    return;
-                }
-                const subjects = Object.keys(window.QUIZ_DATA);
-                if (subjects.length === 0) {
-                    container.innerHTML = '<div class="error">📭 Hech qanday fan mavjud emas.</div>';
-                    return;
-                }
-                let cardsHtml = '<div class="cards-grid">';
-                for (let sub of subjects) {
-                    const info = window.QUIZ_DATA[sub];
-                    cardsHtml += `
-                        <div class="card" data-subject="${sub}">
-                            <h2>📖 ${info.title}</h2>
-                            <p>${info.description || 'Testni boshlash uchun bosing'}</p>
-                            <div class="card-meta">
-                                <span>📋 ${info.questions ? info.questions.length : 0} ta savol</span>
-                                <span>⏱️ 15 soniya/savol</span>
-                            </div>
-                        </div>
-                    `;
-                }
-                cardsHtml += '</div>';
-                container.innerHTML = cardsHtml;
-
-                document.querySelectorAll('.card').forEach(card => {
-                    card.addEventListener('click', (e) => {
-                        const subjectId = card.getAttribute('data-subject');
-                        window.location.href = `quiz.html?subject=${encodeURIComponent(subjectId)}`;
-                    });
-                });
+window.QUIZ_DATA = {
+    matematika: {
+        title: "Matematika",
+        description: "Logarifm, hosila, integral, stereometriya",
+        questions: [
+            {
+                text: "log₂(8) ning qiymati nechaga teng?",
+                options: ["2", "3", "4", "5"],
+                correct: 1,
+                explanation: "2³ = 8, shuning uchun log₂(8) = 3"
+            },
+            {
+                text: "f(x) = x² funksiyaning hosilasi qaysi?",
+                options: ["2x", "x²", "2", "x"],
+                correct: 0,
+                explanation: "xⁿ hosilasi n·xⁿ⁻¹, shuning uchun x² hosilasi 2x"
+            },
+            {
+                text: "∫ 2x dx integralning qiymati?",
+                options: ["x² + C", "2x² + C", "x²", "2x + C"],
+                correct: 0,
+                explanation: "∫ 2x dx = 2·(x²/2) + C = x² + C"
+            },
+            {
+                text: "Kubning hajmi 27 sm³ bo'lsa, uning qirrasi uzunligi?",
+                options: ["2 sm", "3 sm", "4 sm", "5 sm"],
+                correct: 1,
+                explanation: "V = a³, a³ = 27 => a = 3 sm"
+            },
+            {
+                text: "log₅(125) hisoblang",
+                options: ["2", "3", "4", "5"],
+                correct: 1,
+                explanation: "5³ = 125, log₅(125) = 3"
+            },
+            {
+                text: "f(x) = 3x⁴ funksiyaning hosilasi?",
+                options: ["12x³", "4x³", "3x³", "12x⁴"],
+                correct: 0,
+                explanation: "3·4x³ = 12x³"
+            },
+            {
+                text: "∫ (2x + 3) dx integralni hisoblang",
+                options: ["x² + 3x + C", "2x² + 3x + C", "x² + 3", "x² + C"],
+                correct: 0,
+                explanation: "∫2x dx = x², ∫3 dx = 3x, jami x² + 3x + C"
+            },
+            {
+                text: "To'g'ri burchakli parallelepipedning o'lchamlari 2,3,4 bo'lsa, uning to'liq sirti?",
+                options: ["52", "48", "56", "60"],
+                correct: 0,
+                explanation: "S = 2(ab+ac+bc) = 2(6+8+12)=2·26=52"
+            },
+            {
+                text: "ln(e³) ning qiymati?",
+                options: ["1", "2", "3", "e"],
+                correct: 2,
+                explanation: "ln(e³) = 3·ln(e) = 3·1 = 3"
+            },
+            {
+                text: "f(x) = sin(x) funksiyaning hosilasi?",
+                options: ["cos(x)", "-cos(x)", "sin(x)", "-sin(x)"],
+                correct: 0,
+                explanation: "sin(x) ning hosilasi cos(x)"
+            },
+            {
+                text: "∫ cos(x) dx integralni hisoblang",
+                options: ["sin(x) + C", "-sin(x) + C", "cos(x) + C", "-cos(x) + C"],
+                correct: 0,
+                explanation: "cos(x) ning integrali sin(x) + C"
+            },
+            {
+                text: "Sfera radiusi 3 sm bo'lsa, uning hajmi?",
+                options: ["36π", "27π", "32π", "30π"],
+                correct: 0,
+                explanation: "V = (4/3)πR³ = (4/3)π·27 = 36π"
+            },
+            {
+                text: "log₃(1/9) hisoblang",
+                options: ["-2", "2", "-1", "1"],
+                correct: 0,
+                explanation: "3⁻² = 1/9, log₃(1/9) = -2"
+            },
+            {
+                text: "f(x) = eˣ funksiyaning hosilasi?",
+                options: ["eˣ", "x·eˣ", "eˣ⁻¹", "ln(x)"],
+                correct: 0,
+                explanation: "eˣ ning hosilasi o'ziga teng: eˣ"
+            },
+            {
+                text: "∫ (1/x) dx integralni hisoblang (x>0)",
+                options: ["ln|x| + C", "1/x² + C", "x·ln(x) + C", "eˣ + C"],
+                correct: 0,
+                explanation: "∫ (1/x) dx = ln|x| + C"
+            },
+            {
+                text: "Konusning asos radiusi 3 sm, balandligi 4 sm bo'lsa, hajmi?",
+                options: ["12π", "36π", "24π", "18π"],
+                correct: 0,
+                explanation: "V = (1/3)πR²h = (1/3)π·9·4 = 12π"
+            },
+            {
+                text: "log₁₀(1000) nechaga teng?",
+                options: ["2", "3", "4", "10"],
+                correct: 1,
+                explanation: "10³ = 1000, shuning uchun log₁₀(1000) = 3"
+            },
+            {
+                text: "f(x) = ln(x) funksiyaning hosilasi?",
+                options: ["1/x", "x", "1", "ln(x)"],
+                correct: 0,
+                explanation: "ln(x) ning hosilasi 1/x"
+            },
+            {
+                text: "∫ eˣ dx integralni hisoblang",
+                options: ["eˣ + C", "eˣ⁻¹ + C", "x·eˣ + C", "ln(eˣ) + C"],
+                correct: 0,
+                explanation: "eˣ ning integrali o'ziga teng: eˣ + C"
+            },
+            {
+                text: "Piramida asosi 6 sm, balandligi 10 sm bo'lsa, hajmi?",
+                options: ["20 sm³", "60 sm³", "30 sm³", "120 sm³"],
+                correct: 0,
+                explanation: "V = (1/3)·asos·balandlik = (1/3)·6·10 = 20 sm³"
             }
-
-            function waitForData() {
-                if (window.QUIZ_DATA && typeof window.QUIZ_DATA === 'object' && Object.keys(window.QUIZ_DATA).length > 0) {
-                    if (checkInterval) clearInterval(checkInterval);
-                    renderDashboard();
-                } else {
-                    attempts++;
-                    const container = document.getElementById('dashboard-content');
-                    if (attempts >= MAX_ATTEMPTS) {
-                        if (checkInterval) clearInterval(checkInterval);
-                        container.innerHTML = '<div class="error">⛔ Ma\'lumotlar bazasi yuklanmadi. questions.js faylini tekshiring.</div>';
-                    } else {
-                        container.innerHTML = `<div class="loader">🔄 Bazani kutish (${attempts}/${MAX_ATTEMPTS})...</div>`;
-                    }
-                }
-            }
-
-            checkInterval = setInterval(waitForData, 200);
-        })();
-    </script>
-</body>
-</html>
+        ]
+    },
+    fizika: {
+        title: "Fizika",
+        description: "Magnetizm, elektrodinamika, optika",
+        questions: [
+            {
+                text: "Magnit maydonining birligi qaysi?",
+                options: ["Tesla", "Nyuton", "Joul", "Vatt"],
+                correct: 0,
+                explanation: "Magnit maydon induksiyasi Teslada o'lchanadi"
+            },
+            {
+                text: "Om qonuni qaysi formulada ifodalanadi?",
+                options: ["I = U/R", "U = I·R", "R = U/I", "Hammasi to'g'ri"],
+                correct: 3,
+                explanation: "Om qonunining barcha ko'rinishlari to'g'ri"
+            },
+            {
+                text: "Yorug'likning vakuumdagi tezligi qancha?",
+                options: ["3·10⁸ m/s", "3·10⁵ m/s", "3·10⁶ m/s", "3·10⁷ m/s"],
+                correct: 0,
+                explanation: "Yorug'lik tezligi vakuumda 300 000 km/s = 3·10⁸ m/s"
+            },
+            {
+                text: "Lenz qoidasi nimani ifodalaydi?",
+                options: ["Induksiya toki yo'nalishini", "Kuchlanishni", "Qarshilikni", "Quvvatni"],
+                correct: 0,
+                explanation: "Lenz qoidasi induksiya tokining yo'nalishini belgilaydi"
+            },
+            {
+                text: "Kondensatorning sig'imi qaysi birlikda o'lchanadi?",
+                options: ["Farad", "Om", "Genri", "Tesla"],
+                correct: 0,
+                explanation: "Sig'im Farad (F) da o'lchanadi"
+            },
+            {
+                text: "Sindirish ko'rsatkichi n = c/v formulada c nimani anglatadi?",
+                options: ["Yorug'lik vakuumdagi tezligi", "Yorug'lik muhitdagi tezligi", "Tovush tezligi", "Elektron tezligi"],
+                correct: 0,
+                explanation: "c - yorug'likning vakuumdagi tezligi"
+            },
+            {
+                text: "Ampir kuchi qaysi qonun bilan ifodalanadi?",
+                options: ["F = B·I·L·sinα", "F = m·a", "F = k·x", "F = G·m₁m₂/r²"],
+                correct: 0,
+                explanation: "Ampir kuchi F = B·I·L·sinα formula bilan hisoblanadi"
+            },
+            {
+                text: "Elektrodinamika nimani o'rganadi?",
+                options: ["Harakatlanuvchi zaryadlarni", "Tinch zaryadlarni", "Magnitlarni", "Issiqlikni"],
+                correct: 0,
+                explanation: "Elektrodinamika harakatlanuvchi elektr zaryadlarini o'rganadi"
+            },
+            {
+                text: "Linzaning optik kuchi birligi?",
+                options: ["Dioptriya", "Metr", "Santimetr", "Lyuks"],
+                correct: 0,
+                explanation: "Optik kuch dioptriyada (D) o'lchanadi"
+            },
+            {
+                text: "Transformator qanday prinsip asosida ishlaydi?",
+                options: ["Elektromagnit induksiya", "Magnitlanish", "Qizish", "Ionlanish"],
+                correct: 0,
+                explanation: "Transformator elektromagnit induksiya asosida ishlaydi"
+            },
+            {
+                text: "To'liq zanjir uchun Om qonuni formulasi?",
+                options: ["I = E/(R+r)", "I = U/R", "U = I·R", "P = I·U"],
+                correct: 0,
+                explanation
