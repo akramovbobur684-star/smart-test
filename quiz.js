@@ -1,15 +1,17 @@
+<!-- ============================================================ -->
+<!-- quiz.js - Test sahifasi (Parametrni to'g'ri o'qish) -->
+<!-- ============================================================ -->
+<script>
 // ============================================================
-// quiz.js - BLITZ TEST v1.0 (15 SONIYA, RANDOM SAVOLLAR)
+// quiz.js v6.0 - URL parametrni to'g'ri o'qish + Fallback
 // ============================================================
 
 (function() {
     'use strict';
 
-    // ========== KONFIGURATSIYA ==========
-    const TIME_PER_QUESTION = 15; // 15 soniya
-    const TOTAL_QUESTIONS = 25;   // Har testda 25 ta savol
+    const TIME_PER_QUESTION = 15;
+    const TOTAL_QUESTIONS = 25;
 
-    // ========== STATE ==========
     let state = {
         subjectIndex: null,
         subjectName: "",
@@ -17,37 +19,70 @@
         selectedQuestions: [],
         currentIndex: 0,
         answers: [],
+        score: 0,
         timeLeft: TIME_PER_QUESTION,
         timerInterval: null,
-        isFinished: false,
-        startTime: null,
-        isAnswered: false
+        isActive: true,
+        isTimeOver: false,
+        startTime: null
     };
 
-    // DOM elementlari
-    const elements = {
-        subjectName: document.getElementById('quiz-subject-name'),
-        counter: document.getElementById('quiz-question-counter'),
-        questionText: document.getElementById('quiz-question-text'),
-        options: document.getElementById('quiz-options'),
-        nextBtn: document.getElementById('btn-next'),
-        progressFill: document.getElementById('timer-progress-fill'),
-        timerText: document.getElementById('timer-text')
-    };
+    let elements = {};
 
-    // ========== YORDAMCHI FUNKSIYALAR ==========
-    function shuffleArray(arr) {
-        const array = [...arr];
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+    // ========== DARK MODE ==========
+    function initDarkMode() {
+        const savedTheme = localStorage.getItem('quiz_theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+        } else if (savedTheme === 'light') {
+            document.body.classList.remove('dark-mode');
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
         }
-        return array;
     }
 
-    function getUrlParam(param) {
-        const params = new URLSearchParams(window.location.search);
-        return params.get(param);
+    // ========== URL PARAMETRNI OLISH (MUSTAHKAM) ==========
+    function getSubjectIdFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const subjectParam = urlParams.get('subject');
+        
+        console.log('[Quiz] URL parametr "subject":', subjectParam);
+        console.log('[Quiz] To\'liq URL:', window.location.href);
+        
+        if (subjectParam === null) {
+            return null;
+        }
+        
+        // parseInt bilan raqamga aylantirish
+        const parsed = parseInt(subjectParam, 10);
+        
+        // Agar NaN bo'lsa, null qaytar
+        if (isNaN(parsed)) {
+            console.warn('[Quiz] "subject" parametri son emas:', subjectParam);
+            return null;
+        }
+        
+        return parsed;
+    }
+
+    function showErrorPage(title, message, showRetry = true) {
+        if (elements.skeletonLoading) elements.skeletonLoading.style.display = 'none';
+        if (elements.quizContent) elements.quizContent.style.display = 'none';
+        
+        const wrapper = document.getElementById('quiz-wrapper');
+        if (wrapper) {
+            wrapper.innerHTML = `
+                <div class="error-container">
+                    <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="error-title">${escapeHtml(title)}</div>
+                    <div class="error-text">${escapeHtml(message)}</div>
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        ${showRetry ? '<button onclick="location.reload()" class="error-btn" style="background: #4f46e5;"><i class="fas fa-sync-alt"></i> Qayta urinish</button>' : ''}
+                        <a href="index.html" class="error-btn" style="background: #6b7280;"><i class="fas fa-home"></i> Bosh sahifa</a>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     function showToast(message, type = 'info') {
@@ -60,24 +95,22 @@
         toast.style.backgroundColor = colors[type];
         toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${message}`;
         document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        setTimeout(() => toast.remove(), 2500);
     }
 
-    function finishTestWithTimeout() {
-        if (state.isFinished) return;
-        
-        clearTimer();
-        state.isFinished = true;
-        
-        showToast("⏰ Vaqt tugadi! Test yakunlandi.", 'error');
-        
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
+    function shuffleArray(arr) {
+        const array = [...arr];
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function selectRandomQuestions(allQuestions) {
+        if (!allQuestions || allQuestions.length === 0) return [];
+        const shuffled = shuffleArray(allQuestions);
+        return shuffled.slice(0, Math.min(TOTAL_QUESTIONS, shuffled.length));
     }
 
     function clearTimer() {
@@ -87,128 +120,87 @@
         }
     }
 
-    // ========== TAYMER (15 SONIYA) ==========
     function startTimer() {
         clearTimer();
         state.timeLeft = TIME_PER_QUESTION;
         updateTimerUI();
         
         state.timerInterval = setInterval(() => {
-            if (state.isFinished) {
+            if (!state.isActive || state.isTimeOver) {
                 clearTimer();
                 return;
             }
-            
-            if (!state.isAnswered) {
-                state.timeLeft--;
-                updateTimerUI();
-                
-                if (state.timeLeft <= 0) {
-                    clearTimer();
-                    showToast("⏰ Vaqt tugadi! Test to'xtatildi.", 'error');
-                    finishTestWithTimeout();
-                }
+            state.timeLeft--;
+            updateTimerUI();
+            if (state.timeLeft <= 0) {
+                clearTimer();
+                document.getElementById('time-overlay').style.display = 'flex';
+                state.isActive = false;
+                state.isTimeOver = true;
             }
         }, 1000);
     }
 
     function updateTimerUI() {
-        const percent = (state.timeLeft / TIME_PER_QUESTION) * 100;
-        
+        const percent = Math.max(0, (state.timeLeft / TIME_PER_QUESTION) * 100);
         if (elements.progressFill) {
             elements.progressFill.style.width = `${percent}%`;
-            
-            if (percent < 30) {
-                elements.progressFill.style.background = '#ef4444';
-            } else if (percent < 60) {
-                elements.progressFill.style.background = '#f59e0b';
-            } else {
-                elements.progressFill.style.background = 'linear-gradient(90deg, var(--primary), var(--accent))';
-            }
+            elements.progressFill.classList.toggle('danger', percent < 30);
         }
-        
         if (elements.timerText) {
             elements.timerText.innerHTML = `${state.timeLeft} soniya qoldi`;
-            if (state.timeLeft <= 5) {
-                elements.timerText.classList.add('warning');
-            } else {
-                elements.timerText.classList.remove('warning');
-            }
+            elements.timerText.classList.toggle('warning', state.timeLeft <= 5);
         }
     }
 
-    // ========== SAVOLLARNI TANLASH (RANDOM 25) ==========
-    function selectRandomQuestions(allQuestions) {
-        const shuffled = shuffleArray(allQuestions);
-        return shuffled.slice(0, TOTAL_QUESTIONS);
-    }
-
-    // ========== SAVOLNI RENDER QILISH ==========
     function renderQuestion() {
-        if (!state.selectedQuestions.length) return;
+        if (!state.selectedQuestions.length || !state.isActive) return;
         
         const q = state.selectedQuestions[state.currentIndex];
         const current = state.currentIndex + 1;
         
-        if (elements.subjectName && state.subjectName) {
-            elements.subjectName.innerHTML = state.subjectName;
-        }
-        
-        if (elements.counter) {
-            elements.counter.innerHTML = `${current} / ${TOTAL_QUESTIONS}`;
-        }
-        
-        if (elements.questionText) {
-            elements.questionText.innerHTML = q.question;
-        }
+        if (elements.subjectName) elements.subjectName.innerHTML = state.subjectName;
+        if (elements.counter) elements.counter.innerHTML = `${current} / ${TOTAL_QUESTIONS}`;
+        if (elements.questionText) elements.questionText.innerHTML = escapeHtml(q.question);
         
         if (elements.options) {
             elements.options.innerHTML = '';
-            state.isAnswered = false;
-            
             q.options.forEach((opt, i) => {
                 const letter = String.fromCharCode(65 + i);
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
                 btn.innerHTML = `<span class="option-letter">${letter}</span><span class="option-text">${escapeHtml(opt)}</span>`;
-                
                 btn.onclick = () => {
-                    if (state.isFinished || state.isAnswered) return;
-                    
+                    if (!state.isActive || state.isTimeOver) return;
                     state.answers[state.currentIndex] = opt;
-                    state.isAnswered = true;
-                    
                     document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
                     btn.classList.add('selected');
-                    
-                    if (elements.nextBtn) {
-                        elements.nextBtn.disabled = false;
-                    }
-                    
-                    showToast("Javob qabul qilindi!", 'success');
+                    if (elements.nextBtn) elements.nextBtn.disabled = false;
                 };
-                
                 elements.options.appendChild(btn);
             });
         }
         
         if (elements.nextBtn) {
             elements.nextBtn.disabled = true;
-            const isLast = state.currentIndex === TOTAL_QUESTIONS - 1;
-            elements.nextBtn.innerHTML = isLast ? '✅ Natijani ko\'rish' : '▶ Keyingi savol';
+            elements.nextBtn.innerHTML = state.currentIndex === TOTAL_QUESTIONS - 1 ? '✅ Natijani ko\'rish' : '▶ Keyingi savol';
         }
         
         startTimer();
     }
 
-    // ========== KEYINGI SAVOL ==========
     function nextQuestion() {
-        if (!state.isAnswered) {
-            showToast("Iltimos, javob tanlang!", 'warning');
+        if (!state.isActive || state.isTimeOver) return;
+        
+        if (state.answers[state.currentIndex] === undefined) {
+            showToast("⚠️ Iltimos, javob tanlang!", 'warning');
             return;
         }
         
         clearTimer();
+        
+        const currentQ = state.selectedQuestions[state.currentIndex];
+        if (state.answers[state.currentIndex] === currentQ.answer) state.score++;
         
         if (state.currentIndex < TOTAL_QUESTIONS - 1) {
             state.currentIndex++;
@@ -218,37 +210,31 @@
         }
     }
 
-    // ========== TESTNI YAKUNLASH ==========
     function finishQuiz() {
-        if (state.isFinished) return;
-        
+        if (!state.isActive) return;
         clearTimer();
-        state.isFinished = true;
+        state.isActive = false;
         
-        let correct = 0;
+        const lastQ = state.selectedQuestions[state.currentIndex];
+        if (state.answers[state.currentIndex] === lastQ.answer) state.score++;
+        
+        const percent = Math.round((state.score / TOTAL_QUESTIONS) * 100);
+        const timeSpent = Math.round((Date.now() - state.startTime) / 1000);
+        
         const details = [];
-        
         for (let i = 0; i < state.selectedQuestions.length; i++) {
-            const q = state.selectedQuestions[i];
-            const userAnswer = state.answers[i];
-            const isCorrect = userAnswer === q.answer;
-            if (isCorrect) correct++;
-            
             details.push({
-                question: q.question,
-                userAnswer: userAnswer || "Javob berilmadi",
-                correctAnswer: q.answer,
-                isCorrect: isCorrect
+                question: state.selectedQuestions[i].question,
+                userAnswer: state.answers[i] || "Javob berilmadi",
+                correctAnswer: state.selectedQuestions[i].answer,
+                isCorrect: state.answers[i] === state.selectedQuestions[i].answer
             });
         }
-        
-        const percent = Math.round((correct / TOTAL_QUESTIONS) * 100);
-        const timeSpent = Math.round((Date.now() - state.startTime) / 1000);
         
         const result = {
             subject: state.subjectName,
             subjectIndex: state.subjectIndex,
-            correct: correct,
+            correct: state.score,
             total: TOTAL_QUESTIONS,
             percent: percent,
             timeSpent: timeSpent,
@@ -256,7 +242,6 @@
             timestamp: Date.now()
         };
         
-        // Natijani saqlash
         try {
             const results = JSON.parse(localStorage.getItem('qm_results') || '[]');
             results.unshift(result);
@@ -264,16 +249,22 @@
             localStorage.setItem('qm_results', JSON.stringify(results));
         } catch(e) {}
         
-        // Natija sahifasiga o'tish
-        const params = new URLSearchParams({
-            subject: result.subject,
-            score: result.correct,
-            total: result.total,
-            percent: result.percent,
-            time: result.timeSpent
-        });
-        
-        window.location.href = `result.html?${params.toString()}`;
+        window.location.href = `result.html?subject=${encodeURIComponent(result.subject)}&score=${result.correct}&total=${result.total}&percent=${result.percent}&time=${result.timeSpent}`;
+    }
+
+    function restartQuiz() {
+        clearTimer();
+        state.currentIndex = 0;
+        state.answers = [];
+        state.score = 0;
+        state.isActive = true;
+        state.isTimeOver = false;
+        state.selectedQuestions = selectRandomQuestions(state.allQuestions);
+        state.answers = new Array(TOTAL_QUESTIONS).fill(undefined);
+        state.startTime = Date.now();
+        document.getElementById('time-overlay').style.display = 'none';
+        renderQuestion();
+        showToast("⚡ Test qayta boshlandi!", 'success');
     }
 
     function escapeHtml(str) {
@@ -281,71 +272,89 @@
         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    // ========== DARK MODE (app.js bilan sinxron) ==========
-    function initDarkMode() {
-        const savedTheme = localStorage.getItem('quiz_theme');
-        const isDark = savedTheme === 'dark';
-        
-        if (isDark) {
-            document.body.classList.add('dark-mode');
-        } else {
-            document.body.classList.remove('dark-mode');
-        }
-        
-        const themeBtn = document.getElementById('theme-toggle-btn');
-        if (themeBtn) {
-            themeBtn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
-            themeBtn.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const nowDark = document.body.classList.contains('dark-mode');
-                localStorage.setItem('quiz_theme', nowDark ? 'dark' : 'light');
-                themeBtn.innerHTML = nowDark ? '☀️ Light' : '🌙 Dark';
-            });
-        }
-    }
-
-    // ========== ASOSIY START ==========
-    function startQuiz() {
-        const idx = parseInt(getUrlParam('subject'));
-        
-        if (isNaN(idx)) {
-            if (elements.questionText) elements.questionText.innerHTML = '❌ URL xato!';
-            return;
-        }
-        
-        if (!window.QUIZ_DATA || !window.QUIZ_DATA[idx]) {
-            if (elements.questionText) {
-                elements.questionText.innerHTML = `❌ ${idx}-fan topilmadi!`;
+    function waitForData(callback) {
+        let attempts = 0;
+        const maxAttempts = 30;
+        const interval = setInterval(() => {
+            attempts++;
+            if (window.QUIZ_DATA && window.QUIZ_DATA.length > 0) {
+                clearInterval(interval);
+                callback(true);
+            } else if (attempts >= maxAttempts) {
+                clearInterval(interval);
+                callback(false);
             }
+        }, 100);
+    }
+
+    function initQuiz() {
+        elements = {
+            subjectName: document.getElementById('quiz-subject-name'),
+            counter: document.getElementById('quiz-question-counter'),
+            questionText: document.getElementById('quiz-question-text'),
+            options: document.getElementById('quiz-options'),
+            nextBtn: document.getElementById('btn-next'),
+            progressFill: document.getElementById('timer-progress-fill'),
+            timerText: document.getElementById('timer-text'),
+            skeletonLoading: document.getElementById('skeleton-loading'),
+            quizContent: document.getElementById('quiz-content')
+        };
+        
+        initDarkMode();
+        
+        const subjectId = getSubjectIdFromUrl();
+        console.log('[Quiz] Aniqlangan subjectId:', subjectId);
+        
+        if (subjectId === null) {
+            showErrorPage("URL xatosi", "URL da 'subject' parametri topilmadi yoki noto'g'ri!\n\nMisol: quiz.html?subject=0", true);
             return;
         }
         
-        const subject = window.QUIZ_DATA[idx];
-        state.subjectIndex = idx;
-        state.subjectName = subject.subject;
-        state.allQuestions = subject.questions;
-        
-        // RANDOM 25 savol tanlash
-        state.selectedQuestions = selectRandomQuestions(state.allQuestions);
-        state.currentIndex = 0;
-        state.answers = new Array(TOTAL_QUESTIONS).fill(undefined);
-        state.isFinished = false;
-        state.isAnswered = false;
-        state.startTime = Date.now();
-        
-        document.title = `${subject.subject} — Blitz Test`;
-        
-        renderQuestion();
-        
-        showToast(`⚡ ${subject.subject} testi boshlandi! Har bir savolga 15 soniya`, 'success');
-    }
-
-    // Event listenerlar
-    if (elements.nextBtn) {
-        elements.nextBtn.addEventListener('click', nextQuestion);
+        waitForData((isReady) => {
+            if (!isReady) {
+                showErrorPage("Ma'lumotlar bazasi topilmadi", "questions.js fayli yuklanmagan.\n\n• Internet aloqangizni tekshiring\n• Sahifani qayta yuklang", true);
+                return;
+            }
+            
+            if (subjectId >= window.QUIZ_DATA.length || subjectId < 0) {
+                showErrorPage(`Fan topilmadi (${subjectId})`, `Mavjud fanlar: 0 dan ${window.QUIZ_DATA.length - 1} gacha\nTanlangan indeks: ${subjectId}`, true);
+                return;
+            }
+            
+            const subject = window.QUIZ_DATA[subjectId];
+            if (!subject || !subject.questions || subject.questions.length === 0) {
+                showErrorPage(`Savollar topilmadi`, `${subject ? subject.subject : 'Fan'} da savollar mavjud emas!`, true);
+                return;
+            }
+            
+            state.subjectIndex = subjectId;
+            state.subjectName = subject.subject;
+            state.allQuestions = subject.questions;
+            state.selectedQuestions = selectRandomQuestions(state.allQuestions);
+            state.currentIndex = 0;
+            state.answers = new Array(TOTAL_QUESTIONS).fill(undefined);
+            state.score = 0;
+            state.isActive = true;
+            state.isTimeOver = false;
+            state.startTime = Date.now();
+            
+            document.title = `${subject.subject} — Blitz Test`;
+            
+            if (elements.skeletonLoading) elements.skeletonLoading.style.display = 'none';
+            if (elements.quizContent) elements.quizContent.style.display = 'block';
+            
+            renderQuestion();
+            showToast(`⚡ ${subject.subject} testi boshlandi!`, 'success');
+        });
     }
     
-    // Boshlash
-    initDarkMode();
-    startQuiz();
+    document.getElementById('btn-next')?.addEventListener('click', nextQuestion);
+    document.getElementById('reset-test-btn')?.addEventListener('click', restartQuiz);
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initQuiz);
+    } else {
+        initQuiz();
+    }
 })();
+</script>
