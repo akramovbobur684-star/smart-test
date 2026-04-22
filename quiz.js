@@ -1,17 +1,18 @@
 /**
  * ============================================================
- * quiz.js — QuizMaster Pro Test Engine
- * Mantiq: Savollar, Timer, Progress, Sessiyani tiklash
+ * QuizMaster Pro — Intellectual Quiz Engine v3.0
+ * Jigarim, bu kod xatolarni o'zi davolaydi va testni boshqaradi.
  * ============================================================
  */
 
 'use strict';
 
 // -------------------------------------------------------
-// TEST HOLATI (State Management)
+// 1. INTELLEKTUAL HOLAT (State Management)
 // -------------------------------------------------------
 const QuizState = {
     subjectIndex: 0,
+    subjectName: "",
     questions: [],
     currentIndex: 0,
     answers: [],
@@ -22,48 +23,73 @@ const QuizState = {
     isFinished: false,
     startTime: null,
     endTime: null,
-    shuffledOptions: [] // Har bir savol uchun variantlar tartibini saqlaydi
+    shuffledOptions: [],
+    // Intellektual metrikalar
+    userFocus: true,
+    skipsCount: 0,
+    timeAnalysis: [] // Har bir savolga sarflangan vaqt
 };
 
-const TIME_PER_QUESTION = 30; // Har bir savolga 30 sekund
+const TIME_PER_QUESTION = 30; 
+const CIRCUMFERENCE = 125.66; // 2 * PI * 20
 
 // -------------------------------------------------------
-// 1. TESTNI BOSHLASH VA TIKLASH
+// 2. ENGINE MONITORING (Xatolarni nazorat qilish)
+// -------------------------------------------------------
+const EngineMonitor = {
+    log(msg, type = 'info') {
+        console.log(`%c[QuizEngine] ${msg}`, `color: ${type === 'error' ? '#ff4757' : '#2ed573'}; font-weight: bold;`);
+    },
+    validateData(idx) {
+        if (!window.QUIZ_DATA) return { valid: false, msg: "QUIZ_DATA topilmadi (questions.js ulanmagan)." };
+        if (!window.QUIZ_DATA[idx]) return { valid: false, msg: `${idx}-indeksli fan topilmadi.` };
+        return { valid: true };
+    }
+};
+
+// -------------------------------------------------------
+// 3. TESTNI BOSHLASH VA TIKLASH
 // -------------------------------------------------------
 
-/**
- * Testni yangidan yoki saqlangan sessiyadan boshlaydi.
- */
 function startQuiz(idx, resume = false) {
-    const data = window.QUIZ_DATA[idx];
-    if (!data) return showError('Fan ma\'lumotlari yuklanmadi.');
+    EngineMonitor.log("Test yuklanmoqda...");
+    
+    const check = EngineMonitor.validateData(idx);
+    if (!check.valid) return showError(check.msg);
 
+    const data = window.QUIZ_DATA[idx];
+
+    // Sessiyani tiklash mantiqi (Intellektual resume)
     if (resume) {
         const saved = QuizApp.loadSession();
-        if (saved && saved.subjectIndex === idx) {
+        if (saved && saved.subjectIndex === idx && saved.fullState) {
+            EngineMonitor.log("Eski sessiya tiklanmoqda...");
             Object.assign(QuizState, saved.fullState);
             renderQuestion();
             return;
         }
     }
 
-    // Yangi test holati
+    // Holatni noldan sozlash
     QuizState.subjectIndex = idx;
+    QuizState.subjectName = data.subject;
+    // Fisher-Yates algoritmi orqali intellektual aralashtirish
     QuizState.questions = QuizApp.shuffleArray(data.questions);
     QuizState.currentIndex = 0;
     QuizState.answers = new Array(QuizState.questions.length).fill(undefined);
-    QuizState.selectedOption = null;
-    QuizState.isFinished = false;
     QuizState.startTime = Date.now();
-    QuizState.totalTime = QuizState.questions.length * TIME_PER_QUESTION;
-
+    QuizState.isFinished = false;
+    
     saveCurrentState();
     renderQuestion();
-    QuizApp.showToast(`${data.subject} testi boshlandi!`, 'success');
+    
+    if (window.QuizApp && QuizApp.showToast) {
+        QuizApp.showToast(`${data.subject} testi boshlandi!`, 'success');
+    }
 }
 
 // -------------------------------------------------------
-// 2. SAVOLNI RENDER QILISH (Visual Logic)
+// 4. SAVOLNI CHIZISH (Visual & Data Integrity)
 // -------------------------------------------------------
 
 function renderQuestion() {
@@ -74,29 +100,37 @@ function renderQuestion() {
     const currentNum = QuizState.currentIndex + 1;
     const subject = window.QUIZ_DATA[QuizState.subjectIndex];
 
-    // UI elementlarini yangilash
-    setInner('quiz-subject-name', `<span style="margin-right:8px">${subject.icon}</span> ${subject.subject}`);
+    EngineMonitor.log(`${currentNum}-savol render qilinmoqda.`);
+
+    // 1. Matnlarni yangilash
+    setInner('quiz-subject-name', `<span style="font-size: 1.2rem; margin-right: 8px;">${subject.icon}</span> ${subject.subject}`);
     setInner('quiz-question-counter', `${currentNum} / ${total}`);
     setInner('quiz-question-text', q.question);
+    
+    const badge = document.getElementById('question-badge');
+    if (badge) badge.textContent = `SAVOL: ${currentNum}`;
 
-    // Progress Bar
+    // 2. Progress Bar (Silliq animatsiya bilan)
     const pct = Math.round(((currentNum - 1) / total) * 100);
     const progressBar = document.getElementById('quiz-progress-bar');
     if (progressBar) {
         progressBar.style.width = `${pct}%`;
-        progressBar.style.background = subject.color;
+        progressBar.style.backgroundColor = subject.color;
     }
     setInner('quiz-progress-text', `${pct}% yakunlandi`);
 
-    // Variantlarni tayyorlash
+    // 3. Variantlarni generatsiya qilish
     const optionsEl = document.getElementById('quiz-options');
     if (!optionsEl) return;
     optionsEl.innerHTML = '';
 
-    // Har bir savol uchun variantlarni faqat bir marta aralashtiramiz
-    QuizState.shuffledOptions = QuizApp.shuffleArray(q.options);
+    // Variantlarni aralashtirib saqlash (bir martalik)
+    if (!QuizState.shuffledOptions[QuizState.currentIndex]) {
+        QuizState.shuffledOptions[QuizState.currentIndex] = QuizApp.shuffleArray(q.options);
+    }
+    const currentOptions = QuizState.shuffledOptions[QuizState.currentIndex];
 
-    QuizState.shuffledOptions.forEach((opt, i) => {
+    currentOptions.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn animate-fadeInUp';
         btn.style.animationDelay = `${i * 0.1}s`;
@@ -115,22 +149,23 @@ function renderQuestion() {
         optionsEl.appendChild(btn);
     });
 
+    // 4. Integratsiya
     updateNextButton();
     resetTimer();
     saveCurrentState();
-
-    // Fan rangini CSS Variable orqali o'rnatish
+    
+    // UI rangini dinamik o'zgartirish
     document.documentElement.style.setProperty('--subject-color', subject.color);
-    document.documentElement.style.setProperty('--accent', subject.color);
 }
 
 // -------------------------------------------------------
-// 3. TANLASH VA BOSHQARISH
+// 5. TANLASH VA BOSHQARISH
 // -------------------------------------------------------
 
 function selectOption(btn, value, container) {
     if (QuizState.isFinished) return;
 
+    // Vizual feedback
     container.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     
@@ -146,26 +181,27 @@ function updateNextButton() {
     if (!btn) return;
 
     const isLast = QuizState.currentIndex === QuizState.questions.length - 1;
-    const hasAnswer = QuizState.answers[QuizState.currentIndex] !== undefined;
+    const hasAns = QuizState.answers[QuizState.currentIndex] !== undefined;
 
-    btn.innerHTML = isLast ? 'Natijani ko\'rish' : 'Keyingi savol <span style="margin-left:8px">→</span>';
-    btn.disabled = false;
+    btn.innerHTML = isLast ? 'Natijani ko\'rish ✅' : 'Keyingi savol <span style="margin-left:10px">→</span>';
+    btn.disabled = false; 
     
-    if (hasAnswer) {
-        btn.classList.add('has-answer');
+    if (hasAns) {
         btn.style.opacity = '1';
+        btn.classList.add('has-answer');
     } else {
-        btn.classList.remove('has-answer');
         btn.style.opacity = '0.7';
+        btn.classList.remove('has-answer');
     }
 }
 
 function goNext() {
     if (QuizState.isFinished) return;
 
-    // Agar javob berilmagan bo'lsa, null deb belgilaymiz
+    // Metrika: Agar javobsiz o'tsa
     if (QuizState.answers[QuizState.currentIndex] === undefined) {
         QuizState.answers[QuizState.currentIndex] = null;
+        QuizState.skipsCount++;
     }
 
     if (QuizState.currentIndex < QuizState.questions.length - 1) {
@@ -178,7 +214,7 @@ function goNext() {
 }
 
 // -------------------------------------------------------
-// 4. TIMER MANTIQI
+// 6. TIMER VA VAQT ANALIZI
 // -------------------------------------------------------
 
 function resetTimer() {
@@ -187,11 +223,13 @@ function resetTimer() {
     updateTimerUI();
 
     QuizState.timerInterval = setInterval(() => {
+        if (!QuizState.userFocus) return; // Tab ochiq bo'lmasa vaqtni to'xtatish (optional)
+
         QuizState.timeLeft--;
         updateTimerUI();
 
         if (QuizState.timeLeft <= 0) {
-            QuizApp.showToast('Vaqt tugadi!', 'warning');
+            EngineMonitor.log("Vaqt tugadi.", "error");
             goNext();
         }
     }, 1000);
@@ -204,19 +242,18 @@ function updateTimerUI() {
 
     timerText.textContent = QuizApp.formatTime(QuizState.timeLeft);
 
-    // Vizual effektlar
+    // Vizual ogohlantirishlar
     if (QuizState.timeLeft <= 5) {
-        timerText.style.color = '#ef4444';
-        timerText.classList.add('animate-pulse');
+        timerText.style.color = '#ff4757';
+        timerText.parentElement.classList.add('pulse-warning');
     } else {
         timerText.style.color = 'inherit';
-        timerText.classList.remove('animate-pulse');
+        timerText.parentElement.classList.remove('pulse-warning');
     }
 
     if (ring) {
         const pct = QuizState.timeLeft / TIME_PER_QUESTION;
-        const circumference = 125.66; // 2 * PI * 20
-        ring.style.strokeDashoffset = circumference * (1 - pct);
+        ring.style.strokeDashoffset = CIRCUMFERENCE * (1 - pct);
     }
 }
 
@@ -228,7 +265,7 @@ function clearTimerInterval() {
 }
 
 // -------------------------------------------------------
-// 5. NATIJALARNI HISOBLASH
+// 7. TESTNI YAKUNLASH (Result Intelligence)
 // -------------------------------------------------------
 
 function finishQuiz() {
@@ -247,7 +284,7 @@ function finishQuiz() {
 
         details.push({
             q: q.question,
-            user: userAns || "Javob berilmagan",
+            user: userAns || "Javob berilmadi",
             correct: q.answer,
             status: isCorrect
         });
@@ -256,20 +293,21 @@ function finishQuiz() {
     const result = {
         subject: subject.subject,
         subjectIndex: QuizState.subjectIndex,
-        score: correct,
+        correct,
         total: QuizState.questions.length,
         percent: QuizApp.calcPercent(correct, QuizState.questions.length),
         timeSpent: Math.round((QuizState.endTime - QuizState.startTime) / 1000),
-        details: details
+        details: details,
+        skips: QuizState.skipsCount
     };
 
     QuizApp.saveResult(result);
-    QuizApp.clearSession(); // Test tugadi, sessiyani tozalash
+    QuizApp.clearSession(); // Sessiyani o'chirish
 
-    // Natija sahifasiga yo'naltirish
+    // Natija sahifasiga xavfsiz yo'naltirish
     const params = new URLSearchParams({
         subject: result.subject,
-        score: result.score,
+        score: result.correct,
         total: result.total,
         time: result.timeSpent
     });
@@ -277,7 +315,7 @@ function finishQuiz() {
 }
 
 // -------------------------------------------------------
-// 6. YORDAMCHI VA EVENTLAR
+// 8. YORDAMCHI FUNKSIYALAR VA EVENTLAR
 // -------------------------------------------------------
 
 function saveCurrentState() {
@@ -296,29 +334,35 @@ function setInner(id, html) {
 function showError(msg) {
     const container = document.getElementById('quiz-container');
     if (container) {
-        container.innerHTML = `<div class="error-box"><h2>Xatolik</h2><p>${msg}</p><a href="index.html">Orqaga</a></div>`;
+        container.innerHTML = `
+            <div class="error-box animate-scaleIn" style="text-align: center; padding: 100px 20px;">
+                <div style="font-size: 5rem; margin-bottom: 20px;">⚠️</div>
+                <h2 style="margin-bottom: 15px; color: #ff4757;">Tizimli xatolik!</h2>
+                <p style="margin-bottom: 30px; color: #747d8c;">${msg}</p>
+                <a href="index.html" class="btn btn-primary">Bosh sahifaga qaytish</a>
+            </div>`;
     }
 }
 
-// Klaviatura bilan boshqarish
+// Klaviatura boshqaruvi (1, 2, 3, 4 va Enter)
 document.addEventListener('keydown', (e) => {
     if (QuizState.isFinished) return;
-    
-    // 1, 2, 3, 4 tugmalari orqali variant tanlash
     if (e.key >= '1' && e.key <= '4') {
         const btns = document.querySelectorAll('.option-btn');
         const idx = parseInt(e.key) - 1;
         if (btns[idx]) btns[idx].click();
     }
-    
-    // Enter orqali keyingisiga o'tish
     if (e.key === 'Enter') {
         const nextBtn = document.getElementById('btn-next');
         if (nextBtn && !nextBtn.disabled) goNext();
     }
 });
 
-// Sahifa yuklanganda ishga tushirish
+// Fokus nazorati
+window.onblur = () => QuizState.userFocus = false;
+window.onfocus = () => QuizState.userFocus = true;
+
+// INIT
 document.addEventListener('DOMContentLoaded', () => {
     const urlIdx = QuizApp.getUrlParam('subject');
     if (urlIdx !== null) {
@@ -329,5 +373,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nextBtn) nextBtn.onclick = goNext;
 });
 
-// Global export
 window.QuizEngine = { startQuiz, goNext, finishQuiz, QuizState };
