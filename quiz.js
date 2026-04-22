@@ -1,3 +1,4 @@
+alert("Kod yangilandi, Bobur!");
 (function() {
     let currentQuestions = [];
     let currentIndex = 0;
