@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuizMaster Pro — Test</title>
     
-    <!-- Font Awesome (ixtiyoriy, lekin dark mode tugmasi uchun kerak) -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Asosiy CSS (root papkada) -->
+    <link rel="stylesheet" href="style.css?v=1.2">
     
     <style>
         :root {
@@ -15,193 +18,56 @@
             --bg: #ffffff;
             --bg-secondary: #f3f4f6;
             --text: #1f2937;
-            --text-secondary: #6b7280;
-            --card-bg: #ffffff;
             --card-border: #e5e7eb;
-            --success: #10b981;
-            --danger: #ef4444;
         }
-
+        
         body.dark-mode {
             --bg: #0f172a;
             --bg-secondary: #1e293b;
             --text: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --card-bg: #1e293b;
             --card-border: #334155;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
+            background: var(--bg);
             color: var(--text);
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: all 0.3s;
         }
-
-        .quiz-wrapper {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .quiz-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            border-bottom: 1px solid var(--card-border);
-            margin-bottom: 30px;
-        }
-
-        .quiz-header h1 {
-            font-size: 24px;
-        }
-
-        .quiz-header h1 span {
-            color: var(--accent);
-        }
-
-        .theme-toggle {
-            background: var(--bg-secondary);
-            border: 1px solid var(--card-border);
-            padding: 10px 15px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 16px;
-            color: var(--text);
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.05);
-        }
-
-        .quiz-timer {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-secondary);
-            padding: 10px 20px;
-            border-radius: 50px;
-        }
-
-        #quiz-timer {
-            font-size: 24px;
-            font-weight: bold;
-            font-family: monospace;
-        }
-
-        .quiz-subject {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .quiz-subject h2 {
-            font-size: 28px;
-        }
-
-        .quiz-counter {
-            text-align: center;
-            margin-bottom: 10px;
-            color: var(--text-secondary);
-        }
-
-        .question-badge {
-            display: inline-block;
-            background: var(--primary);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        .question-text {
-            font-size: 24px;
-            margin-bottom: 30px;
-            line-height: 1.4;
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
+        
+        .quiz-wrapper { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--card-border); margin-bottom: 30px; }
+        .theme-toggle { background: var(--bg-secondary); border: 1px solid var(--card-border); padding: 8px 20px; border-radius: 30px; cursor: pointer; color: var(--text); }
+        .question-text { font-size: 24px; margin: 30px 0; line-height: 1.4; }
+        .options-grid { display: grid; gap: 15px; margin-bottom: 30px; }
         .option-btn {
             display: flex;
             align-items: center;
             gap: 15px;
             padding: 15px 20px;
-            background: var(--card-bg);
+            background: var(--bg-secondary);
             border: 2px solid var(--card-border);
             border-radius: 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 16px;
+            transition: all 0.3s;
             color: var(--text);
         }
-
-        .option-btn:hover {
-            border-color: var(--primary);
-            transform: translateX(5px);
-        }
-
-        .option-btn.selected {
-            border-color: var(--primary);
-            background: var(--primary);
-            color: white;
-        }
-
+        .option-btn:hover { border-color: var(--primary); transform: translateX(5px); }
+        .option-btn.selected { border-color: var(--primary); background: var(--primary); color: white; }
         .option-letter {
             font-weight: bold;
-            font-size: 18px;
             width: 30px;
             height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bg-secondary);
+            background: var(--bg);
             border-radius: 50%;
         }
-
-        .option-btn.selected .option-letter {
-            background: white;
-            color: var(--primary);
-        }
-
-        .quiz-progress {
-            margin: 20px 0;
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: var(--card-border);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--primary);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .progress-text {
-            text-align: center;
-            font-size: 14px;
-            margin-top: 8px;
-            color: var(--text-secondary);
-        }
-
+        .progress-bar { height: 8px; background: var(--card-border); border-radius: 10px; overflow: hidden; margin: 20px 0; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
         .next-btn {
             width: 100%;
             padding: 16px;
@@ -212,124 +78,79 @@
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
-
-        .next-btn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.05);
-        }
-
-        .next-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .error-container {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .error-container i {
-            font-size: 64px;
-            color: var(--danger);
-            margin-bottom: 20px;
-        }
-
-        .error-container h2 {
-            color: var(--danger);
-            margin-bottom: 15px;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 12px 24px;
-            border-radius: 12px;
-            color: white;
-            z-index: 1000;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        .quiz-timer { font-size: 28px; font-weight: bold; font-family: monospace; }
+        .quiz-subject { text-align: center; margin-bottom: 20px; }
+        .question-badge { display: inline-block; background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; }
+        
+        @media (max-width: 600px) {
+            .question-text { font-size: 18px; }
+            .quiz-wrapper { padding: 10px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="quiz-wrapper">
-        <div class="quiz-header">
-            <h1>📝 QuizMaster <span>Pro</span></h1>
-            <button id="theme-toggle-btn" class="theme-toggle">
-                <i class="fas fa-moon"></i> <span id="theme-text">Dark</span>
-            </button>
-        </div>
-
-        <div id="quiz-content">
-            <!-- Dinamik kontent shu yerga yuklanadi -->
-            <div class="quiz-subject">
-                <h2 id="quiz-subject-name">Yuklanmoqda...</h2>
-            </div>
-            <div class="quiz-counter">
-                <span id="quiz-question-counter">0 / 0</span>
-            </div>
-            <div style="text-align: center;">
-                <span class="question-badge" id="question-badge">SAVOL</span>
-            </div>
-            <div class="question-text" id="quiz-question-text">
-                Savollar yuklanmoqda...
-            </div>
-            <div class="options-grid" id="quiz-options">
-                <div class="option-btn">Yuklanmoqda...</div>
-            </div>
-            <div class="quiz-progress">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="quiz-progress-bar"></div>
-                </div>
-                <div class="progress-text" id="quiz-progress-text">0%</div>
-            </div>
-            <button id="btn-next" class="next-btn">▶ Keyingi savol</button>
+<div class="quiz-wrapper">
+    <div class="quiz-header">
+        <h1>📝 QuizMaster <span style="color: var(--accent);">Pro</span></h1>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div class="quiz-timer" id="quiz-timer">00:00</div>
+            <button id="theme-toggle-btn" class="theme-toggle">🌙 Dark</button>
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- MUHIM: SCRIPT TARTIBI (Path'lar to'g'riligiga e'tibor bering!) -->
-    <!-- ============================================================ -->
-    
-    <!-- 1. AVVAL ma'lumotlar bazasi (data papkasida) -->
-    <script src="data/questions.js"></script>
-    
-    <!-- 2. KEYIN app.js (UI va umumiy funksiyalar) -->
-    <script src="js/app.js"></script>
-    
-    <!-- 3. ENG OXIRIDA quiz.js (asosiy test mantiqi) -->
-    <script src="js/quiz.js"></script>
-    
-    <!-- Qo'shimcha tekshiruv -->
-    <script>
-        (function() {
-            console.log("=== HTML sahifa yuklandi ===");
-            console.log("window.QUIZ_DATA mavjudmi?", !!window.QUIZ_DATA);
-            console.log("window.QuizApp mavjudmi?", !!window.QuizApp);
-            console.log("window.QuizEngine mavjudmi?", !!window.QuizEngine);
-            
-            // Agar hali hech narsa ishlamasa, fallback xabar
-            setTimeout(function() {
-                const questionEl = document.getElementById('quiz-question-text');
-                if (questionEl && questionEl.innerText === "Savollar yuklanmoqda...") {
-                    questionEl.innerHTML = "⚠️ Ma'lumotlar yuklanmadi. Iltimos, sahifani qayta yuklang.";
-                }
-            }, 3000);
-        })();
-    </script>
+    <div id="quiz-content">
+        <div class="quiz-subject"><h2 id="quiz-subject-name">Yuklanmoqda...</h2></div>
+        <div style="text-align: center; margin-bottom: 10px; color: var(--text-secondary);">
+            <span id="quiz-question-counter">0 / 0</span>
+        </div>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <span class="question-badge" id="question-badge">SAVOL</span>
+        </div>
+        <div class="question-text" id="quiz-question-text">Savollar yuklanmoqda...</div>
+        <div class="options-grid" id="quiz-options"></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="quiz-progress-bar"></div>
+        </div>
+        <div style="text-align: center; font-size: 14px; margin-bottom: 20px;" id="quiz-progress-text">0%</div>
+        <button id="btn-next" class="next-btn">▶ Keyingi savol</button>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ROOT PAPKASIDAGI FAYLLAR (papkalarsiz)                       -->
+<!-- ============================================================ -->
+
+<!-- 1️⃣ BIRINCHI: Ma'lumotlar bazasi -->
+<script src="questions.js?v=1.2"></script>
+
+<!-- 2️⃣ KEYIN: Quiz Engine -->
+<script src="quiz.js?v=1.2"></script>
+
+<!-- 3️⃣ QO'SHIMCHA: Tekshiruv -->
+<script>
+    (function() {
+        console.log("=== QUIZ SAHIFASI YUKLANDI ===");
+        console.log("window.QUIZ_DATA mavjudmi?", !!window.QUIZ_DATA);
+        console.log("window.QUIZ_DATA uzunligi:", window.QUIZ_DATA ? window.QUIZ_DATA.length : 0);
+        
+        if (!window.QUIZ_DATA || window.QUIZ_DATA.length === 0) {
+            const questionEl = document.getElementById('quiz-question-text');
+            if (questionEl) {
+                questionEl.innerHTML = `
+                    <div style="text-align:center; padding:40px;">
+                        <i class="fas fa-database" style="font-size:48px; color:#ef4444;"></i>
+                        <h3 style="color:#ef4444; margin:20px 0;">Ma'lumotlar bazasi topilmadi!</h3>
+                        <p>questions.js fayli mavjudligini tekshiring.</p>
+                        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; cursor:pointer;">🔄 Qayta yuklash</button>
+                        <button onclick="location.href='index.html'" style="margin-top:20px; margin-left:10px; padding:10px 20px; cursor:pointer;">🏠 Bosh sahifa</button>
+                    </div>
+                `;
+            }
+        }
+    })();
+</script>
+
 </body>
 </html>
