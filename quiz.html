@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- quiz.html - TO'LIQ QAYTA ISHLANGAN VERSIYA (Index Matching + Layout Fix) -->
+<!-- quiz.html - FIXED VERSION (Path Correction + Global Sync) -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="uz">
@@ -11,7 +11,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts (Dashboard bilan bir xil) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     
     <!-- ========== DARK MODE SINXRON (Dashboarddan) ========== -->
@@ -83,7 +83,7 @@
             justify-content: center;
         }
 
-        /* ========== ASOSIY KONTEYNER (MARKAZDA) ========== */
+        /* ========== ASOSIY KONTEYNER ========== */
         .quiz-wrapper {
             max-width: 550px;
             width: 100%;
@@ -409,6 +409,7 @@
             font-size: 14px;
             color: var(--text-secondary);
             margin-bottom: 25px;
+            line-height: 1.5;
         }
 
         .error-btn {
@@ -535,9 +536,16 @@
     </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- SCRIPTS (ROOT PAPKASIDA - MUHIM TARTIB) -->
+<!-- ============================================================ -->
+<!-- 1️⃣ BIRINCHI: Ma'lumotlar bazasi -->
+<script src="questions.js"></script>
+
+<!-- 2️⃣ KEYIN: Quiz Engine -->
 <script>
 // ============================================================
-// quiz.js v3.0 - INDEX MATCHING + INIT FIX + RESET LOGIC
+// quiz.js v4.0 - FINAL FIXED VERSION (Path Correction + Global Sync)
 // ============================================================
 
 (function() {
@@ -546,6 +554,7 @@
     // ========== KONFIGURATSIYA ==========
     const TIME_PER_QUESTION = 15;
     const TOTAL_QUESTIONS = 25;
+    const DATA_WAIT_TIMEOUT = 2000; // 2 soniya kutish
 
     // ========== STATE ==========
     let state = {
@@ -560,7 +569,8 @@
         isFinished: false,
         isTimeOver: false,
         startTime: null,
-        isAnswered: false
+        isAnswered: false,
+        dataReady: false
     };
 
     // DOM elementlari
@@ -850,71 +860,34 @@
         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    // ========== MA'LUMOTLARNI TEKSHIRISH VA TESTNI BOSHLASH ==========
-    function initQuiz() {
-        initElements();
+    // ========== MA'LUMOTLARNI KUTISH FUNKSIYASI ==========
+    function waitForData(callback) {
+        let attempts = 0;
+        const maxAttempts = DATA_WAIT_TIMEOUT / 100; // 20 marta (2 soniya)
         
-        const subjectParam = getUrlParam('subject');
-        console.log('[Quiz] URL subject param:', subjectParam);
+        console.log('[Quiz] Ma\'lumotlarni kutish boshlandi...');
         
-        if (subjectParam === null) {
-            showError("URL da 'subject' parametri topilmadi!", "Misol: quiz.html?subject=0");
-            return;
-        }
-        
-        const idx = parseInt(subjectParam);
-        if (isNaN(idx)) {
-            showError(`'subject' parametri son emas: ${subjectParam}`, "0 dan 4 gacha bo'lgan son kiriting");
-            return;
-        }
-        
-        console.log('[Quiz] window.QUIZ_DATA mavjudmi?', !!window.QUIZ_DATA);
-        console.log('[Quiz] window.QUIZ_DATA uzunligi:', window.QUIZ_DATA ? window.QUIZ_DATA.length : 0);
-        
-        if (!window.QUIZ_DATA || window.QUIZ_DATA.length === 0) {
-            showError("Ma'lumotlar bazasi topilmadi!", "questions.js fayli yuklanganligini tekshiring");
-            return;
-        }
-        
-        if (idx >= window.QUIZ_DATA.length) {
-            showError(`${idx}-indeksli fan topilmadi!`, `Mavjud fanlar: 0 dan ${window.QUIZ_DATA.length - 1} gacha`);
-            return;
-        }
-        
-        const subject = window.QUIZ_DATA[idx];
-        if (!subject || !subject.questions || subject.questions.length === 0) {
-            showError(`${subject ? subject.subject : 'Fan'} da savollar yo'q!`, "Ma'lumotlar bazasini tekshiring");
-            return;
-        }
-        
-        console.log('[Quiz] Fan topildi:', subject.subject);
-        console.log('[Quiz] Jami savollar soni:', subject.questions.length);
-        
-        state.subjectIndex = idx;
-        state.subjectName = subject.subject;
-        state.allQuestions = subject.questions;
-        
-        // RANDOM 25 savol tanlash
-        state.selectedQuestions = selectRandomQuestions(state.allQuestions);
-        state.currentIndex = 0;
-        state.answers = new Array(TOTAL_QUESTIONS).fill(undefined);
-        state.isFinished = false;
-        state.isTimeOver = false;
-        state.isAnswered = false;
-        state.startTime = Date.now();
-        
-        document.title = `${subject.subject} — Blitz Test`;
-        
-        // Skeletorni yashirib, asosiy kontentni ko'rsatish
-        if (elements.skeletonLoading) elements.skeletonLoading.style.display = 'none';
-        if (elements.quizContent) elements.quizContent.style.display = 'block';
-        
-        renderQuestion();
-        showToast(`⚡ ${subject.subject} testi boshlandi! Har bir savolga 15 soniya`, 'success');
+        const checkInterval = setInterval(() => {
+            attempts++;
+            
+            if (window.QUIZ_DATA && window.QUIZ_DATA.length > 0) {
+                console.log('[Quiz] ✅ Ma\'lumotlar topildi!', window.QUIZ_DATA.length, 'ta fan');
+                clearInterval(checkInterval);
+                callback(true);
+            } else if (attempts >= maxAttempts) {
+                console.error('[Quiz] ❌ Ma\'lumotlar topilmadi!', attempts, 'urinish');
+                clearInterval(checkInterval);
+                callback(false);
+            } else if (attempts % 5 === 0) {
+                console.log('[Quiz] Kutilmoqda...', attempts, '/', maxAttempts);
+            }
+        }, 100);
     }
-    
+
+    // ========== XATO KO'RSATISH ==========
     function showError(title, message) {
         if (elements.skeletonLoading) elements.skeletonLoading.style.display = 'none';
+        if (elements.quizContent) elements.quizContent.style.display = 'none';
         
         const wrapper = document.getElementById('quiz-wrapper');
         if (wrapper) {
@@ -928,6 +901,73 @@
             `;
         }
         console.error('[Quiz] Xato:', title, message);
+    }
+
+    // ========== ASOSIY INIT FUNKSIYASI ==========
+    function initQuiz() {
+        initElements();
+        
+        const subjectParam = getUrlParam('subject');
+        console.log('[Quiz] URL subject param:', subjectParam);
+        
+        if (subjectParam === null) {
+            showError("URL xatosi", "URL da 'subject' parametri topilmadi!\nMisol: quiz.html?subject=0");
+            return;
+        }
+        
+        const idx = parseInt(subjectParam);
+        if (isNaN(idx)) {
+            showError(`Parametr xatosi`, `'subject' parametri son emas: ${subjectParam}\n0 dan 4 gacha bo'lgan son kiriting`);
+            return;
+        }
+        
+        // Ma'lumotlarni kutish
+        waitForData((isReady) => {
+            if (!isReady) {
+                showError("Ma'lumotlar bazasi topilmadi!", 
+                    "questions.js fayli yuklanmagan yoki bo'sh.\n\nSabablari:\n• Internet aloqangizni tekshiring\n• Sahifani qayta yuklang\n• Agar muammo davom etsa, F12 tugmasini bosing va konsolni tekshiring");
+                return;
+            }
+            
+            console.log('[Quiz] window.QUIZ_DATA uzunligi:', window.QUIZ_DATA.length);
+            
+            if (idx >= window.QUIZ_DATA.length) {
+                showError(`Fan topilmadi (${idx})`, `Mavjud fanlar: 0 dan ${window.QUIZ_DATA.length - 1} gacha\nTanlangan indeks: ${idx}`);
+                return;
+            }
+            
+            const subject = window.QUIZ_DATA[idx];
+            if (!subject || !subject.questions || subject.questions.length === 0) {
+                showError(`Savollar topilmadi`, `${subject ? subject.subject : 'Fan'} da savollar mavjud emas!\nMa'lumotlar bazasini tekshiring`);
+                return;
+            }
+            
+            console.log('[Quiz] Fan topildi:', subject.subject);
+            console.log('[Quiz] Jami savollar soni:', subject.questions.length);
+            
+            state.subjectIndex = idx;
+            state.subjectName = subject.subject;
+            state.allQuestions = subject.questions;
+            
+            // RANDOM 25 savol tanlash
+            state.selectedQuestions = selectRandomQuestions(state.allQuestions);
+            state.currentIndex = 0;
+            state.answers = new Array(TOTAL_QUESTIONS).fill(undefined);
+            state.isFinished = false;
+            state.isTimeOver = false;
+            state.isAnswered = false;
+            state.startTime = Date.now();
+            state.dataReady = true;
+            
+            document.title = `${subject.subject} — Blitz Test`;
+            
+            // Skeletorni yashirib, asosiy kontentni ko'rsatish
+            if (elements.skeletonLoading) elements.skeletonLoading.style.display = 'none';
+            if (elements.quizContent) elements.quizContent.style.display = 'block';
+            
+            renderQuestion();
+            showToast(`⚡ ${subject.subject} testi boshlandi! Har bir savolga 15 soniya`, 'success');
+        });
     }
 
     // ========== EVENT LISTENERLAR ==========
