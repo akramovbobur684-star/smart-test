@@ -1,338 +1,269 @@
-// ============================================================
-// quiz.js - ASOSIY TEST LOGIKASI (ROOT PAPKADA)
-// ============================================================
-
-(function() {
-    'use strict';
-
-    // ========== KONFIGURATSIYA ==========
-    const TOTAL_QUESTIONS = 25;
-    const TOTAL_TIME_MINUTES = 30;
-    const TOTAL_TIME_SECONDS = TOTAL_TIME_MINUTES * 60;
-
-    // ========== STATE ==========
-    let state = {
-        subjectIndex: null,
-        subjectName: "",
-        allQuestions: [],
-        selectedQuestions: [],
-        currentIndex: 0,
-        answers: [],
-        timeLeft: TOTAL_TIME_SECONDS,
-        timerInterval: null,
-        isFinished: false,
-        startTime: null,
-        isAnswered: false
-    };
-
-    // ========== DOM ELEMENTLARI ==========
-    const elements = {
-        subjectName: document.getElementById('quiz-subject-name'),
-        counter: document.getElementById('quiz-question-counter'),
-        badge: document.getElementById('question-badge'),
-        questionText: document.getElementById('quiz-question-text'),
-        options: document.getElementById('quiz-options'),
-        progressBar: document.getElementById('quiz-progress-bar'),
-        progressText: document.getElementById('quiz-progress-text'),
-        nextBtn: document.getElementById('btn-next'),
-        timer: document.getElementById('quiz-timer'),
-        prevBtn: document.getElementById('btn-prev')
-    };
-
-    // ========== YORDAMCHI FUNKSIYALAR ==========
-    function shuffleArray(arr) {
-        const array = [...arr];
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
+<!-- ============================================================ -->
+<!-- quiz.css - TEST SAHIFASI UCHUN MOBIL UCHUN QULAY STILLAR -->
+<!-- ============================================================ -->
+<style>
+    /* Root o'zgaruvchilar */
+    :root {
+        --primary: #4f46e5;
+        --primary-dark: #4338ca;
+        --accent: #f59e0b;
+        --success: #10b981;
+        --danger: #ef4444;
+        --bg: #ffffff;
+        --bg-secondary: #f3f4f6;
+        --text: #111827;
+        --text-secondary: #6b7280;
+        --card-bg: #ffffff;
+        --card-border: #e5e7eb;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    function getUrlParam(param) {
-        const params = new URLSearchParams(window.location.search);
-        return params.get(param);
+    body.dark-mode {
+        --bg: #0f172a;
+        --bg-secondary: #1e293b;
+        --text: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --card-bg: #1e293b;
+        --card-border: #334155;
     }
 
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
 
-    function showToast(message, type = 'info') {
-        const existingToast = document.querySelector('.toast');
-        if (existingToast) existingToast.remove();
-        
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        const colors = { success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#4f46e5' };
-        toast.style.cssText = `
-            position: fixed; bottom: 30px; right: 30px; padding: 12px 24px;
-            background: ${colors[type]}; color: white; border-radius: 12px;
-            z-index: 10000; animation: slideIn 0.3s ease-out; font-weight: 500;
-        `;
-        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${message}`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+    body {
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        transition: background var(--transition), color var(--transition);
+        line-height: 1.5;
+        min-height: 100vh;
     }
 
-    // ========== SAVOLLARNI TANLASH (25 ta RANDOM) ==========
-    function selectRandomQuestions(allQuestions) {
-        const shuffled = shuffleArray(allQuestions);
-        return shuffled.slice(0, TOTAL_QUESTIONS);
+    /* ========== ASOSIY KONTEYNER ========== */
+    .quiz-wrapper {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 16px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 
-    // ========== TAYMER ==========
-    function startTimer() {
-        if (state.timerInterval) clearInterval(state.timerInterval);
-        
-        state.timerInterval = setInterval(() => {
-            if (state.isFinished) return;
-            
-            state.timeLeft--;
-            updateTimerDisplay();
-            
-            if (state.timeLeft <= 0) {
-                clearInterval(state.timerInterval);
-                showToast("⏰ Vaqt tugadi! Test avtomatik yakunlanmoqda...", 'warning');
-                setTimeout(() => finishQuiz(), 500);
-            }
-        }, 1000);
+    /* ========== HEADER (Logo + Dark Mode) ========== */
+    .quiz-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 2px solid var(--card-border);
+        margin-bottom: 20px;
     }
 
-    function updateTimerDisplay() {
-        if (elements.timer) {
-            elements.timer.innerHTML = formatTime(state.timeLeft);
-            if (state.timeLeft <= 60) {
-                elements.timer.style.color = '#ef4444';
-                elements.timer.style.fontWeight = 'bold';
-            }
-        }
+    .quiz-logo {
+        font-size: 22px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
-    function stopTimer() {
-        if (state.timerInterval) {
-            clearInterval(state.timerInterval);
-            state.timerInterval = null;
-        }
+    .quiz-logo span {
+        background: none;
+        -webkit-text-fill-color: var(--accent);
     }
 
-    // ========== JAVOB TANLASH ==========
-    function selectOption(btn, value) {
-        if (state.isFinished) return;
-        if (state.isAnswered) {
-            showToast("Javob allaqachon tanlangan!", 'warning');
-            return;
-        }
-        
-        // Tanlangan javobni saqlash
-        state.answers[state.currentIndex] = value;
-        state.isAnswered = true;
-        
-        // Vizual yangilash
-        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        
-        // Next tugmasini faollashtirish
-        if (elements.nextBtn) {
-            elements.nextBtn.disabled = false;
-            elements.nextBtn.style.opacity = '1';
-        }
-        
-        showToast("Javob qabul qilindi!", 'success');
+    .theme-toggle {
+        background: var(--bg-secondary);
+        border: 1px solid var(--card-border);
+        padding: 8px 16px;
+        border-radius: 40px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        transition: var(--transition);
     }
 
-    // ========== SAVOLNI RENDER QILISH ==========
-    function renderQuestion() {
-        if (!state.selectedQuestions.length) return;
-        
-        const q = state.selectedQuestions[state.currentIndex];
-        const current = state.currentIndex + 1;
-        const percent = Math.round((current / TOTAL_QUESTIONS) * 100);
-        
-        // Matnlarni yangilash
-        if (elements.questionText) elements.questionText.innerHTML = q.question;
-        if (elements.counter) elements.counter.innerHTML = `${current} / ${TOTAL_QUESTIONS}`;
-        if (elements.badge) elements.badge.innerHTML = `SAVOL: ${current}`;
-        if (elements.progressBar) elements.progressBar.style.width = `${percent}%`;
-        if (elements.progressText) elements.progressText.innerHTML = `${percent}% yakunlandi`;
-        
-        // Variantlar
-        if (elements.options) {
-            elements.options.innerHTML = '';
-            state.isAnswered = state.answers[state.currentIndex] !== undefined;
-            
-            q.options.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                const letter = String.fromCharCode(65 + i);
-                btn.innerHTML = `<span class="option-letter">${letter}</span><span class="option-text">${escapeHtml(opt)}</span>`;
-                
-                if (state.answers[state.currentIndex] === opt) {
-                    btn.classList.add('selected');
-                }
-                
-                btn.onclick = () => selectOption(btn, opt);
-                elements.options.appendChild(btn);
-            });
-        }
-        
-        // Next tugmasi
-        if (elements.nextBtn) {
-            const isLast = state.currentIndex === TOTAL_QUESTIONS - 1;
-            elements.nextBtn.innerHTML = isLast ? '✅ Natijani ko\'rish' : '▶ Keyingi savol';
-            elements.nextBtn.disabled = !state.isAnswered;
-            elements.nextBtn.style.opacity = state.isAnswered ? '1' : '0.6';
-        }
+    .theme-toggle:hover {
+        transform: scale(1.02);
+        border-color: var(--primary);
     }
 
-    // ========== KEYINGI SAVOL ==========
-    function nextQuestion() {
-        if (!state.isAnswered) {
-            showToast("Iltimos, javob tanlang!", 'warning');
-            return;
-        }
-        
-        if (state.currentIndex < TOTAL_QUESTIONS - 1) {
-            state.currentIndex++;
-            renderQuestion();
-        } else {
-            finishQuiz();
-        }
+    /* ========== FAN VA SAVOL RAQAMI ========== */
+    .quiz-info {
+        text-align: center;
+        margin-bottom: 20px;
     }
 
-    // ========== TESTNI YAKUNLASH ==========
-    function finishQuiz() {
-        if (state.isFinished) return;
-        
-        stopTimer();
-        state.isFinished = true;
-        
-        // Hisoblash
-        let correct = 0;
-        const details = [];
-        
-        state.selectedQuestions.forEach((q, i) => {
-            const userAnswer = state.answers[i];
-            const isCorrect = userAnswer === q.answer;
-            if (isCorrect) correct++;
-            
-            details.push({
-                question: q.question,
-                userAnswer: userAnswer || "Javob berilmadi",
-                correctAnswer: q.answer,
-                isCorrect: isCorrect
-            });
-        });
-        
-        const percent = Math.round((correct / TOTAL_QUESTIONS) * 100);
-        const timeSpent = TOTAL_TIME_SECONDS - state.timeLeft;
-        
-        const result = {
-            subject: state.subjectName,
-            subjectIndex: state.subjectIndex,
-            correct: correct,
-            total: TOTAL_QUESTIONS,
-            percent: percent,
-            timeSpent: timeSpent,
-            details: details,
-            timestamp: Date.now()
-        };
-        
-        // localStorage ga saqlash
-        try {
-            const results = JSON.parse(localStorage.getItem('qm_results') || '[]');
-            results.unshift(result);
-            while (results.length > 50) results.pop();
-            localStorage.setItem('qm_results', JSON.stringify(results));
-        } catch(e) {}
-        
-        // Natija sahifasiga o'tish
-        const params = new URLSearchParams({
-            subject: result.subject,
-            score: result.correct,
-            total: result.total,
-            percent: result.percent,
-            time: result.timeSpent
-        });
-        
-        window.location.href = `result.html?${params.toString()}`;
+    .subject-name {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: var(--primary);
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    .question-counter {
+        font-size: 14px;
+        color: var(--text-secondary);
+        background: var(--bg-secondary);
+        display: inline-block;
+        padding: 4px 16px;
+        border-radius: 30px;
     }
 
-    // ========== DARK MODE ==========
-    function initDarkMode() {
-        const savedTheme = localStorage.getItem('quiz_theme');
-        const isDark = savedTheme === 'dark';
-        if (isDark) document.body.classList.add('dark-mode');
-        
-        const themeBtn = document.getElementById('theme-toggle-btn');
-        if (themeBtn) {
-            themeBtn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
-            themeBtn.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const nowDark = document.body.classList.contains('dark-mode');
-                localStorage.setItem('quiz_theme', nowDark ? 'dark' : 'light');
-                themeBtn.innerHTML = nowDark ? '☀️ Light' : '🌙 Dark';
-            });
-        }
+    /* ========== PROGRESS BAR (15 SONIYA) ========== */
+    .timer-section {
+        margin-bottom: 20px;
     }
 
-    // ========== BOSHLASH ==========
-    function startQuiz() {
-        const idx = parseInt(getUrlParam('subject'));
-        
-        if (isNaN(idx)) {
-            if (elements.questionText) elements.questionText.innerHTML = '❌ URL da subject parametri topilmadi!';
-            return;
-        }
-        
-        if (!window.QUIZ_DATA || !window.QUIZ_DATA[idx]) {
-            if (elements.questionText) {
-                elements.questionText.innerHTML = `❌ ${idx}-indeksli fan topilmadi! Mavjud fanlar: ${window.QUIZ_DATA ? window.QUIZ_DATA.length : 0}`;
-            }
-            return;
-        }
-        
-        const subject = window.QUIZ_DATA[idx];
-        state.subjectIndex = idx;
-        state.subjectName = subject.subject;
-        state.allQuestions = subject.questions;
-        
-        // 25 ta RANDOM savol tanlash
-        state.selectedQuestions = selectRandomQuestions(state.allQuestions);
-        state.currentIndex = 0;
-        state.answers = new Array(TOTAL_QUESTIONS).fill(undefined);
-        state.isAnswered = false;
-        state.timeLeft = TOTAL_TIME_SECONDS;
-        state.isFinished = false;
-        state.startTime = Date.now();
-        
-        if (elements.subjectName) elements.subjectName.innerHTML = `${subject.icon || '📚'} ${subject.subject}`;
-        document.title = `${subject.subject} — QuizMaster Pro`;
-        
-        renderQuestion();
-        startTimer();
-        
-        showToast(`✅ ${subject.subject} testi boshlandi! ${TOTAL_QUESTIONS} ta savol`, 'success');
+    .progress-container {
+        width: 100%;
+        height: 6px;
+        background: var(--card-border);
+        border-radius: 10px;
+        overflow: hidden;
     }
 
-    // Event listenerlar
-    if (elements.nextBtn) elements.nextBtn.onclick = nextQuestion;
-    
-    // Oldingi savolga o'tishni BLOKIRLASH (cheating prevention)
-    if (elements.prevBtn) {
-        elements.prevBtn.disabled = true;
-        elements.prevBtn.style.opacity = '0.5';
-        elements.prevBtn.style.cursor = 'not-allowed';
+    .progress-fill {
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        border-radius: 10px;
+        transition: width 0.1s linear;
     }
-    
-    // Boshlash
-    initDarkMode();
-    startQuiz();
-})();
+
+    .timer-text {
+        text-align: center;
+        font-size: 13px;
+        margin-top: 8px;
+        color: var(--text-secondary);
+    }
+
+    .timer-text.warning {
+        color: var(--danger);
+        font-weight: 600;
+    }
+
+    /* ========== SAVOL MATNI ========== */
+    .question-text {
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1.4;
+        margin-bottom: 24px;
+        padding: 16px;
+        background: var(--bg-secondary);
+        border-radius: 20px;
+        border-left: 4px solid var(--primary);
+    }
+
+    /* ========== VARIANTLAR (FULL WIDTH MOBILE) ========== */
+    .options-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    .option-btn {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 20px;
+        background: var(--card-bg);
+        border: 2px solid var(--card-border);
+        border-radius: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 16px;
+        color: var(--text);
+        width: 100%;
+        text-align: left;
+    }
+
+    .option-btn:hover {
+        transform: translateX(6px);
+        border-color: var(--primary);
+    }
+
+    .option-btn.selected {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: white;
+    }
+
+    .option-letter {
+        font-weight: 800;
+        font-size: 18px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-secondary);
+        border-radius: 50%;
+        transition: var(--transition);
+    }
+
+    .option-btn.selected .option-letter {
+        background: white;
+        color: var(--primary);
+    }
+
+    /* ========== NEXT TUGMASI ========== */
+    .next-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        border: none;
+        border-radius: 60px;
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 10px;
+    }
+
+    .next-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .next-btn:not(:disabled):hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+
+    /* ========== TOAST XABAR ========== */
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        color: white;
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+        font-weight: 500;
+        max-width: 85%;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 600px) {
+        .quiz-wrapper { padding: 12px; }
+        .question-text { font-size: 18px; padding: 14px; }
+        .option-btn { padding: 14px 16px; font-size: 15px; }
+        .option-letter { width: 32px; height: 32px; font-size: 16px; }
+        .next-btn { padding: 14px; font-size: 16px; }
+    }
+</style>
