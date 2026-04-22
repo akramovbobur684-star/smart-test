@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuizMaster Pro — Test Natijalari</title>
     
-    <!-- Font Awesome -->
+    <!-- Font Awesome (CDN) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- Asosiy style.css (root papkada) -->
+    <link rel="stylesheet" href="style.css">
+    
     <style>
+        /* Qo'shimcha stillar — result sahifasi uchun maxsus */
         :root {
             --primary: #4f46e5;
             --primary-dark: #4338ca;
@@ -22,7 +26,6 @@
             --bg-tertiary: #e5e7eb;
             --text: #111827;
             --text-secondary: #6b7280;
-            --text-tertiary: #9ca3af;
             --card-bg: #ffffff;
             --card-border: #e5e7eb;
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -38,12 +41,8 @@
             --bg-tertiary: #334155;
             --text: #f1f5f9;
             --text-secondary: #94a3b8;
-            --text-tertiary: #64748b;
             --card-bg: #1e293b;
             --card-border: #334155;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
         }
 
         * {
@@ -58,6 +57,7 @@
             color: var(--text);
             transition: background-color var(--transition-base), color var(--transition-base);
             line-height: 1.5;
+            min-height: 100vh;
         }
 
         .container {
@@ -209,7 +209,6 @@
 
         /* ========== FEEDBACK CARD ========== */
         .feedback-card {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border-radius: 24px;
             padding: 30px;
             margin: 30px 0;
@@ -234,6 +233,11 @@
             font-size: 14px;
             opacity: 0.9;
         }
+
+        .feedback-expert { background: linear-gradient(135deg, #10b981, #059669); }
+        .feedback-good { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .feedback-average { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .feedback-poor { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
         /* ========== DETAILS TABLE ========== */
         .details-section {
@@ -328,15 +332,6 @@
             color: var(--danger);
         }
 
-        .answer-compare {
-            font-size: 13px;
-        }
-
-        .user-wrong {
-            color: var(--danger);
-            text-decoration: line-through;
-        }
-
         .correct-answer {
             color: var(--success);
             font-weight: 600;
@@ -391,37 +386,15 @@
 
         /* ========== ANIMATIONS ========== */
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .animate-fadeInUp {
             animation: fadeInUp 0.5s ease-out forwards;
         }
 
-        /* ========== RESPONSIVE ========== */
-        @media (max-width: 768px) {
-            .container { padding: 0 16px; }
-            .stats-grid { grid-template-columns: 1fr; gap: 12px; }
-            .circular-chart { width: 200px; height: 200px; }
-            .score-text { font-size: 40px; }
-            .btn-group { flex-direction: column; align-items: center; }
-            .btn { width: 200px; justify-content: center; }
-            .details-table th, .details-table td { padding: 10px 12px; font-size: 12px; }
-        }
-
-        @media (max-width: 480px) {
-            .feedback-message { font-size: 15px; }
-            .stat-value { font-size: 22px; }
-        }
-
-        /* Loading Spinner */
+        /* ========== LOADING ========== */
         .loading-spinner {
             display: flex;
             justify-content: center;
@@ -440,6 +413,31 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .container { padding: 0 16px; }
+            .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+            .circular-chart { width: 200px; height: 200px; }
+            .score-text { font-size: 40px; }
+            .btn-group { flex-direction: column; align-items: center; }
+            .btn { width: 200px; justify-content: center; }
+            .details-table th, .details-table td { padding: 10px 12px; font-size: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .feedback-message { font-size: 15px; }
+            .stat-value { font-size: 22px; }
         }
     </style>
 </head>
@@ -474,12 +472,15 @@
         </div>
     </footer>
 
+    <!-- ============================================================ -->
+    <!-- ROOT PAPKASIDAGI FAYLLAR (PAPKALARSIZ)                       -->
+    <!-- ============================================================ -->
+    
+    <!-- 1️⃣ App.js (Dark Mode va umumiy funksiyalar) -->
+    <script src="app.js"></script>
+    
+    <!-- 2️⃣ Result sahifasi mantiqi (ichki) -->
     <script>
-        // ============================================================
-        // QUIZMASTER PRO — RESULT SAHIFASI v3.0
-        // SVG Circular Progress, Intellektual Feedback, Dark Mode
-        // ============================================================
-
         (function() {
             'use strict';
 
@@ -501,10 +502,10 @@
             // 2. FOIZGA QARAB RANG OLISH
             // -------------------------------------------------------
             function getScoreColor(percent) {
-                if (percent >= 80) return '#10b981';  // Yashil
-                if (percent >= 60) return '#f59e0b';  // Sariq
-                if (percent >= 40) return '#f97316';  // To'q sariq
-                return '#ef4444';                      // Qizil
+                if (percent >= 80) return '#10b981';
+                if (percent >= 60) return '#f59e0b';
+                if (percent >= 40) return '#f97316';
+                return '#ef4444';
             }
 
             // -------------------------------------------------------
@@ -553,6 +554,7 @@
             // 4. VAQTNI FORMATLASH (MM:SS)
             // -------------------------------------------------------
             function formatTime(seconds) {
+                if (isNaN(seconds) || seconds < 0) return '00:00';
                 const mins = Math.floor(seconds / 60);
                 const secs = seconds % 60;
                 return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -565,9 +567,7 @@
                 try {
                     const stored = localStorage.getItem('qm_results');
                     if (!stored) return null;
-                    
                     const results = JSON.parse(stored);
-                    // Oxirgi natijani topish
                     return results.find(r => r.subject === subjectName) || results[0] || null;
                 } catch (e) {
                     console.error('LocalStorage dan o\'qishda xatolik:', e);
@@ -576,12 +576,13 @@
             }
 
             // -------------------------------------------------------
-            // 6. SVG DIAGRAMMANI CHIZISH (ANIMATSIYALI)
+            // 6. SVG DIAGRAMMANI CHIZISH
             // -------------------------------------------------------
+            let animationInterval = null;
+
             function renderScoreCircle(percent) {
                 const radius = 115;
                 const circumference = 2 * Math.PI * radius;
-                const dashOffset = circumference - (percent / 100) * circumference;
                 const color = getScoreColor(percent);
                 
                 return `
@@ -598,7 +599,6 @@
                 `;
             }
 
-            // Animatsiyani ishga tushirish
             function animateCircle(percent) {
                 const radius = 115;
                 const circumference = 2 * Math.PI * radius;
@@ -608,17 +608,20 @@
                 
                 if (!circleElement || !textElement) return;
                 
+                if (animationInterval) clearInterval(animationInterval);
+                
                 let currentPercent = 0;
                 const duration = 1000;
                 const stepTime = 20;
                 const steps = duration / stepTime;
                 const increment = percent / steps;
                 
-                const interval = setInterval(() => {
+                animationInterval = setInterval(() => {
                     currentPercent += increment;
                     if (currentPercent >= percent) {
                         currentPercent = percent;
-                        clearInterval(interval);
+                        clearInterval(animationInterval);
+                        animationInterval = null;
                     }
                     
                     const currentOffset = circumference - (currentPercent / 100) * circumference;
@@ -630,8 +633,8 @@
             // -------------------------------------------------------
             // 7. STATISTIKA PANELI
             // -------------------------------------------------------
-            function renderStats(score, total, timeSpent, percent) {
-                const correctPercent = Math.round((score / total) * 100);
+            function renderStats(score, total, timeSpent) {
+                const correctPercent = total > 0 ? Math.round((score / total) * 100) : 0;
                 
                 return `
                     <div class="stats-grid">
@@ -659,20 +662,12 @@
             // -------------------------------------------------------
             function renderFeedback(percent, subject) {
                 const feedback = getSmartFeedback(percent, subject);
-                
-                let bgGradient = '';
-                if (feedback.type === 'expert') {
-                    bgGradient = 'linear-gradient(135deg, #10b981, #059669)';
-                } else if (feedback.type === 'good') {
-                    bgGradient = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
-                } else if (feedback.type === 'average') {
-                    bgGradient = 'linear-gradient(135deg, #f59e0b, #d97706)';
-                } else {
-                    bgGradient = 'linear-gradient(135deg, #ef4444, #dc2626)';
-                }
+                const feedbackClass = feedback.type === 'expert' ? 'feedback-expert' :
+                                     feedback.type === 'good' ? 'feedback-good' :
+                                     feedback.type === 'average' ? 'feedback-average' : 'feedback-poor';
                 
                 return `
-                    <div class="feedback-card animate-fadeInUp" style="animation-delay: 0.4s; background: ${bgGradient};">
+                    <div class="feedback-card ${feedbackClass} animate-fadeInUp" style="animation-delay: 0.4s">
                         <div class="feedback-icon"><i class="fas ${feedback.icon}"></i></div>
                         <div class="feedback-message">${feedback.message}</div>
                         <div class="feedback-advice"><i class="fas fa-lightbulb"></i> ${feedback.advice}</div>
@@ -681,11 +676,12 @@
             }
 
             // -------------------------------------------------------
-            // 9. TAHILIL JADVALI (REVIEW)
+            // 9. TAHILIL JADVALI (REVIEW) — SAVOLLAR RO'YXATI
             // -------------------------------------------------------
-            function renderDetailsTable(subjectName) {
+            function renderDetailsTable(subjectName, userScore, userTotal) {
                 const result = getLatestResultForSubject(subjectName);
                 
+                // Agar localStorage'da batafsil ma'lumot bo'lmasa, faqat umumiy ma'lumot ko'rsatiladi
                 if (!result || !result.details || result.details.length === 0) {
                     return `
                         <div class="details-section">
@@ -694,36 +690,37 @@
                                     <i class="fas fa-chart-simple"></i> Savollar tahlili
                                 </div>
                             </div>
-                            <div style="text-align: center; padding: 40px; background: var(--bg-secondary); border-radius: 16px;">
+                            <div class="empty-state">
                                 <i class="fas fa-info-circle" style="font-size: 48px; margin-bottom: 15px; color: var(--text-secondary);"></i>
                                 <p>Batafsil tahlil uchun test natijasi localStorage'da saqlanmagan.</p>
                                 <p style="font-size: 13px; margin-top: 10px;">Keyingi testlarda batafsil tahlil ko'rsatiladi.</p>
+                                <p style="font-size: 13px; margin-top: 5px;">Sizning natijangiz: ${userScore}/${userTotal}</p>
                             </div>
                         </div>
                     `;
                 }
                 
+                let correctCount = 0;
                 let tableRows = '';
+                
                 result.details.forEach((item, idx) => {
                     const isCorrect = item.isCorrect;
-                    const userAnswer = item.userAnswer || 'Javob berilmadi';
-                    const correctAnswer = item.correctAnswer;
+                    if (isCorrect) correctCount++;
+                    const questionText = item.question || `Savol ${idx + 1}`;
+                    const shortQuestion = questionText.length > 70 ? questionText.substring(0, 70) + '...' : questionText;
                     
                     tableRows += `
                         <tr>
                             <td style="width: 50px; text-align: center;">${idx + 1}</td>
-                            <td>${escapeHtml(item.question.substring(0, 80))}${item.question.length > 80 ? '...' : ''}</td>
-                            <td style="width: 120px;">
+                            <td>${escapeHtml(shortQuestion)}</td>
+                            <td style="width: 100px;">
                                 <span class="status-badge ${isCorrect ? 'status-correct' : 'status-wrong'}">
                                     <i class="fas ${isCorrect ? 'fa-check' : 'fa-times'}"></i>
                                     ${isCorrect ? 'To\'g\'ri' : 'Xato'}
                                 </span>
                             </td>
                             <td style="width: 150px;">
-                                <div class="answer-compare">
-                                    ${!isCorrect ? `<span class="user-wrong">${escapeHtml(userAnswer)}</span><br>` : ''}
-                                    <span class="correct-answer"><i class="fas fa-check-circle"></i> ${escapeHtml(correctAnswer)}</span>
-                                </div>
+                                <span class="correct-answer"><i class="fas fa-check-circle"></i> ${escapeHtml(item.correctAnswer)}</span>
                             </td>
                         </tr>
                     `;
@@ -734,6 +731,10 @@
                         <div class="details-header">
                             <div class="details-title">
                                 <i class="fas fa-chart-simple"></i> Savollar tahlili (${result.details.length} ta savol)
+                                <span style="font-size: 14px; font-weight: normal; margin-left: 10px;">
+                                    <i class="fas fa-check-circle" style="color: var(--success);"></i> ${correctCount} to'g'ri
+                                    <i class="fas fa-times-circle" style="color: var(--danger); margin-left: 8px;"></i> ${result.details.length - correctCount} xato
+                                </span>
                             </div>
                             <button class="toggle-details" id="toggle-details-btn">
                                 <i class="fas fa-chevron-down"></i> Ko'rish
@@ -771,7 +772,14 @@
             // -------------------------------------------------------
             // 10. HARAKAT TUGMALARI
             // -------------------------------------------------------
-            function renderButtons(subjectIndex) {
+            function renderButtons(subjectName) {
+                // Subject indeksini topish (qayta topshirish uchun)
+                let subjectIndex = 0;
+                if (window.QUIZ_DATA) {
+                    const found = window.QUIZ_DATA.findIndex(s => s.subject === subjectName);
+                    if (found !== -1) subjectIndex = found;
+                }
+                
                 return `
                     <div class="btn-group">
                         <button class="btn btn-primary" id="retake-btn">
@@ -785,7 +793,7 @@
             }
 
             // -------------------------------------------------------
-            // 11. DARK MODE
+            // 11. DARK MODE (app.js bilan sinxron)
             // -------------------------------------------------------
             function initDarkMode() {
                 const savedTheme = localStorage.getItem('quiz_theme');
@@ -828,19 +836,12 @@
                 const container = document.getElementById('result-content');
                 if (!container) return;
                 
-                // Subject indeksini topish (qayta topshirish uchun)
-                let subjectIndex = 0;
-                if (window.QUIZ_DATA) {
-                    const found = window.QUIZ_DATA.findIndex(s => s.subject === subject);
-                    if (found !== -1) subjectIndex = found;
-                }
-                
                 container.innerHTML = `
                     ${renderScoreCircle(percent)}
-                    ${renderStats(score, total, time, percent)}
+                    ${renderStats(score, total, time)}
                     ${renderFeedback(percent, subject)}
-                    ${renderDetailsTable(subject)}
-                    ${renderButtons(subjectIndex)}
+                    ${renderDetailsTable(subject, score, total)}
+                    ${renderButtons(subject)}
                 `;
                 
                 // SVG animatsiyasini ishga tushirish
@@ -870,6 +871,11 @@
                 const retakeBtn = document.getElementById('retake-btn');
                 if (retakeBtn) {
                     retakeBtn.addEventListener('click', () => {
+                        let subjectIndex = 0;
+                        if (window.QUIZ_DATA) {
+                            const found = window.QUIZ_DATA.findIndex(s => s.subject === subject);
+                            if (found !== -1) subjectIndex = found;
+                        }
                         window.location.href = `quiz.html?subject=${subjectIndex}`;
                     });
                 }
@@ -881,32 +887,14 @@
             function init() {
                 initDarkMode();
                 
-                // Ma'lumotlar bazasini kutish (agar kerak bo'lsa)
-                if (window.QUIZ_DATA && window.QUIZ_DATA.length > 0) {
-                    renderResultPage();
-                } else {
-                    let attempts = 0;
-                    const checkData = setInterval(() => {
-                        if (window.QUIZ_DATA && window.QUIZ_DATA.length > 0) {
-                            clearInterval(checkData);
-                            renderResultPage();
-                        } else if (attempts >= 30) {
-                            clearInterval(checkData);
-                            const container = document.getElementById('result-content');
-                            if (container) {
-                                container.innerHTML = `
-                                    <div style="text-align: center; padding: 60px 20px;">
-                                        <i class="fas fa-database" style="font-size: 64px; color: var(--danger); margin-bottom: 20px;"></i>
-                                        <h2 style="color: var(--danger);">Ma'lumotlar bazasi topilmadi!</h2>
-                                        <p style="margin-top: 15px;">questions.js fayli mavjudligini tekshiring.</p>
-                                        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">🔄 Qayta yuklash</button>
-                                    </div>
-                                `;
-                            }
-                        }
-                        attempts++;
-                    }, 100);
+                // Agar app.js da QuizApp bo'lsa, undan foydalanish
+                if (window.QuizApp && window.QuizApp.initDarkMode) {
+                    // app.js allaqachon ishlaydi
                 }
+                
+                // Ma'lumotlar bazasini kutmasdan darhol natijalarni ko'rsatish
+                // (chunki result.html uchun QUIZ_DATA shart emas)
+                renderResultPage();
             }
             
             init();
