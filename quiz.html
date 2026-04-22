@@ -1,154 +1,243 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Test — QuizMaster Pro</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/quiz.css" />
-  <style>
-    /* Sahifaga xos qo'shimcha uslublar */
-    .q-dot { 
-        width: 12px; height: 12px; border-radius: 50%; 
-        border: none; background: var(--border-color, #ccc); 
-        cursor: pointer; transition: all 0.3s ease; 
-        padding: 0; margin: 0 4px;
-    }
-    .q-dot.active { transform: scale(1.4); background: var(--accent, #6C63FF) !important; box-shadow: 0 0 10px var(--accent); }
-    .q-dot.answered { background: #10b981; }
-    .q-dot.skipped { background: #f59e0b; }
-    .timer-ring { transition: stroke-dashoffset 0.3s linear, stroke 0.3s ease; }
-    .progress-bar { height: 100%; background: var(--accent, #6C63FF); border-radius: var(--radius-full); transition: width 0.4s ease; }
-    .progress-container { width: 100%; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuizMaster Pro — Intellektual Test Tizimi</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/quiz.css" />
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6C63FF 0%, #5848FF 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            background: #f0f2f5;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+
+        /* Intellektual Animatsiyalar */
+        .question-card {
+            transform-origin: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(108, 99, 255, 0.1);
+        }
+
+        .option-btn {
+            border: 2px solid #edf2f7;
+            background: #fff;
+            padding: 16px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2d3748;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            border-color: #6C63FF;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.15);
+        }
+
+        .option-btn.selected {
+            background: #6C63FF !important;
+            color: #fff !important;
+            border-color: #6C63FF;
+            transform: scale(1.02);
+        }
+
+        /* Progress va Timer vizualizatsiyasi */
+        .timer-ring {
+            stroke-dasharray: 125.66;
+            transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+        }
+
+        .q-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px; /* Professional ko'rinish uchun kvadratga yaqin */
+            background: #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .q-dot.active {
+            width: 30px;
+            background: #6C63FF;
+            border-radius: 10px;
+        }
+
+        .pulse-warning {
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); color: #e53e3e; }
+            100% { transform: scale(1); }
+        }
+    </style>
 </head>
 <body class="quiz-body-context">
 
-  <nav class="navbar" role="navigation">
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0;">
-      <a href="index.html" class="navbar-brand" aria-label="Bosh sahifaga qaytish">
-        <div class="brand-icon" style="background: #6C63FF; color: white; padding: 5px 12px; border-radius: 8px;">Q</div>
-        <span style="font-weight: bold; margin-left: 10px;">QuizMaster <span class="text-accent" style="color:#6C63FF">Pro</span></span>
-      </a>
-      <div class="navbar-actions" style="display: flex; gap: 15px; align-items: center;">
-        <button class="theme-toggle" id="theme-btn" style="background:none; border:1px solid #ccc; border-radius: 50%; cursor:pointer; padding: 5px 8px;">🌙</button>
-        <button class="btn btn-ghost btn-sm" id="btn-quit" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-          ✕ To'xtatish
-        </button>
-      </div>
-    </div>
-  </nav>
-
-  <main class="quiz-page" id="quiz-container" role="main">
-    <div class="container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
-
-      <div class="quiz-topbar animate-fadeInUp" style="display: grid; grid-template-columns: auto 1fr auto; gap: 25px; align-items: center; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;">
-        
-        <div class="quiz-subject-pill" style="background: rgba(108, 99, 255, 0.1); padding: 8px 16px; border-radius: 20px;">
-          <span id="quiz-subject-name" class="quiz-subject-text" style="color: #6C63FF; font-weight: 700;">Yuklanmoqda...</span>
+    <nav class="navbar">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0;">
+            <a href="index.html" class="navbar-brand">
+                <div class="brand-icon" style="background: var(--primary-gradient); color: white; padding: 8px 14px; border-radius: 10px; font-weight: 800;">Q</div>
+                <span style="font-weight: 700; margin-left: 12px; font-size: 1.4rem; letter-spacing: -0.5px;">QuizMaster <span style="color:#6C63FF">Pro</span></span>
+            </a>
+            <div class="navbar-actions" style="display: flex; gap: 15px; align-items: center;">
+                <button class="theme-toggle" id="theme-btn" style="border: none; background: #fff; border-radius: 12px; cursor:pointer; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">🌙</button>
+                <button class="btn-quit" id="btn-quit" style="background: #fff5f5; color: #f56565; border: 1px solid #feb2b2; padding: 10px 18px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.2s;">
+                    ✕ To'xtatish
+                </button>
+            </div>
         </div>
+    </nav>
 
-        <div class="quiz-progress-block" role="progressbar">
-          <div class="progress-meta flex-between" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <span id="quiz-progress-text" style="font-size: 0.8rem; color: #64748b;">0% bajarildi</span>
-            <span id="quiz-question-counter" class="quiz-counter" style="font-weight: bold; font-size: 0.9rem;">1 / 20</span>
-          </div>
-          <div class="progress-container">
-            <div class="progress-bar" id="quiz-progress-bar" style="width:0%"></div>
-          </div>
+    <main class="quiz-page" id="quiz-container">
+        <div class="container" style="max-width: 850px; margin: 40px auto; padding: 0 20px;">
+
+            <div class="quiz-topbar animate-fadeInUp" style="display: grid; grid-template-columns: auto 1fr auto; gap: 30px; align-items: center; background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); margin-bottom: 30px;">
+                
+                <div class="quiz-subject-pill" style="background: #f3f0ff; padding: 10px 20px; border-radius: 14px;">
+                    <span id="quiz-subject-name" style="color: #6C63FF; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Yuklanmoqda...</span>
+                </div>
+
+                <div class="quiz-progress-block">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span id="quiz-progress-text" style="font-size: 0.85rem; font-weight: 600; color: #718096;">0% bajarildi</span>
+                        <span id="quiz-question-counter" style="font-weight: 700; font-size: 0.9rem; color: #2d3748;">1 / 20</span>
+                    </div>
+                    <div class="progress-container" style="height: 10px; background: #edf2f7; border-radius: 20px;">
+                        <div class="progress-bar" id="quiz-progress-bar" style="width:0%; height:100%; border-radius:20px; background: var(--primary-gradient);"></div>
+                    </div>
+                </div>
+
+                <div class="timer-block" style="position: relative; width: 65px; height: 65px;">
+                    <svg viewBox="0 0 52 52" style="transform: rotate(-90deg); width: 100%; height: 100%;">
+                        <circle cx="26" cy="26" r="20" stroke="#edf2f7" stroke-width="4" fill="none"/>
+                        <circle class="timer-ring" id="timer-ring" cx="26" cy="26" r="20" stroke="#6C63FF" stroke-width="4" fill="none" />
+                    </svg>
+                    <span id="quiz-timer" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 800; font-size: 0.9rem;">00:30</span>
+                </div>
+            </div>
+
+            <article class="question-card animate-fadeInUp" id="question-card" style="padding: 50px; border-radius: 28px; margin-bottom: 25px; position: relative;">
+                <div id="question-badge" style="position: absolute; top: -18px; left: 40px; background: #2d3748; color: white; padding: 6px 20px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">SAVOL: 1</div>
+                <p id="quiz-question-text" style="font-size: 1.5rem; font-weight: 700; line-height: 1.4; color: #1a202c; text-align: center;">Savol yuklanmoqda...</p>
+            </article>
+
+            <div class="options-grid" id="quiz-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 40px;">
+                </div>
+
+            <div class="quiz-bottom-bar" style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
+                <div id="question-dots" style="display: flex; gap: 8px; align-items: center;"></div>
+                <button class="btn-next" id="btn-next" disabled style="background: #6C63FF; color: white; border: none; padding: 14px 35px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);">
+                    Keyingisi →
+                </button>
+            </div>
         </div>
+    </main>
 
-        <div class="timer-block" style="position: relative; width: 60px; height: 60px;">
-          <svg class="timer-svg" viewBox="0 0 52 52" style="transform: rotate(-90deg); width: 100%; height: 100%;">
-            <circle class="timer-track" cx="26" cy="26" r="20" stroke="#e2e8f0" stroke-width="4" fill="none"/>
-            <circle class="timer-ring" id="timer-ring" cx="26" cy="26" r="20" stroke="#6C63FF" stroke-width="4" fill="none"
-              style="stroke-dasharray: 125.66; stroke-dashoffset: 0;"
-            />
-          </svg>
-          <span class="timer-text" id="quiz-timer" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 800; font-size: 0.8rem;">00:30</span>
-        </div>
-      </div>
+    <script src="data/questions.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/quiz.js"></script>
+    
+    <script>
+        // Professional UI Manager
+        const UIManager = {
+            init() {
+                this.bindEvents();
+                this.startUpdateLoop();
+            },
 
-      <article class="question-card card animate-fadeInUp" id="question-card" style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 20px; position: relative;">
-        <div class="question-number-badge" id="question-badge" style="position: absolute; top: -15px; left: 30px; background: #6C63FF; color: white; padding: 5px 15px; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 10px rgba(108,99,255,0.3);">S–1</div>
-        <p class="question-text" id="quiz-question-text" style="font-size: 1.3rem; font-weight: 600; line-height: 1.5; color: #1e293b;">Savol yuklanmoqda...</p>
-      </article>
+            bindEvents() {
+                document.getElementById('theme-btn').addEventListener('click', () => {
+                    if (window.QuizApp) QuizApp.toggleTheme();
+                });
 
-      <div class="options-grid" id="quiz-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px;">
-        </div>
+                document.getElementById('btn-quit').addEventListener('click', () => {
+                    if (confirm("Diqqat! Testni to'xtatsangiz, barcha natijalaringiz o'chib ketadi. Rozimisiz?")) {
+                        window.location.href = 'index.html';
+                    }
+                });
+            },
 
-      <div class="quiz-bottom-bar animate-fadeInUp" style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-        <div class="question-dots" id="question-dots" style="display: flex; gap: 5px;">
-          </div>
-        <button class="btn btn-primary btn-lg" id="btn-next" disabled style="background: #6C63FF; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;">
-          Keyingisi →
-        </button>
-      </div>
+            startUpdateLoop() {
+                setInterval(() => this.syncState(), 100);
+            },
 
-    </div>
-  </main>
+            syncState() {
+                if (!window.QuizEngine || !QuizEngine.QuizState) return;
+                
+                const state = QuizEngine.QuizState;
+                const total = state.questions.length;
+                const current = state.currentIndex;
 
-  <script src="data/questions.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/quiz.js"></script>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. Mavzuni boshqarish
-      const themeBtn = document.getElementById('theme-btn');
-      themeBtn.addEventListener('click', () => {
-        if (window.QuizApp) window.QuizApp.toggleTheme();
-      });
+                // 1. Text & Progress Updates
+                document.getElementById('quiz-subject-name').textContent = state.subjectName || "Test";
+                document.getElementById('question-badge').textContent = `SAVOL: ${current + 1}`;
+                document.getElementById('quiz-question-counter').textContent = `${current + 1} / ${total}`;
+                
+                const pct = Math.round((current / total) * 100);
+                document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+                document.getElementById('quiz-progress-text').textContent = `${pct}% bajarildi`;
 
-      // 2. Testdan chiqishni tasdiqlash
-      const quitBtn = document.getElementById('btn-quit');
-      quitBtn.addEventListener('click', () => {
-        if (confirm("Haqiqatdan ham testni to'xtatmoqchimisiz? Natijalar saqlanmaydi.")) {
-          window.location.href = 'index.html';
-        }
-      });
+                // 2. Timer Logic
+                const timerText = document.getElementById('quiz-timer');
+                if (state.timeLeft <= 5) {
+                    timerText.classList.add('pulse-warning');
+                } else {
+                    timerText.classList.remove('pulse-warning');
+                }
 
-      // 3. Davomiy yangilanishlar (Badge, Dots, Progress)
-      const updateUI = () => {
-        if (!window.QuizEngine || !QuizEngine.QuizState) return;
-        
-        const state = QuizEngine.QuizState;
-        const total = state.questions.length;
-        const current = state.currentIndex;
+                // 3. Dots Navigation
+                this.renderDots(total, current, state.answers);
+            },
 
-        // Badge va Counter
-        document.getElementById('question-badge').textContent = `S–${current + 1}`;
-        document.getElementById('quiz-question-counter').textContent = `${current + 1} / ${total}`;
-        
-        // Progress Bar
-        const percent = Math.round(((current) / total) * 100);
-        document.getElementById('quiz-progress-bar').style.width = `${percent}%`;
-        document.getElementById('quiz-progress-text').textContent = `${percent}% bajarildi`;
+            renderDots(total, current, answers) {
+                const container = document.getElementById('question-dots');
+                if (container.children.length !== total) {
+                    container.innerHTML = '';
+                    for (let i = 0; i < total; i++) {
+                        const dot = document.createElement('div');
+                        dot.className = 'q-dot';
+                        container.appendChild(dot);
+                    }
+                }
 
-        // Dots (Nuqtalar) navigatsiyasi
-        const dotsContainer = document.getElementById('question-dots');
-        if (dotsContainer.children.length !== total) {
-          dotsContainer.innerHTML = '';
-          for (let i = 0; i < total; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'q-dot';
-            dotsContainer.appendChild(dot);
-          }
-        }
+                Array.from(container.children).forEach((dot, i) => {
+                    dot.classList.toggle('active', i === current);
+                    dot.classList.toggle('answered', answers[i] !== undefined && answers[i] !== null);
+                });
+            }
+        };
 
-        Array.from(dotsContainer.children).forEach((dot, i) => {
-          dot.classList.toggle('active', i === current);
-          dot.classList.toggle('answered', state.answers[i] !== undefined && state.answers[i] !== null);
-          dot.classList.toggle('skipped', state.answers[i] === null);
+        document.addEventListener('DOMContentLoaded', () => {
+            UIManager.init();
+            
+            // Professional kirish effekti
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.5s ease';
+                document.body.style.opacity = '1';
+            }, 100);
         });
-      };
 
-      // UI ni yangilab turish
-      setInterval(updateUI, 200);
-
-      // Sahifani tark etishda ogohlantirish (Refresh yoki Yopishda)
-      window.onbeforeunload = () => "Test jarayoni ketmoqda. Chiqib ketsangiz natijalar yo'qoladi.";
-    });
-  </script>
+        window.onbeforeunload = (e) => {
+            if (window.QuizEngine && !QuizEngine.QuizState.isFinished) {
+                return "Test hali yakunlanmadi. Chiqishni istaysizmi?";
+            }
+        };
+    </script>
 </body>
 </html>
