@@ -1,196 +1,476 @@
-window.QUIZ_DATA = {
-    matematika: {
-        title: "Matematika",
-        description: "Logarifm, hosila, integral, stereometriya",
-        questions: [
-            {
-                text: "log₂(8) ning qiymati nechaga teng?",
-                options: ["2", "3", "4", "5"],
-                correct: 1,
-                explanation: "2³ = 8, shuning uchun log₂(8) = 3"
-            },
-            {
-                text: "f(x) = x² funksiyaning hosilasi qaysi?",
-                options: ["2x", "x²", "2", "x"],
-                correct: 0,
-                explanation: "xⁿ hosilasi n·xⁿ⁻¹, shuning uchun x² hosilasi 2x"
-            },
-            {
-                text: "∫ 2x dx integralning qiymati?",
-                options: ["x² + C", "2x² + C", "x²", "2x + C"],
-                correct: 0,
-                explanation: "∫ 2x dx = 2·(x²/2) + C = x² + C"
-            },
-            {
-                text: "Kubning hajmi 27 sm³ bo'lsa, uning qirrasi uzunligi?",
-                options: ["2 sm", "3 sm", "4 sm", "5 sm"],
-                correct: 1,
-                explanation: "V = a³, a³ = 27 => a = 3 sm"
-            },
-            {
-                text: "log₅(125) hisoblang",
-                options: ["2", "3", "4", "5"],
-                correct: 1,
-                explanation: "5³ = 125, log₅(125) = 3"
-            },
-            {
-                text: "f(x) = 3x⁴ funksiyaning hosilasi?",
-                options: ["12x³", "4x³", "3x³", "12x⁴"],
-                correct: 0,
-                explanation: "3·4x³ = 12x³"
-            },
-            {
-                text: "∫ (2x + 3) dx integralni hisoblang",
-                options: ["x² + 3x + C", "2x² + 3x + C", "x² + 3", "x² + C"],
-                correct: 0,
-                explanation: "∫2x dx = x², ∫3 dx = 3x, jami x² + 3x + C"
-            },
-            {
-                text: "To'g'ri burchakli parallelepipedning o'lchamlari 2,3,4 bo'lsa, uning to'liq sirti?",
-                options: ["52", "48", "56", "60"],
-                correct: 0,
-                explanation: "S = 2(ab+ac+bc) = 2(6+8+12)=2·26=52"
-            },
-            {
-                text: "ln(e³) ning qiymati?",
-                options: ["1", "2", "3", "e"],
-                correct: 2,
-                explanation: "ln(e³) = 3·ln(e) = 3·1 = 3"
-            },
-            {
-                text: "f(x) = sin(x) funksiyaning hosilasi?",
-                options: ["cos(x)", "-cos(x)", "sin(x)", "-sin(x)"],
-                correct: 0,
-                explanation: "sin(x) ning hosilasi cos(x)"
-            },
-            {
-                text: "∫ cos(x) dx integralni hisoblang",
-                options: ["sin(x) + C", "-sin(x) + C", "cos(x) + C", "-cos(x) + C"],
-                correct: 0,
-                explanation: "cos(x) ning integrali sin(x) + C"
-            },
-            {
-                text: "Sfera radiusi 3 sm bo'lsa, uning hajmi?",
-                options: ["36π", "27π", "32π", "30π"],
-                correct: 0,
-                explanation: "V = (4/3)πR³ = (4/3)π·27 = 36π"
-            },
-            {
-                text: "log₃(1/9) hisoblang",
-                options: ["-2", "2", "-1", "1"],
-                correct: 0,
-                explanation: "3⁻² = 1/9, log₃(1/9) = -2"
-            },
-            {
-                text: "f(x) = eˣ funksiyaning hosilasi?",
-                options: ["eˣ", "x·eˣ", "eˣ⁻¹", "ln(x)"],
-                correct: 0,
-                explanation: "eˣ ning hosilasi o'ziga teng: eˣ"
-            },
-            {
-                text: "∫ (1/x) dx integralni hisoblang (x>0)",
-                options: ["ln|x| + C", "1/x² + C", "x·ln(x) + C", "eˣ + C"],
-                correct: 0,
-                explanation: "∫ (1/x) dx = ln|x| + C"
-            },
-            {
-                text: "Konusning asos radiusi 3 sm, balandligi 4 sm bo'lsa, hajmi?",
-                options: ["12π", "36π", "24π", "18π"],
-                correct: 0,
-                explanation: "V = (1/3)πR²h = (1/3)π·9·4 = 12π"
-            },
-            {
-                text: "log₁₀(1000) nechaga teng?",
-                options: ["2", "3", "4", "10"],
-                correct: 1,
-                explanation: "10³ = 1000, shuning uchun log₁₀(1000) = 3"
-            },
-            {
-                text: "f(x) = ln(x) funksiyaning hosilasi?",
-                options: ["1/x", "x", "1", "ln(x)"],
-                correct: 0,
-                explanation: "ln(x) ning hosilasi 1/x"
-            },
-            {
-                text: "∫ eˣ dx integralni hisoblang",
-                options: ["eˣ + C", "eˣ⁻¹ + C", "x·eˣ + C", "ln(eˣ) + C"],
-                correct: 0,
-                explanation: "eˣ ning integrali o'ziga teng: eˣ + C"
-            },
-            {
-                text: "Piramida asosi 6 sm, balandligi 10 sm bo'lsa, hajmi?",
-                options: ["20 sm³", "60 sm³", "30 sm³", "120 sm³"],
-                correct: 0,
-                explanation: "V = (1/3)·asos·balandlik = (1/3)·6·10 = 20 sm³"
-            }
-        ]
-    },
-    fizika: {
-        title: "Fizika",
-        description: "Magnetizm, elektrodinamika, optika",
-        questions: [
-            {
-                text: "Magnit maydonining birligi qaysi?",
-                options: ["Tesla", "Nyuton", "Joul", "Vatt"],
-                correct: 0,
-                explanation: "Magnit maydon induksiyasi Teslada o'lchanadi"
-            },
-            {
-                text: "Om qonuni qaysi formulada ifodalanadi?",
-                options: ["I = U/R", "U = I·R", "R = U/I", "Hammasi to'g'ri"],
-                correct: 3,
-                explanation: "Om qonunining barcha ko'rinishlari to'g'ri"
-            },
-            {
-                text: "Yorug'likning vakuumdagi tezligi qancha?",
-                options: ["3·10⁸ m/s", "3·10⁵ m/s", "3·10⁶ m/s", "3·10⁷ m/s"],
-                correct: 0,
-                explanation: "Yorug'lik tezligi vakuumda 300 000 km/s = 3·10⁸ m/s"
-            },
-            {
-                text: "Lenz qoidasi nimani ifodalaydi?",
-                options: ["Induksiya toki yo'nalishini", "Kuchlanishni", "Qarshilikni", "Quvvatni"],
-                correct: 0,
-                explanation: "Lenz qoidasi induksiya tokining yo'nalishini belgilaydi"
-            },
-            {
-                text: "Kondensatorning sig'imi qaysi birlikda o'lchanadi?",
-                options: ["Farad", "Om", "Genri", "Tesla"],
-                correct: 0,
-                explanation: "Sig'im Farad (F) da o'lchanadi"
-            },
-            {
-                text: "Sindirish ko'rsatkichi n = c/v formulada c nimani anglatadi?",
-                options: ["Yorug'lik vakuumdagi tezligi", "Yorug'lik muhitdagi tezligi", "Tovush tezligi", "Elektron tezligi"],
-                correct: 0,
-                explanation: "c - yorug'likning vakuumdagi tezligi"
-            },
-            {
-                text: "Ampir kuchi qaysi qonun bilan ifodalanadi?",
-                options: ["F = B·I·L·sinα", "F = m·a", "F = k·x", "F = G·m₁m₂/r²"],
-                correct: 0,
-                explanation: "Ampir kuchi F = B·I·L·sinα formula bilan hisoblanadi"
-            },
-            {
-                text: "Elektrodinamika nimani o'rganadi?",
-                options: ["Harakatlanuvchi zaryadlarni", "Tinch zaryadlarni", "Magnitlarni", "Issiqlikni"],
-                correct: 0,
-                explanation: "Elektrodinamika harakatlanuvchi elektr zaryadlarini o'rganadi"
-            },
-            {
-                text: "Linzaning optik kuchi birligi?",
-                options: ["Dioptriya", "Metr", "Santimetr", "Lyuks"],
-                correct: 0,
-                explanation: "Optik kuch dioptriyada (D) o'lchanadi"
-            },
-            {
-                text: "Transformator qanday prinsip asosida ishlaydi?",
-                options: ["Elektromagnit induksiya", "Magnitlanish", "Qizish", "Ionlanish"],
-                correct: 0,
-                explanation: "Transformator elektromagnit induksiya asosida ishlaydi"
-            },
-            {
-                text: "To'liq zanjir uchun Om qonuni formulasi?",
-                options: ["I = E/(R+r)", "I = U/R", "U = I·R", "P = I·U"],
-                correct: 0,
-                explanation
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuizArena — Bilim Platformasi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #263347;
+      --border: #2d3f5a;
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --accent3: #34d399;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --danger: #f87171;
+      --glow: rgba(56, 189, 248, 0.15);
+    }
+
+    html, body {
+      height: 100%;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    body {
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56,189,248,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(129,140,248,0.06) 0%, transparent 60%);
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(56,189,248,0.08);
+      animation: modalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.88) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .modal h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .modal p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    .modal input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 1rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 16px;
+    }
+
+    .modal input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+    }
+
+    .modal input::placeholder {
+      color: var(--muted);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0f172a;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 48px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .greeting-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      color: var(--text);
+    }
+
+    .greeting-badge .avatar {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: #0f172a;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 48px 80px;
+    }
+
+    .hero {
+      padding: 64px 0 48px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .hero h1 .highlight {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin: 40px 0;
+      flex-wrap: wrap;
+    }
+
+    .stat-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 24px;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .stat-chip .num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--accent);
+      display: block;
+    }
+
+    .stat-chip .label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .last-visit-bar {
+      background: linear-gradient(135deg, rgba(56,189,248,0.06), rgba(129,140,248,0.06));
+      border: 1px solid rgba(56,189,248,0.12);
+      border-radius: 14px;
+      padding: 16px 24px;
+      margin-bottom: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .last-visit-bar .icon {
+      font-size: 1.1rem;
+    }
+
+    .last-visit-bar strong {
+      color: var(--accent);
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--text);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .subject-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .subject-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--glow);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .subject-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent);
+      box-shadow: 0 12px 40px rgba(56,189,248,0.12);
+    }
+
+    .subject-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-icon {
+      font-size: 2.2rem;
+      margin-bottom: 18px;
+      display: block;
+    }
+
+    .card-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .card-meta .dot {
+      width: 4px;
+      height: 4px;
+      background: var(--muted);
+      border-radius: 50%;
+    }
+
+    .card-badge {
+      margin-top: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.18);
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    .card-arrow {
+      position: absolute;
+      top: 28px;
+      right: 28px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      color: var(--muted);
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+    }
+
+    .subject-card:hover .card-arrow {
+      background: var(--accent);
+      color: #0f172a;
+      transform: rotate(45deg);
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 20px 24px; }
+      main { padding: 0 24px 60px; }
+      .hero { padding: 40px 0 32px; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="overlay" id="nameOverlay">
+    <div class="modal">
+      <div class="modal-icon">👋</div>
+      <h2>Xush kelibsiz!</h2>
+      <p>Boshlash uchun ismingizni kiriting</p>
+      <input type="text" id="nameInput" placeholder="Ismingiz..." maxlength="30" autocomplete="off" />
+      <button class="btn-primary" id="nameSubmit">Davom etish →</button>
+    </div>
+  </div>
+
+  <header>
+    <a class="logo" href="index.html">Quiz<span>Arena</span></a>
+    <div class="header-right">
+      <div class="greeting-badge" id="greetingBadge" style="display:none;">
+        <div class="avatar" id="avatarInitial"></div>
+        <span id="greetingText"></span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="hero-eyebrow">🎯 Bilimingizni Sinab Ko'ring</div>
+      <h1>Interaktiv <span class="highlight">Quiz Platformasi</span></h1>
+      <p>O'zingizni sinovdan o'tkazing va har kuni yangi bilimlar kashf eting</p>
+    </div>
+
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="last-visit-bar" id="lastVisitBar" style="display:none;">
+      <span class="icon">🕐</span>
+      <span id="lastVisitText"></span>
+    </div>
+
+    <div class="section-title">Mavzular</div>
+    <div class="cards-grid" id="cardsGrid"></div>
+  </main>
+
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
