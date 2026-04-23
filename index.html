@@ -3,209 +3,474 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QuizMaster Pro — Online Test Platformasi</title>
-  <meta name="description" content="Matematika, Fizika, Ingliz tili, Dasturlash va Tarix bo'yicha professional online testlar" />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/index.css" />
+  <title>QuizArena — Bilim Platformasi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #263347;
+      --border: #2d3f5a;
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --accent3: #34d399;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --danger: #f87171;
+      --glow: rgba(56, 189, 248, 0.15);
+    }
+
+    html, body {
+      height: 100%;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    body {
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56,189,248,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(129,140,248,0.06) 0%, transparent 60%);
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(56,189,248,0.08);
+      animation: modalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.88) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .modal h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .modal p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    .modal input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 1rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 16px;
+    }
+
+    .modal input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+    }
+
+    .modal input::placeholder {
+      color: var(--muted);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0f172a;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 48px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .greeting-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      color: var(--text);
+    }
+
+    .greeting-badge .avatar {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: #0f172a;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 48px 80px;
+    }
+
+    .hero {
+      padding: 64px 0 48px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .hero h1 .highlight {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin: 40px 0;
+      flex-wrap: wrap;
+    }
+
+    .stat-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 24px;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .stat-chip .num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--accent);
+      display: block;
+    }
+
+    .stat-chip .label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .last-visit-bar {
+      background: linear-gradient(135deg, rgba(56,189,248,0.06), rgba(129,140,248,0.06));
+      border: 1px solid rgba(56,189,248,0.12);
+      border-radius: 14px;
+      padding: 16px 24px;
+      margin-bottom: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .last-visit-bar .icon {
+      font-size: 1.1rem;
+    }
+
+    .last-visit-bar strong {
+      color: var(--accent);
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--text);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .subject-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .subject-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--glow);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .subject-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent);
+      box-shadow: 0 12px 40px rgba(56,189,248,0.12);
+    }
+
+    .subject-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-icon {
+      font-size: 2.2rem;
+      margin-bottom: 18px;
+      display: block;
+    }
+
+    .card-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .card-meta .dot {
+      width: 4px;
+      height: 4px;
+      background: var(--muted);
+      border-radius: 50%;
+    }
+
+    .card-badge {
+      margin-top: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.18);
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    .card-arrow {
+      position: absolute;
+      top: 28px;
+      right: 28px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      color: var(--muted);
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+    }
+
+    .subject-card:hover .card-arrow {
+      background: var(--accent);
+      color: #0f172a;
+      transform: rotate(45deg);
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 20px 24px; }
+      main { padding: 0 24px 60px; }
+      .hero { padding: 40px 0 32px; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- ===== NAVBAR ===== -->
-  <nav class="navbar" role="navigation" aria-label="Asosiy navigatsiya">
-    <div class="container">
-      <a href="index.html" class="navbar-brand" aria-label="QuizMaster Pro - Bosh sahifa">
-        <div class="brand-icon" aria-hidden="true">Q</div>
-        <span>QuizMaster <span class="text-accent">Pro</span></span>
-      </a>
-      <div class="navbar-actions">
-        <button class="theme-toggle" aria-label="Mavzuni almashtirish">🌙</button>
+  <div class="overlay" id="nameOverlay">
+    <div class="modal">
+      <div class="modal-icon">👋</div>
+      <h2>Xush kelibsiz!</h2>
+      <p>Boshlash uchun ismingizni kiriting</p>
+      <input type="text" id="nameInput" placeholder="Ismingiz..." maxlength="30" autocomplete="off" />
+      <button class="btn-primary" id="nameSubmit">Davom etish →</button>
+    </div>
+  </div>
+
+  <header>
+    <a class="logo" href="index.html">Quiz<span>Arena</span></a>
+    <div class="header-right">
+      <div class="greeting-badge" id="greetingBadge" style="display:none;">
+        <div class="avatar" id="avatarInitial"></div>
+        <span id="greetingText"></span>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- ===== HERO SECTION ===== -->
-  <section class="hero-section" aria-labelledby="hero-title">
-    <div class="container">
-      <div class="hero-content">
-        <div class="hero-badge animate-fadeInUp">
-          <span class="badge badge-accent">🎯 5 ta fan · 100 ta savol</span>
-        </div>
-        <h1 id="hero-title" class="hero-title animate-fadeInUp stagger-1">
-          Bilimingizni <br />
-          <span class="gradient-text">sinab ko'ring!</span>
-        </h1>
-        <p class="hero-desc animate-fadeInUp stagger-2">
-          Professional darajadagi testlar orqali o'z bilimingizni baholang.
-          Har bir test 20 ta savol va 10 daqiqa vaqtdan iborat.
-        </p>
-        <div class="hero-stats animate-fadeInUp stagger-3">
-          <div class="stat-item">
-            <span class="stat-number" id="stat-tests-taken">0</span>
-            <span class="stat-label">O'tilgan testlar</span>
-          </div>
-          <div class="stat-divider" aria-hidden="true"></div>
-          <div class="stat-item">
-            <span class="stat-number">5</span>
-            <span class="stat-label">Fan bo'limlari</span>
-          </div>
-          <div class="stat-divider" aria-hidden="true"></div>
-          <div class="stat-item">
-            <span class="stat-number">100</span>
-            <span class="stat-label">Jami savollar</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Dekorativ element -->
-      <div class="hero-decoration" aria-hidden="true">
-        <div class="deco-circle deco-1"></div>
-        <div class="deco-circle deco-2"></div>
-        <div class="deco-circle deco-3"></div>
-        <div class="floating-icons">
-          <span class="float-icon" style="--delay:0s">∑</span>
-          <span class="float-icon" style="--delay:0.8s">⚡</span>
-          <span class="float-icon" style="--delay:1.6s">🔤</span>
-          <span class="float-icon" style="--delay:2.4s">&lt;/&gt;</span>
-          <span class="float-icon" style="--delay:3.2s">🏛</span>
-        </div>
-      </div>
+  <main>
+    <div class="hero">
+      <div class="hero-eyebrow">🎯 Bilimingizni Sinab Ko'ring</div>
+      <h1>Interaktiv <span class="highlight">Quiz Platformasi</span></h1>
+      <p>O'zingizni sinovdan o'tkazing va har kuni yangi bilimlar kashf eting</p>
     </div>
-  </section>
 
-  <!-- ===== SUBJECT CARDS ===== -->
-  <main class="subjects-section" aria-labelledby="subjects-title">
-    <div class="container">
-      <div class="section-header text-center animate-fadeInUp">
-        <h2 id="subjects-title" class="section-title">Fan tanlang</h2>
-        <p class="section-desc">Quyidagi fanlardan birini tanlab, testni boshlang</p>
-      </div>
+    <div class="stats-row" id="statsRow"></div>
 
-      <!-- Fanlar grid -->
-      <div class="subjects-grid" id="subjects-grid" role="list">
-        <!-- JavaScript orqali to'ldiriladi -->
-      </div>
+    <div class="last-visit-bar" id="lastVisitBar" style="display:none;">
+      <span class="icon">🕐</span>
+      <span id="lastVisitText"></span>
     </div>
+
+    <div class="section-title">Mavzular</div>
+    <div class="cards-grid" id="cardsGrid"></div>
   </main>
 
-  <!-- ===== FEATURES SECTION ===== -->
-  <section class="features-section" aria-labelledby="features-title">
-    <div class="container">
-      <h2 id="features-title" class="section-title text-center animate-fadeInUp">
-        Nima uchun QuizMaster Pro?
-      </h2>
-      <div class="features-grid">
-        <div class="feature-card animate-fadeInUp stagger-1">
-          <div class="feature-icon">⚡</div>
-          <h3>Tezkor va zamonaviy</h3>
-          <p>Har bir savol 30 soniyada javob berishingiz kerak. Bu bilimingizni real sinaydi.</p>
-        </div>
-        <div class="feature-card animate-fadeInUp stagger-2">
-          <div class="feature-icon">🎲</div>
-          <h3>Tasodifiy savollar</h3>
-          <p>Har safar testni boshlaganingizda savollar va variantlar aralashtiriladi.</p>
-        </div>
-        <div class="feature-card animate-fadeInUp stagger-3">
-          <div class="feature-icon">📊</div>
-          <h3>Batafsil natija</h3>
-          <p>Test yakunida foiz, baho va har bir savolning to'g'ri javobini ko'rasiz.</p>
-        </div>
-        <div class="feature-card animate-fadeInUp stagger-4">
-          <div class="feature-icon">🌙</div>
-          <h3>Dark/Light rejim</h3>
-          <p>Ko'zingizni qoʻriqlash uchun tungi rejim mavjud. Istalgan vaqt almashtirishingiz mumkin.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== FOOTER ===== -->
-  <footer class="footer" role="contentinfo">
-    <div class="container">
-      <div class="footer-inner">
-        <span class="footer-brand">QuizMaster <span class="text-accent">Pro</span></span>
-        <p class="footer-text">Professional online test platformasi &copy; 2025</p>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ===== SCRIPTS ===== -->
-  <script src="data/questions.js"></script>
-  <script src="js/app.js"></script>
-  <script>
-    // -------------------------------------------------------
-    // Bosh sahifa logikasi — Fan kartochkalarini yaratish
-    // -------------------------------------------------------
-    document.addEventListener('DOMContentLoaded', () => {
-      const grid = document.getElementById('subjects-grid');
-      if (!grid || !window.QUIZ_DATA) return;
-
-      // O'tilgan testlar sonini ko'rsatish
-      const results = QuizApp.getAllResults();
-      const statEl = document.getElementById('stat-tests-taken');
-      if (statEl) statEl.textContent = results.length;
-
-      // Har bir fan uchun karta yaratish
-      window.QUIZ_DATA.forEach((subject, idx) => {
-        // Bu fan uchun eng yaxshi natijani topish
-        const subjectResults = results.filter(r => r.subjectIndex === idx);
-        const bestResult = subjectResults.length > 0
-          ? Math.max(...subjectResults.map(r => r.percent))
-          : null;
-
-        const card = document.createElement('article');
-        card.className = `subject-card animate-fadeInUp stagger-${(idx % 5) + 1}`;
-        card.setAttribute('role', 'listitem');
-        card.style.setProperty('--card-color', subject.color);
-        card.style.setProperty('--card-gradient', subject.gradient);
-
-        card.innerHTML = `
-          <div class="subject-card-bg" aria-hidden="true"></div>
-          <div class="subject-card-content">
-            <div class="subject-icon-wrapper">
-              <span class="subject-icon" aria-hidden="true">${subject.icon}</span>
-            </div>
-            <div class="subject-info">
-              <h3 class="subject-name">${subject.subject}</h3>
-              <p class="subject-meta">20 ta savol · 10 daqiqa</p>
-              ${bestResult !== null
-                ? `<div class="subject-best">
-                    <span class="best-label">Eng yaxshi:</span>
-                    <span class="best-score" style="color: ${subject.color}">${bestResult}%</span>
-                   </div>`
-                : `<p class="subject-new-badge">Yangi</p>`
-              }
-            </div>
-            <div class="subject-arrow" aria-hidden="true">→</div>
-          </div>
-          <div class="subject-card-footer">
-            <button
-              class="btn btn-start"
-              onclick="startSubject(${idx})"
-              aria-label="${subject.subject} testini boshlash"
-            >
-              Testni boshlash
-            </button>
-          </div>
-        `;
-
-        // Kartaga bosilganda ham testni boshlash
-        card.addEventListener('click', (e) => {
-          if (!e.target.closest('.btn-start')) {
-            startSubject(idx);
-          }
-        });
-
-        grid.appendChild(card);
-      });
-    });
-
-    /**
-     * Tanlangan fan testiga o'tish.
-     * @param {number} idx
-     */
-    function startSubject(idx) {
-      window.location.href = `quiz.html?subject=${idx}`;
-    }
-  </script>
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
