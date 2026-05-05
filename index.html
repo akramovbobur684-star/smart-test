@@ -1,383 +1,74 @@
-// words.js - Word Search o'yini uchun so'zlar bazasi
-// 400+ so'z, 4-10 harf, lotin yozuvida
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="Word Search - O'zbek tilidagi so'z topish o'yini">
+    <title>Word Search | O'zbekiston bo'ylab sayohat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Slider -->
+    <div class="bg-slider">
+        <div class="bg-slide active" style="background-image: url('https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=1920&q=80')"></div>
+        <div class="bg-slide" style="background-image: url('https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=1920&q=80')"></div>
+        <div class="bg-slide" style="background-image: url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=1920&q=80')"></div>
+        <div class="bg-slide" style="background-image: url('https://images.unsplash.com/photo-1534751516642-3b6a4f4f8ab6?w=1920&q=80')"></div>
+        <div class="bg-slide" style="background-image: url('https://images.unsplash.com/photo-1534751516642-3b6a4f4f8ab6?w=1920&q=80')"></div>
+        <div class="overlay"></div>
+    </div>
 
-window.WORDS = [
-    // ========== 1. O'ZBEKISTON SHAHARLARI (25 ta) ==========
-    "toshkent",
-    "samarqand",
-    "buxoro",
-    "andijon",
-    "namangan",
-    "fargona",
-    "nukus",
-    "xiva",
-    "termiz",
-    "qarshi",
-    "jizzax",
-    "navoiy",
-    "guliston",
-    "urganch",
-    "shahrisabz",
-    "bekobod",
-    "chirchiq",
-    "angren",
-    "kogon",
-    "denov",
-    "xazorasp",
-    "kattaqorgon",
-    "zarafshon",
-    "muynoq",
-    "boysun",
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="title">
+                <span class="neon-text">✨ WORD SEARCH</span>
+                <span class="subtitle">O'zbekiston bo'ylab sayohat</span>
+            </h1>
+            
+            <!-- Score & Progress -->
+            <div class="stats">
+                <div class="score-card">
+                    <span class="score-label">🎯 TOPILGAN</span>
+                    <span class="score-value" id="scoreValue">0</span>
+                    <span class="score-total" id="scoreTotal">/0</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+        </div>
 
-    // ========== 2. TABIAT (40 ta) ==========
-    "daraxt",
-    "tog",
-    "daryo",
-    "quyosh",
-    "shamol",
-    "yomgir",
-    "chol",
-    "buloq",
-    "gul",
-    "oy",
-    "yulduz",
-    "bog",
-    "meva",
-    "suv",
-    "havo",
-    "tuproq",
-    "tosh",
-    "qum",
-    "muz",
-    "qor",
-    "yaproq",
-    "ildiz",
-    "chang",
-    "tuman",
-    "bulut",
-    "chaqmoq",
-    "do'l",
-    "sel",
-    "qoya",
-    "vodiy",
-    "dasht",
-    "o'rmon",
-    "hayvon",
-    "qush",
-    "baliq",
-    "kapalak",
-    "ari",
-    "qurt",
-    "loy",
-    "bahor",
+        <!-- Game Area -->
+        <div class="game-area">
+            <!-- Words List -->
+            <div class="words-panel">
+                <div class="panel-header">
+                    <h3>📝 TOPILADIGAN SO'ZLAR</h3>
+                    <button class="reset-btn" id="resetBtn">
+                        <span>🔄</span> Yangilash
+                    </button>
+                </div>
+                <div class="words-list" id="wordsList"></div>
+            </div>
 
-    // ========== 3. MAKTAB (45 ta) ==========
-    "kitob",
-    "daftar",
-    "ustoz",
-    "oquvchi",
-    "maktab",
-    "fan",
-    "sinf",
-    "dars",
-    "qalam",
-    "ruchka",
-    "chizgich",
-    "o'chirgich",
-    "sirkul",
-    "sindirgich",
-    "portfel",
-    "sumka",
-    "doska",
-    "bo'r",
-    "gazeta",
-    "jurnal",
-    "kundalik",
-    "baholash",
-    "imtihon",
-    "test",
-    "masala",
-    "misol",
-    "yechim",
-    "o'qituvchi",
-    "direktor",
-    "biblioteka",
-    "laboratoriya",
-    "tanaffus",
-    "qo'ngiroq",
-    "alifbo",
-    "harf",
-    "so'z",
-    "gap",
-    "she'r",
-    "hikon",
-    "erak",
-    "tarix",
-    "matematika",
-    "fizika",
-    "kimyo",
-    "biologiya",
+            <!-- Game Grid -->
+            <div class="grid-container">
+                <div class="grid" id="grid"></div>
+            </div>
+        </div>
 
-    // ========== 4. UY XO'JALIK (45 ta) ==========
-    "stol",
-    "stul",
-    "muzlatgich",
-    "televizor",
-    "choynak",
-    "qozon",
-    "tovoq",
-    "piyola",
-    "qoshiq",
-    "vilka",
-    "pichoq",
-    "kosa",
-    "lagan",
-    "chelak",
-    "supurgi",
-    "chang'ich",
-    "kir yuvish",
-    "dazmol",
-    "gilam",
-    "parda",
-    "deraza",
-    "eshik",
-    "shkaf",
-    "javon",
-    "karavot",
-    "yostiq",
-    "korpecha",
-    "adoyol",
-    "salfetka",
-    "ayna",
-    "taroq",
-    "sovun",
-    "shampun",
-    "moy",
-    "kir sovun",
-    "chang yutgich",
-    "mikroto'lqin",
-    "gaz plita",
-    "ventilator",
-    "sovitgich",
-    "qozoncha",
-    "kastrul",
-    "skovorodka",
-    "kofe mashinasi",
-    "elektr choynak",
+        <!-- Messages -->
+        <div class="message" id="message"></div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Sichqoncha bilan belgilang | Topilgan so'zlar chiziladi</p>
+        </div>
+    </div>
 
-    // ========== 5. KO'CHA VA TRANSPORT (35 ta) ==========
-    "mashina",
-    "avtobus",
-    "yol",
-    "svetofor",
-    "velosiped",
-    "mototsikl",
-    "taksi",
-    "metro",
-    "poezd",
-    "samolyot",
-    "vertolyot",
-    "trolleybus",
-    "tramvay",
-    "yuk mashina",
-    "samosval",
-    "traktor",
-    "ekskavator",
-    "kran",
-    "tez yordam",
-    "ong'och",
-    "piyoda",
-    "haydovchi",
-    "yolak",
-    "most",
-    "tunnel",
-    "stansiya",
-    "bekat",
-    "koplon",
-    "burilish",
-    "aylanma",
-    "to'xtash",
-    "garaj",
-    "turargoh",
-    "bensin",
-    "g'ildirak",
-
-    // ========== 6. TEXNOLOGIYA (35 ta) ==========
-    "kompyuter",
-    "telefon",
-    "internet",
-    "dastur",
-    "noutbuk",
-    "planshet",
-    "klaviatura",
-    "sichqoncha",
-    "ekran",
-    "monitor",
-    "karnay",
-    "quloqchin",
-    "videokarta",
-    "protsessor",
-    "xotira",
-    "fleshka",
-    "disk",
-    "qattiq disk",
-    "kuchaytirgich",
-    "router",
-    "modem",
-    "tarmoq",
-    "veb sayt",
-    "brauzer",
-    "qidiruv",
-    "xabar",
-    "foto",
-    "video",
-    "ovoz",
-    "sozlamalar",
-    "ilova",
-    "oyna",
-    "papka",
-    "fayl",
-    "kod",
-
-    // ========== 7. UMUMIY KATTA O'ZBEK SO'ZLAR (80+ ta, kamida 6-10 harf) ==========
-    "mamlakat",
-    "mustaqillik",
-    "jahon",
-    "inson",
-    "tabiat",
-    "mehnat",
-    "bilim",
-    "donolik",
-    "taraqqiyot",
-    "kelajak",
-    "ezgulik",
-    "mahalla",
-    "an'ana",
-    "madaniyat",
-    "san'at",
-    "adabiyot",
-    "ilm",
-    "fan",
-    "texnologiya",
-    "kashfiyot",
-    "ixtiro",
-    "rivojlanish",
-    "o'zgarish",
-    "yangilik",
-    "bunyodkorlik",
-    "hamkorlik",
-    "do'stlik",
-    "birlik",
-    "tinchlik",
-    "farovonlik",
-    "baxt",
-    "saodat",
-    "omad",
-    "muvaffaqiyat",
-    "g'alaba",
-    "zafar",
-    "sharaf",
-    "nomus",
-    "vijdon",
-    "sabr",
-    "matonat",
-    "jasorat",
-    "kuch",
-    "quvvat",
-    "energiya",
-    "hayot",
-    "sog'liq",
-    "salomatlik",
-    "barkamol",
-    "yetuk",
-    "chiroyli",
-    "go'zal",
-    "yonduz",
-    "rayon",
-    "viloyat",
-    "poytaxt",
-    "shahar",
-    "qishloq",
-    "ovul",
-    "xalq",
-    "millat",
-    "elat",
-    "avlod",
-    "nasl",
-    "oila",
-    "urug",
-    "qarindosh",
-    "mehmon",
-    "ziyofat",
-    "dasturxon",
-    "non",
-    "suv",
-    "choy",
-    "osh",
-    "somsa",
-    "manti",
-    "norin",
-    "shashlik",
-    "lagmon",
-    "dimlama",
-
-    // ========== QO'SHIMCHA UMUMIY SO'ZLAR (qolgan qism) ==========
-    "farzand",
-    "ota",
-    "ona",
-    "aka",
-    "uka",
-    "singil",
-    "bobo",
-    "buvi",
-    "nabira",
-    "tog'a",
-    "xola",
-    "amaki",
-    "xalfa",
-    "qo'shni",
-    "do'st",
-    "rahbar",
-    "yetakchi",
-    "hukmdor",
-    "sarkarda",
-    "jomiy",
-    "buxoriy",
-    "temur",
-    "navoiy",
-    "bobur",
-    "berdak",
-    "qodiriy",
-    "fitrat",
-    "cho'lpon",
-    "ayniy",
-    "sadriddin",
-    "yassaviy",
-    "kashgariy",
-    "farobiy",
-    "xususiyat",
-    "imkoniyat",
-    "xayol",
-    "orzu",
-    "tush",
-    "ma'no",
-    "mohiyat",
-    "tuzilish",
-    "jarayon",
-    "hodisa",
-    "voqea",
-    "vaziyat",
-    "yechim",
-    "javob",
-    "savol",
-    "masala",
-    "muammo"
-];
-
-// Bazani tekshirish: kamida 400 ta so'z
-console.log("Word Search so'zlar bazasi yuklandi. Jami so'zlar soni:", window.WORDS.length);
-<script src="words.js"></script>
-<script>
-    console.log(window.WORDS); // Barcha so'zlar
-    console.log(window.WORDS.length); // So'zlar soni
-</script>
+    <script src="words.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
