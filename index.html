@@ -2,136 +2,965 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>So'z Topish O'yini — Uzbek Word Search</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>So'z Qidirish – O'zbekiston</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ══════════════════════════════════════════════
+   CSS VARIABLES & RESET
+══════════════════════════════════════════════ */
+:root {
+  --gold:        #d4a843;
+  --gold-light:  #f0c96a;
+  --gold-dark:   #a07830;
+  --cream:       #f5efe0;
+  --text-bright: #ffffff;
+  --text-dim:    rgba(255,255,255,0.65);
+  --overlay-dark:rgba(0,0,0,0.52);
+  --cell-bg:     rgba(255,255,255,0.08);
+  --cell-hover:  rgba(212,168,67,0.25);
+  --cell-found:  rgba(212,168,67,0.55);
+  --border-glow: rgba(212,168,67,0.4);
+  --panel-bg:    rgba(10,8,5,0.62);
+  --blur:        blur(1px);
+  --transition:  1.8s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow-x: hidden;
+  font-family: 'Exo 2', sans-serif;
+  color: var(--text-bright);
+}
+
+/* ══════════════════════════════════════════════
+   BACKGROUND SYSTEM
+══════════════════════════════════════════════ */
+#bg-container {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Each slide */
+.bg-slide {
+  position: absolute;
+  inset: -8%;          /* extra room for Ken Burns zoom */
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+  will-change: transform, opacity;
+}
+
+.bg-slide.active {
+  opacity: 1;
+  animation: kenBurns 12s ease-in-out forwards;
+}
+
+.bg-slide.leaving {
+  opacity: 0;
+  transition: opacity 2.2s ease-in-out;
+}
+
+@keyframes kenBurns {
+  0%   { transform: scale(1.0) translate(0%, 0%); }
+  100% { transform: scale(1.12) translate(-2%, -1.5%); }
+}
+
+/* Alternating direction for variety */
+.bg-slide:nth-child(even).active {
+  animation: kenBurnsAlt 12s ease-in-out forwards;
+}
+@keyframes kenBurnsAlt {
+  0%   { transform: scale(1.0) translate(0%, 0%); }
+  100% { transform: scale(1.12) translate(2%, 1%); }
+}
+
+/* Dark gradient overlay */
+#bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,0.55) 0%,
+      rgba(0,0,0,0.38) 45%,
+      rgba(0,0,0,0.62) 100%
+    );
+  pointer-events: none;
+}
+
+/* Dynamic colour tint that shifts with time-of-day */
+#bg-tint {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: background 4s ease;
+}
+
+/* Vignette */
+#bg-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  background: radial-gradient(ellipse at center,
+    transparent 45%,
+    rgba(0,0,0,0.65) 100%
+  );
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════
+   PARALLAX LAYER (mouse-tracked)
+══════════════════════════════════════════════ */
+#parallax-wrap {
+  position: fixed;
+  inset: -5%;
+  z-index: 0;
+  transition: transform 0.12s linear;
+  will-change: transform;
+}
+
+/* ══════════════════════════════════════════════
+   PARTICLES
+══════════════════════════════════════════════ */
+#particles {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--gold-light);
+  opacity: 0;
+  animation: floatParticle linear infinite;
+}
+
+@keyframes floatParticle {
+  0%   { transform: translateY(110vh) scale(0);   opacity: 0; }
+  10%  { opacity: 0.55; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(-10vh) scale(1.4); opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════
+   CITY LABEL
+══════════════════════════════════════════════ */
+#city-label {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 20;
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+#city-label span {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════
+   MAIN LAYOUT
+══════════════════════════════════════════════ */
+#app {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 16px 48px;
+  gap: 22px;
+}
+
+/* ══════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════ */
+header {
+  text-align: center;
+}
+
+.title-eyebrow {
+  font-family: 'Cinzel', serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.32em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+h1 {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, #c8912a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 18px rgba(212,168,67,0.35));
+}
+
+.title-sub {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+/* Decorative divider */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px auto 0;
+  width: fit-content;
+}
+.divider::before, .divider::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.divider::after { background: linear-gradient(90deg, var(--gold), transparent); }
+.divider-icon { color: var(--gold); font-size: 1rem; }
+
+/* ══════════════════════════════════════════════
+   STATS BAR
+══════════════════════════════════════════════ */
+.stats-bar {
+  display: flex;
+  gap: 18px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid var(--border-glow);
+  border-radius: 60px;
+  padding: 10px 28px;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-dim);
+}
+
+.stat-value {
+  color: var(--gold-light);
+  font-weight: 700;
+  font-size: 1rem;
+  min-width: 2ch;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════
+   GAME AREA
+══════════════════════════════════════════════ */
+.game-area {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+}
+
+/* ══════════════════════════════════════════════
+   GRID
+══════════════════════════════════════════════ */
+.grid-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid var(--border-glow);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow:
+    0 0 0 1px rgba(212,168,67,0.08),
+    0 8px 48px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+#grid {
+  display: grid;
+  gap: 3px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.cell {
+  width: clamp(30px, 6vw, 40px);
+  height: clamp(30px, 6vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 700;
+  font-size: clamp(0.78rem, 1.8vw, 1rem);
+  text-transform: uppercase;
+  background: var(--cell-bg);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s, border-color 0.18s, color 0.18s;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.03em;
+}
+
+.cell:hover {
+  background: var(--cell-hover);
+  border-color: rgba(212,168,67,0.45);
+  transform: scale(1.07);
+  color: #fff;
+}
+
+.cell.selected {
+  background: rgba(212,168,67,0.38);
+  border-color: var(--gold);
+  color: #fff;
+  transform: scale(1.09);
+}
+
+.cell.found {
+  background: var(--cell-found);
+  border-color: var(--gold-light);
+  color: #fff;
+  animation: foundPop 0.35s ease;
+}
+
+@keyframes foundPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* ══════════════════════════════════════════════
+   WORD LIST
+══════════════════════════════════════════════ */
+.words-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid var(--border-glow);
+  border-radius: 18px;
+  padding: 20px 22px;
+  min-width: 180px;
+  box-shadow:
+    0 8px 48px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.words-panel h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(212,168,67,0.2);
+}
+
+#word-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+#word-list li {
+  font-size: 0.88rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+#word-list li.found-word {
+  color: var(--gold-light);
+  text-decoration: line-through;
+  opacity: 0.55;
+  border-color: rgba(212,168,67,0.12);
+  background: rgba(212,168,67,0.06);
+}
+
+/* ══════════════════════════════════════════════
+   WIN OVERLAY
+══════════════════════════════════════════════ */
+#win-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+}
+
+#win-overlay.show { display: flex; }
+
+.win-card {
+  background: linear-gradient(145deg, rgba(20,15,5,0.97), rgba(35,25,8,0.97));
+  border: 1px solid var(--gold);
+  border-radius: 22px;
+  padding: 48px 52px;
+  text-align: center;
+  box-shadow: 0 0 60px rgba(212,168,67,0.3), 0 24px 80px rgba(0,0,0,0.7);
+  animation: winCardIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes winCardIn {
+  from { transform: scale(0.7) translateY(30px); opacity: 0; }
+  to   { transform: scale(1)   translateY(0);    opacity: 1; }
+}
+
+.win-icon { font-size: 3.5rem; margin-bottom: 12px; }
+
+.win-card h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 2rem;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.win-card p {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+/* ══════════════════════════════════════════════
+   BUTTON
+══════════════════════════════════════════════ */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, #c8912a 100%);
+  color: #1a1000;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 12px 32px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+  box-shadow: 0 4px 20px rgba(212,168,67,0.4);
+}
+
+.btn-gold:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 32px rgba(212,168,67,0.55);
+  filter: brightness(1.1);
+}
+
+/* ══════════════════════════════════════════════
+   PROGRESS BAR
+══════════════════════════════════════════════ */
+.progress-wrap {
+  width: 100%;
+  max-width: 460px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 60px;
+  height: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(212,168,67,0.12);
+}
+
+#progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+  border-radius: 60px;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 8px var(--gold);
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .stats-bar { gap: 12px; padding: 9px 18px; font-size: 0.76rem; }
+  .words-panel { min-width: unset; width: 100%; max-width: 360px; }
+  .words-panel h3 { font-size: 0.68rem; }
+  #word-list { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  #word-list li { font-size: 0.75rem; padding: 4px 8px; }
+  #city-label { font-size: 0.68rem; bottom: 14px; right: 14px; }
+}
+</style>
 </head>
 <body>
 
-<!-- Background -->
-<div id="bg-layer" class="dawn"></div>
-<canvas id="particles-canvas"></canvas>
-
-<!-- Ornament corners (SVG pattern) -->
-<div class="ornament-corner oc-tl"><svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M5 5 Q60 5 60 60 Q60 5 115 5" stroke="#D4AF37" stroke-width="2" fill="none"/>
-  <path d="M5 5 Q5 60 60 60 Q5 60 5 115" stroke="#D4AF37" stroke-width="2" fill="none"/>
-  <circle cx="60" cy="60" r="8" fill="none" stroke="#D4AF37" stroke-width="1.5"/>
-  <circle cx="5" cy="5" r="4" fill="#D4AF37" opacity="0.6"/>
-  <path d="M20 5 Q5 5 5 20" stroke="#D4AF37" stroke-width="1" fill="none" stroke-dasharray="3,3"/>
-  <path d="M5 20 Q5 5 20 5" stroke="#D4AF37" stroke-width="1.5" fill="none"/>
-</svg></div>
-<div class="ornament-corner oc-tr"><svg viewBox="0 0 120 120" fill="none"><path d="M5 5 Q60 5 60 60 Q60 5 115 5" stroke="#D4AF37" stroke-width="2" fill="none"/><path d="M5 5 Q5 60 60 60 Q5 60 5 115" stroke="#D4AF37" stroke-width="2" fill="none"/><circle cx="60" cy="60" r="8" fill="none" stroke="#D4AF37" stroke-width="1.5"/><circle cx="5" cy="5" r="4" fill="#D4AF37" opacity="0.6"/></svg></div>
-<div class="ornament-corner oc-bl"><svg viewBox="0 0 120 120" fill="none"><path d="M5 5 Q60 5 60 60 Q60 5 115 5" stroke="#D4AF37" stroke-width="2" fill="none"/><path d="M5 5 Q5 60 60 60 Q5 60 5 115" stroke="#D4AF37" stroke-width="2" fill="none"/><circle cx="60" cy="60" r="8" fill="none" stroke="#D4AF37" stroke-width="1.5"/><circle cx="5" cy="5" r="4" fill="#D4AF37" opacity="0.6"/></svg></div>
-<div class="ornament-corner oc-br"><svg viewBox="0 0 120 120" fill="none"><path d="M5 5 Q60 5 60 60 Q60 5 115 5" stroke="#D4AF37" stroke-width="2" fill="none"/><path d="M5 5 Q5 60 60 60 Q5 60 5 115" stroke="#D4AF37" stroke-width="2" fill="none"/><circle cx="60" cy="60" r="8" fill="none" stroke="#D4AF37" stroke-width="1.5"/><circle cx="5" cy="5" r="4" fill="#D4AF37" opacity="0.6"/></svg></div>
-
-<!-- Floating shapes -->
-<div class="floating-shape" style="top:15%;left:5%;animation-delay:0s;">✦</div>
-<div class="floating-shape" style="top:60%;left:88%;animation-delay:2s;">◆</div>
-<div class="floating-shape" style="top:35%;left:92%;animation-delay:4s;font-size:50px;">❋</div>
-<div class="floating-shape" style="top:75%;left:3%;animation-delay:6s;font-size:60px;">✦</div>
-<div class="floating-shape" style="top:5%;left:75%;animation-delay:3s;font-size:40px;">◈</div>
-
-<!-- Toast -->
-<div id="toast"></div>
-
-<!-- ===== START SCREEN ===== -->
-<div id="start-screen" class="screen">
-  <div class="logo-wrap">
-    <div class="logo-icon">🏛️</div>
-    <div class="logo-title">SO'Z TOPISH</div>
-    <div class="logo-sub">O'yini • Uzbekiston</div>
+<!-- ══ BACKGROUND SYSTEM ══ -->
+<div id="bg-container">
+  <div id="parallax-wrap">
+    <!-- slides injected by JS -->
   </div>
-  <div class="highscore-badge">
-    <div class="label">Eng yuqori ball</div>
-    <div class="value" id="hs-display">0</div>
+</div>
+<div id="bg-overlay"></div>
+<div id="bg-tint"></div>
+<div id="bg-vignette"></div>
+<div id="particles"></div>
+<div id="city-label">📍 <span id="city-name">Toshkent</span></div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+
+  <header>
+    <p class="title-eyebrow">O'zbekiston so'zlari</p>
+    <h1>So'z Qidirish</h1>
+    <p class="title-sub">Shaharlar va Joylar</p>
+    <div class="divider"><span class="divider-icon">✦</span></div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat">🏆 <span class="stat-value" id="found-count">0</span> / <span id="total-count">0</span></div>
+    <div class="stat">⏱ <span class="stat-value" id="timer">00:00</span></div>
+    <div class="stat">✨ <span class="stat-value" id="score">0</span></div>
   </div>
-  <button class="btn-play" id="btn-start">O'YNASH</button>
-  <button class="btn-secondary" id="btn-settings-start">⚙️ Sozlamalar</button>
+
+  <div class="progress-wrap">
+    <div id="progress-bar"></div>
+  </div>
+
+  <div class="game-area">
+    <div class="grid-panel">
+      <div id="grid"></div>
+    </div>
+    <div class="words-panel">
+      <h3>🔍 So'zlar</h3>
+      <ul id="word-list"></ul>
+    </div>
+  </div>
+
 </div>
 
-<!-- ===== GAME SCREEN ===== -->
-<div id="game-screen" class="screen hidden">
-  <div class="game-header">
-    <div class="stat-chip">
-      <span class="icon">⭐</span>
-      <div><div class="val" id="score-display">0</div><div class="lbl">BALL</div></div>
-    </div>
-    <div class="level-badge" id="level-display">DARAJA 1</div>
-    <div class="stat-chip">
-      <span class="icon">🪙</span>
-      <div><div class="val" id="coins-display">0</div><div class="lbl">TANGA</div></div>
-    </div>
-    <div class="stat-chip">
-      <span class="icon">⏱️</span>
-      <div><div class="val" id="timer-display">00:00</div><div class="lbl">VAQT</div></div>
-    </div>
-  </div>
-
-  <div class="grid-wrapper">
-    <div class="grid-container">
-      <div id="word-grid"></div>
-    </div>
-  </div>
-
-  <div class="words-panel">
-    <div class="words-panel-inner">
-      <div class="words-panel-title" id="category-display">So'zlar</div>
-      <div class="words-list" id="words-list"></div>
-    </div>
-  </div>
-
-  <div class="bottom-bar">
-    <button class="btn-menu" id="btn-menu">☰</button>
-    <div class="category-label" id="combo-label"></div>
-    <button class="btn-hint" id="btn-hint">💡 Ko'mak <span class="hint-count" id="hint-count">3</span></button>
+<!-- ══ WIN OVERLAY ══ -->
+<div id="win-overlay">
+  <div class="win-card">
+    <div class="win-icon">🏆</div>
+    <h2>Tabriklaymiz!</h2>
+    <p>Barcha so'zlarni topdingiz!</p>
+    <button class="btn-gold" onclick="restartGame()">Qaytadan O'ynash</button>
   </div>
 </div>
 
-<!-- ===== LEVEL COMPLETE MODAL ===== -->
-<div id="level-modal" class="modal-overlay hidden">
-  <div class="modal-box">
-    <div class="modal-title">Barakalla! 🎉</div>
-    <div class="modal-sub" id="modal-sub-text">Daraja muvaffaqiyatli yakunlandi</div>
-    <div class="stars-row" id="stars-row">
-      <span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span>
-    </div>
-    <div class="score-breakdown" id="score-breakdown"></div>
-    <div class="achievements-row" id="achievements-row"></div>
-    <button class="btn-play" id="btn-next-level" style="width:100%;font-size:16px;padding:14px;">Keyingi Daraja ➤</button>
-  </div>
-</div>
+<script>
+/* ════════════════════════════════════════════════
+   BACKGROUND SYSTEM
+════════════════════════════════════════════════ */
 
-<!-- ===== SETTINGS PANEL ===== -->
-<div id="settings-panel" class="hidden">
-  <div class="settings-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <span style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);font-weight:700;">Sozlamalar</span>
-      <button id="btn-close-settings" class="btn-menu">✕</button>
-    </div>
-    <div class="settings-row">
-      <span>🎵 Musiqa</span>
-      <div class="toggle on" id="toggle-music"></div>
-    </div>
-    <div class="settings-row">
-      <span>🔊 Ovozlar</span>
-      <div class="toggle on" id="toggle-sfx"></div>
-    </div>
-    <div class="settings-row">
-      <span>✨ Animatsiyalar</span>
-      <div class="toggle on" id="toggle-anim"></div>
-    </div>
-    <div class="settings-row" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;">
-      <span>🗑️ O'yinni qayta boshlash</span>
-      <button class="btn-secondary" id="btn-reset" style="padding:8px 16px;font-size:12px;">Tozalash</button>
-    </div>
-    <div class="settings-row">
-      <span style="color:rgba(255,255,255,0.4);font-size:12px;">So'z Topish O'yini v1.0 — Uzbekiston</span>
-    </div>
-  </div>
-</div>
+const CITIES = [
+  {
+    name: "Toshkent",
+    url: "https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=1600&q=85&auto=format&fit=crop",
+    tint: "rgba(30,15,0,0.18)"
+  },
+  {
+    name: "Samarqand",
+    url: "https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?w=1600&q=85&auto=format&fit=crop",
+    tint: "rgba(10,20,35,0.22)"
+  },
+  {
+    name: "Buxoro",
+    url: "https://images.unsplash.com/photo-1575573038280-ef1be8f4e0c3?w=1600&q=85&auto=format&fit=crop",
+    tint: "rgba(25,12,0,0.2)"
+  },
+  {
+    name: "Xiva",
+    url: "https://images.unsplash.com/photo-1627037558426-c2d07beda3af?w=1600&q=85&auto=format&fit=crop",
+    tint: "rgba(20,10,5,0.2)"
+  },
+  {
+    name: "Farg'ona",
+    url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=85&auto=format&fit=crop",
+    tint: "rgba(5,20,10,0.18)"
+  },
+  {
+    name: "Andijon",
+    url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=85&auto=format&fit=crop",
+    tint: "rgba(5,12,25,0.18)"
+  }
+];
 
-<script src="script.js"></script>
+const parallaxWrap = document.getElementById('parallax-wrap');
+const bgTint       = document.getElementById('bg-tint');
+const cityNameEl   = document.getElementById('city-name');
+const cityLabel    = document.getElementById('city-label');
+
+let currentBg = 0;
+let slides     = [];
+
+/* Build slides */
+function buildSlides() {
+  CITIES.forEach((city, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'bg-slide';
+    slide.style.backgroundImage = `url('${city.url}')`;
+    parallaxWrap.appendChild(slide);
+    slides.push(slide);
+  });
+}
+
+/* Preload images */
+function preloadImages() {
+  CITIES.forEach(city => {
+    const img = new Image();
+    img.src = city.url;
+  });
+}
+
+/* Switch background */
+function switchBackground() {
+  const prev = currentBg;
+  currentBg  = (currentBg + 1) % CITIES.length;
+
+  const prevSlide = slides[prev];
+  const nextSlide = slides[currentBg];
+
+  // Restart animation by cloning
+  nextSlide.classList.remove('active', 'leaving');
+  void nextSlide.offsetWidth; // reflow
+  nextSlide.classList.add('active');
+
+  prevSlide.classList.add('leaving');
+  setTimeout(() => {
+    prevSlide.classList.remove('active', 'leaving');
+  }, 2400);
+
+  // Update tint
+  bgTint.style.background = CITIES[currentBg].tint;
+
+  // Update city label
+  cityLabel.style.opacity = '0';
+  setTimeout(() => {
+    cityNameEl.textContent = CITIES[currentBg].name;
+    cityLabel.style.opacity = '1';
+  }, 900);
+}
+
+/* Init background */
+function initBackground() {
+  buildSlides();
+  preloadImages();
+  slides[0].classList.add('active');
+  bgTint.style.background = CITIES[0].tint;
+
+  // Switch every 8 seconds
+  setInterval(switchBackground, 8000);
+}
+
+/* ══ PARALLAX – Desktop ══ */
+document.addEventListener('mousemove', (e) => {
+  const xPct = (e.clientX / window.innerWidth  - 0.5) * 2; // -1..1
+  const yPct = (e.clientY / window.innerHeight - 0.5) * 2;
+  const maxShift = 12; // px
+  parallaxWrap.style.transform = `translate(${xPct * maxShift}px, ${yPct * maxShift}px)`;
+});
+
+/* ══ PARALLAX – Mobile gyroscope ══ */
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', (e) => {
+    if (e.gamma == null) return;
+    const x = Math.max(-1, Math.min(1, e.gamma / 30));
+    const y = Math.max(-1, Math.min(1, (e.beta - 30) / 30));
+    parallaxWrap.style.transform = `translate(${x * 8}px, ${y * 5}px)`;
+  });
+}
+
+/* ══ PARTICLES ══ */
+function spawnParticles() {
+  const container = document.getElementById('particles');
+  const count = window.innerWidth < 600 ? 14 : 26;
+
+  for (let i = 0; i < count; i++) {
+    const p    = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 3.5 + 1;
+    const left = Math.random() * 100;
+    const dur  = Math.random() * 14 + 10;
+    const del  = Math.random() * 12;
+    const op   = Math.random() * 0.5 + 0.15;
+
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${left}%;
+      animation-duration:${dur}s;
+      animation-delay:${del}s;
+      opacity:${op};
+    `;
+    container.appendChild(p);
+  }
+}
+
+/* ════════════════════════════════════════════════
+   WORD SEARCH GAME
+════════════════════════════════════════════════ */
+
+const WORDS = [
+  "TOSHKENT","SAMARQAND","BUXORO","XIVA","NAMANGAN",
+  "FARGONA","ANDIJON","NUKUS","QARSHI","TERMIZ"
+];
+
+const GRID_SIZE = 12;
+let grid       = [];
+let foundWords = new Set();
+let selected   = [];
+let isDragging = false;
+let score      = 0;
+let timerVal   = 0;
+let timerInt   = null;
+let wordPositions = {};
+
+/* ── Grid init ── */
+function createEmptyGrid() {
+  return Array.from({length: GRID_SIZE}, () => Array(GRID_SIZE).fill(''));
+}
+
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const UZ_EXTRA = 'QGHNRTOAESIUBXKFMDLPZYW';
+
+function fillRandom(grid) {
+  for (let r = 0; r < GRID_SIZE; r++)
+    for (let c = 0; c < GRID_SIZE; c++)
+      if (!grid[r][c]) grid[r][c] = UZ_EXTRA[Math.floor(Math.random() * UZ_EXTRA.length)];
+  return grid;
+}
+
+const DIRS = [
+  [0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]
+];
+
+function placeWord(grid, word) {
+  const shuffledDirs = [...DIRS].sort(() => Math.random() - 0.5);
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const dir = shuffledDirs[attempt % shuffledDirs.length];
+    const r   = Math.floor(Math.random() * GRID_SIZE);
+    const c   = Math.floor(Math.random() * GRID_SIZE);
+    const cells = [];
+    let ok = true;
+    for (let i = 0; i < word.length; i++) {
+      const nr = r + dir[0] * i;
+      const nc = c + dir[1] * i;
+      if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) { ok = false; break; }
+      if (grid[nr][nc] && grid[nr][nc] !== word[i])               { ok = false; break; }
+      cells.push([nr, nc]);
+    }
+    if (ok) {
+      cells.forEach(([nr,nc], i) => grid[nr][nc] = word[i]);
+      wordPositions[word] = cells;
+      return true;
+    }
+  }
+  return false;
+}
+
+function buildGrid() {
+  grid         = createEmptyGrid();
+  wordPositions = {};
+  const shuffled = [...WORDS].sort(() => Math.random() - 0.5);
+  shuffled.forEach(w => placeWord(grid, w));
+  fillRandom(grid);
+}
+
+/* ── Render ── */
+function renderGrid() {
+  const el = document.getElementById('grid');
+  el.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+  el.innerHTML = '';
+
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = grid[r][c];
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+
+      // Pointer events
+      cell.addEventListener('pointerdown', e => { e.preventDefault(); startSelect(r, c); });
+      cell.addEventListener('pointerenter', () => { if (isDragging) extendSelect(r, c); });
+      cell.addEventListener('pointerup',   () => endSelect());
+
+      el.appendChild(cell);
+    }
+  }
+}
+
+function renderWordList() {
+  const el = document.getElementById('word-list');
+  el.innerHTML = '';
+  document.getElementById('total-count').textContent = WORDS.length;
+  WORDS.forEach(w => {
+    const li = document.createElement('li');
+    li.textContent = w;
+    li.dataset.word = w;
+    if (foundWords.has(w)) li.classList.add('found-word');
+    el.appendChild(li);
+  });
+}
+
+/* ── Selection logic ── */
+function startSelect(r, c) {
+  isDragging = true;
+  selected   = [[r,c]];
+  highlightSelected();
+}
+
+function extendSelect(r, c) {
+  if (!isDragging) return;
+  const [sr, sc] = selected[0];
+  const dr = Math.sign(r - sr);
+  const dc = Math.sign(c - sc);
+  if ((dr === 0 && dc === 0) && selected.length > 1) return;
+
+  // Only allow straight lines
+  const lenR = Math.abs(r - sr);
+  const lenC = Math.abs(c - sc);
+  if (lenR !== lenC && lenR !== 0 && lenC !== 0) return;
+
+  const len = Math.max(lenR, lenC);
+  const cells = [];
+  for (let i = 0; i <= len; i++) cells.push([sr + dr*i, sc + dc*i]);
+  selected = cells;
+  highlightSelected();
+}
+
+function endSelect() {
+  if (!isDragging) return;
+  isDragging = false;
+  checkWord();
+  clearHighlight();
+  selected = [];
+}
+
+function highlightSelected() {
+  document.querySelectorAll('.cell').forEach(el => el.classList.remove('selected'));
+  selected.forEach(([r,c]) => {
+    const el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+    if (el) el.classList.add('selected');
+  });
+}
+
+function clearHighlight() {
+  document.querySelectorAll('.cell.selected').forEach(el => el.classList.remove('selected'));
+}
+
+function checkWord() {
+  const str = selected.map(([r,c]) => grid[r][c]).join('');
+  const rev = str.split('').reverse().join('');
+
+  for (const w of WORDS) {
+    if ((str === w || rev === w) && !foundWords.has(w)) {
+      foundWords.add(w);
+      markFound(w);
+      updateScore();
+      updateProgress();
+      renderWordList();
+      if (foundWords.size === WORDS.length) {
+        setTimeout(showWin, 700);
+      }
+      return;
+    }
+  }
+}
+
+function markFound(word) {
+  const cells = wordPositions[word];
+  if (!cells) return;
+  cells.forEach(([r,c]) => {
+    const el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+    if (el) el.classList.add('found');
+  });
+}
+
+function updateScore() {
+  score += 100 + Math.max(0, 60 - timerVal) * 2;
+  document.getElementById('score').textContent = score;
+  document.getElementById('found-count').textContent = foundWords.size;
+}
+
+function updateProgress() {
+  const pct = (foundWords.size / WORDS.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+/* ── Timer ── */
+function startTimer() {
+  timerInt = setInterval(() => {
+    timerVal++;
+    const m = String(Math.floor(timerVal / 60)).padStart(2,'0');
+    const s = String(timerVal % 60).padStart(2,'0');
+    document.getElementById('timer').textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+/* ── Win ── */
+function showWin() {
+  clearInterval(timerInt);
+  document.getElementById('win-overlay').classList.add('show');
+}
+
+/* ── Restart ── */
+function restartGame() {
+  clearInterval(timerInt);
+  foundWords.clear();
+  selected   = [];
+  isDragging = false;
+  score      = 0;
+  timerVal   = 0;
+  document.getElementById('score').textContent       = 0;
+  document.getElementById('found-count').textContent = 0;
+  document.getElementById('timer').textContent       = '00:00';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('win-overlay').classList.remove('show');
+  buildGrid();
+  renderGrid();
+  renderWordList();
+  startTimer();
+}
+
+/* ── Boot ── */
+window.addEventListener('load', () => {
+  initBackground();
+  spawnParticles();
+  restartGame();
+});
+
+/* ── Touch drag fix ── */
+document.addEventListener('pointerup', () => {
+  if (isDragging) { isDragging = false; endSelect(); }
+});
+</script>
 </body>
 </html>
